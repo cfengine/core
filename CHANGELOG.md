@@ -1,3 +1,9 @@
+## 3.24.6
+
+- CFEngine 3.24.6 was released to address security vulnerabilities in PHP and does not have any other changes.
+  For more information, see:
+  https://cfengine.com/blog/2026/php-cves-cve-2026-109618-and-cve-2026-109619/
+
 ## 3.24.5
 
 - Added 2 most recent self upgrade log files to `cf-support` collection (ENT-14144)

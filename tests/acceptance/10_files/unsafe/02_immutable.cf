@@ -49,7 +49,9 @@ bundle agent check
 {
   vars:
     "expected" string => "But agent can override";
-    "actual" string => readfile("$(global.testfile)"),
+
+    "actual"
+      string => readfile("$(global.testfile)"),
       if => fileexists("$(global.testfile)");
 
   classes:

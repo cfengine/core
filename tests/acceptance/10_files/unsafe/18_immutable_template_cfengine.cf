@@ -52,7 +52,8 @@ bundle agent check
 
     # Indent the sub-agent output in the DEBUG report, so that errors it
     # prints are not mistaken for errors of the test by testall
-    "output_indented" string => regex_replace("$(run[output])", "^", "  | ", "gm");
+    "output_indented"
+      string => regex_replace("$(run[output])", "^", "  | ", "gm");
 
   classes:
     "ok"

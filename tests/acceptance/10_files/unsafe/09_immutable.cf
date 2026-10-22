@@ -56,7 +56,8 @@ bundle agent check
 {
   vars:
     "expected" string => "Hello larsewi!";
-    "actual" string => readfile("$(global.testfile)");
+    "actual" string => readfile("$(global.testfile)"),
+      if => fileexists("$(global.testfile)");
 
   classes:
     "ok" expression => strcmp("$(actual)", "$(expected)");

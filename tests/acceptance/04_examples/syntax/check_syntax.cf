@@ -124,7 +124,7 @@ bundle agent test_example(file)
 
   classes:
     "failure_$(cfile)"
-      not => returnszero("$(checker) $(file)", "noshell"),
+      not => returnszero("$(checker) $(file) >/dev/null 2>&1", "useshell"),
       scope => "namespace";
 
   reports:

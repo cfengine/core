@@ -69,7 +69,9 @@ bundle agent check
 {
   vars:
     "observed_gid" string => filestat($(G.testfile), gid);
-    "desired_gid" int => getgid("pr_gr_1"),
+
+    "desired_gid"
+      int => getgid("pr_gr_1"),
       if => groupexists("pr_gr_1");
 
   reports:

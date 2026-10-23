@@ -37,5 +37,6 @@ WatcherCheckResult FileWatcherCheckFileCreated(void *state);
 WatcherCheckResult FileWatcherCheckFileModified(void *state);
 WatcherCheckResult FileWatcherCheckFileContentModified(void *state);
 WatcherCheckResult FileWatcherCheckFilePermissionsChanged(void *state);
+WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state);
 
 #endif

@@ -173,6 +173,7 @@ static const EventType EVENT_TABLE[] =
     FileEventTypeNew(REACTOR_FILE_MODIFIED, FileWatcherCheckFileModified),
     FileEventTypeNew(REACTOR_FILE_CONTENT_MODIFIED, FileWatcherCheckFileContentModified),
     FileEventTypeNew(REACTOR_FILE_PERMISSIONS_CHANGED, FileWatcherCheckFilePermissionsChanged),
+    FileEventTypeNew(REACTOR_FILE_OWNER_CHANGED, FileWatcherCheckFileOwnerChanged),
     EventTypeNewNull()
 };
 

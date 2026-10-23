@@ -46,6 +46,7 @@ static const ConstraintSyntax when_constraints[] =
     ConstraintSyntaxNewString(REACTOR_FILE_MODIFIED, CF_ANYSTRING, "File to react for on change of its modification time", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString(REACTOR_FILE_CONTENT_MODIFIED, CF_ANYSTRING, "File to react for on change of its content hash", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString(REACTOR_FILE_PERMISSIONS_CHANGED, CF_ANYSTRING, "File to react for on change of its permissions", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString(REACTOR_FILE_OWNER_CHANGED, CF_ANYSTRING, "File to react for on change of its owning user or group", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("interval", REACTOR_INTERVAL_RANGE, "Seconds between two checks for the event", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

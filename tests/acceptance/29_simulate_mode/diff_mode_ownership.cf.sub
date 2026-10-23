@@ -1,0 +1,31 @@
+bundle common simulation_ownership_promises
+{
+  vars:
+    "inputs" slist => { "$(this.promise_dirname)/../default.sub.cf" };
+}
+
+body common control
+{
+  inputs => { "@(simulation_ownership_promises.inputs)" };
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testroot)$(const.dirsep)chown-me"
+      create => "true";
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testroot)$(const.dirsep)chown-me"
+      perms => mog("0600", "bin", "bin");
+}
+
+bundle agent main
+{
+  methods:
+    "init";
+    "test";
+}

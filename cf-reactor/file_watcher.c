@@ -28,6 +28,7 @@
 #include <alloc.h>
 #include <file_lib.h>           /* safe_fopen() */
 #include <hash.h>               /* HashDigestFromId() */
+#include <conversion.h>         /* IntFromString() */
 #include <prototypes3.h>        /* cf_strtimestamp_local() */
 #include <sys/stat.h>
 #include <errno.h>
@@ -70,6 +71,13 @@ typedef struct
             uid_t uid;
             gid_t gid;
         } owner;
+
+        /* FileWatcherCheckFileSizeExceeds() */
+        struct
+        {
+            off_t threshold;  /* Not observed, set when the state is created */
+            off_t size;
+        } file_size;
     } last;
 } FileWatcherState;
 
@@ -81,6 +89,19 @@ void *FileWatcherStateNew(const Rlist *args)
 
     FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
     fws->path = xstrdup(path);
+
+    return fws;
+}
+
+void *FileWatcherSizeStateNew(const Rlist *args)
+{
+    assert(args != NULL && args->next != NULL);
+    const char *path = RlistScalarValue(args);
+    const long size_threshold = IntFromString(RlistScalarValue(args->next));
+
+    FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
+    fws->path = xstrdup(path);
+    fws->last.file_size.threshold = size_threshold;
 
     return fws;
 }
@@ -384,4 +405,29 @@ WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state)
     fws->last.owner.uid = uid;
     fws->last.owner.gid = gid;
     return FileWatcherRecordObservation(fws, exists, changed, "owner change");
+}
+
+// =========== code for the file_size_exceeds event ===========
+
+WatcherCheckResult FileWatcherCheckFileSizeExceeds(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const off_t size = exists ? sb.st_size : 0;
+
+    /* Only when the size grows above the threshold, including a file created
+     * above it, not every time it is checked above it */
+    const bool exceeded = fws->last_exists && (fws->last.file_size.size > fws->last.file_size.threshold);
+    const bool exceeds = exists && (size > fws->last.file_size.threshold);
+
+    fws->last.file_size.size = size;
+    return FileWatcherRecordObservation(fws, exists, !exceeded && exceeds, "size exceeding threshold");
 }

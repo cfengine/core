@@ -132,7 +132,8 @@ void EventWatcherResume(void);
  * immediately. Without watchers, the watcher thread sleeps until woken up, so
  * this must be called after registering watchers outside of an
  * EventWatcherPause()/EventWatcherResume() pair (which wakes it up itself),
- * i.e. after the watchers of the initial policy.
+ * i.e. after the watchers of the initial policy. Logs the number of
+ * registered watchers.
  */
 void EventWatcherWakeUp(void);
 void EventWatcherFinalize(void);

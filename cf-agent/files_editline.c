@@ -373,7 +373,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     char lockname[CF_BUFSIZE];
 
     Attributes a = GetDeletionAttributes(ctx, pp);
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     if (!SanityCheckDeletions(&a, pp))
     {
@@ -453,7 +453,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
     char lockname[CF_BUFSIZE];
 
     Attributes a = GetColumnAttributes(ctx, pp);
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     if (a.column.column_separator == NULL)
     {
@@ -547,7 +547,7 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
 /* Are we working in a restricted region? */
 
     Attributes a = GetReplaceAttributes(ctx, pp);
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     if (!a.replace.replace_value)
     {
@@ -733,7 +733,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 
     Attributes a = GetInsertionAttributes(ctx, pp);
     int allow_multi_lines = StringEqual(a.sourcetype, "preserve_all_lines");
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     if (!SanityCheckInsertions(&a))
     {

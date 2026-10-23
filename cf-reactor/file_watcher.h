@@ -30,7 +30,15 @@
 
 
 void *FileWatcherStateNew(const Rlist *args);
-WatcherCheckResult FileWatcherCheckFileDeleted(void *state);
+void *FileWatcherSizeStateNew(const Rlist *args);
 void FileWatcherStateDestroy(void *state);
+
+WatcherCheckResult FileWatcherCheckFileDeleted(void *state);
+WatcherCheckResult FileWatcherCheckFileCreated(void *state);
+WatcherCheckResult FileWatcherCheckFileModified(void *state);
+WatcherCheckResult FileWatcherCheckFileContentModified(void *state);
+WatcherCheckResult FileWatcherCheckFilePermissionsChanged(void *state);
+WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state);
+WatcherCheckResult FileWatcherCheckFileSizeExceeds(void *state);
 
 #endif

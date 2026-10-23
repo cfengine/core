@@ -1,0 +1,42 @@
+#######################################################
+#
+# Test what is a permissions change for a file_permissions_changed event
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when permissions_changed(file)
+{
+  file_permissions_changed => "$(file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "file_a" string => getenv("FILE_A", 999);
+    "file_b" string => getenv("FILE_B", 999);
+    "file_c" string => getenv("FILE_C", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    # a regular file
+    "$(promise_name)_A"
+      when => permissions_changed("$(file_a)"),
+      then => record_event("$(events_file)", "A permissions changed");
+
+    # a directory
+    "$(promise_name)_B"
+      when => permissions_changed("$(file_b)"),
+      then => record_event("$(events_file)", "B permissions changed");
+
+    # a symlink
+    "$(promise_name)_C"
+      when => permissions_changed("$(file_c)"),
+      then => record_event("$(events_file)", "C permissions changed");
+}

@@ -3,7 +3,7 @@
 fail=0
 
 banner() {
-    name=" $(basename "$1") "
+    name=" $(basename "$(dirname "$1")")/$(basename "$1") "
     width=72
     left=$(( (width - ${#name}) / 2 ))
     right=$(( width - ${#name} - left ))
@@ -23,7 +23,7 @@ error() {
 CF_BINDIR=${CF_BINDIR:-/var/cfengine/bin}
 export CF_BINDIR
 
-for t in "$PWD"/tests/*.sh; do
+for t in "$PWD"/tests/*/*.sh; do
     banner "$t"
 
     # create throwaway work dir

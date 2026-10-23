@@ -1,0 +1,48 @@
+#######################################################
+#
+# Test what is a content modification for a file_content_modified event
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when content_modified(file)
+{
+  file_content_modified => "$(file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "file_a" string => getenv("FILE_A", 999);
+    "file_b" string => getenv("FILE_B", 999);
+    "file_c" string => getenv("FILE_C", 999);
+    "file_d" string => getenv("FILE_D", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    # a regular file
+    "$(promise_name)_A"
+      when => content_modified("$(file_a)"),
+      then => record_event("$(events_file)", "A content modified");
+
+    # an empty regular file
+    "$(promise_name)_B"
+      when => content_modified("$(file_b)"),
+      then => record_event("$(events_file)", "B content modified");
+
+    # a symlink
+    "$(promise_name)_C"
+      when => content_modified("$(file_c)"),
+      then => record_event("$(events_file)", "C content modified");
+
+    # a directory
+    "$(promise_name)_D"
+      when => content_modified("$(file_d)"),
+      then => record_event("$(events_file)", "D content modified");
+}

@@ -5,3 +5,28 @@ bundle agent record_event(file, message)
       with => strftime("localtime", "%Y-%m-%d %H:%M:%S", now()),
       report_to_file => "$(file)";
 }
+
+# Defines a class for the outcome of the promise it is used on:
+# <prefix>_kept, <prefix>_repaired or <prefix>_failed
+body classes then_outcome(prefix)
+{
+  promise_kept => { "$(prefix)_kept" };
+  promise_repaired => { "$(prefix)_repaired" };
+  repair_failed => { "$(prefix)_failed" };
+  repair_denied => { "$(prefix)_failed" };
+  repair_timeout => { "$(prefix)_failed" };
+}
+
+# Records "<prefix> <outcome>" for the outcome classes of then_outcome(prefix)
+# defined so far. Nothing is recorded if the promise was not evaluated (e.g.
+# skipped because of a lock).
+bundle agent record_then_outcome(file, prefix)
+{
+  vars:
+    "outcomes" slist => { "kept", "repaired", "failed" };
+
+  methods:
+    "$(prefix)_$(outcomes)"
+      if => "$(prefix)_$(outcomes)",
+      usebundle => record_event("$(file)", "$(prefix) $(outcomes)");
+}

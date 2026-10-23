@@ -158,6 +158,12 @@ static const EventArg NO_EXTRA_ARGS[] =
     { NULL, RVAL_TYPE_NOPROMISEE }
 };
 
+static const EventArg FILE_SIZE_EXCEEDS_ARGS[] =
+{
+    { REACTOR_SIZE_THRESHOLD, RVAL_TYPE_SCALAR },
+    { NULL, RVAL_TYPE_NOPROMISEE }
+};
+
 #define EventTypeNew(name, type, args, new_state, destroy_state, check) \
     { name, type, args, new_state, destroy_state, check }
 #define EventTypeNewNull() EventTypeNew(NULL, RVAL_TYPE_NOPROMISEE, NULL, NULL, NULL, NULL)
@@ -169,6 +175,13 @@ static const EventArg NO_EXTRA_ARGS[] =
 static const EventType EVENT_TABLE[] =
 {
     FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
+    FileEventTypeNew(REACTOR_FILE_CREATED, FileWatcherCheckFileCreated),
+    FileEventTypeNew(REACTOR_FILE_MODIFIED, FileWatcherCheckFileModified),
+    FileEventTypeNew(REACTOR_FILE_CONTENT_MODIFIED, FileWatcherCheckFileContentModified),
+    FileEventTypeNew(REACTOR_FILE_PERMISSIONS_CHANGED, FileWatcherCheckFilePermissionsChanged),
+    FileEventTypeNew(REACTOR_FILE_OWNER_CHANGED, FileWatcherCheckFileOwnerChanged),
+    EventTypeNew(REACTOR_FILE_SIZE_EXCEEDS, RVAL_TYPE_SCALAR, FILE_SIZE_EXCEEDS_ARGS,
+                 FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds),
     EventTypeNewNull()
 };
 
@@ -505,7 +518,25 @@ static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *p
         return PROMISE_RESULT_SKIPPED;
     }
 
-    return RunThenBundles(ctx, pp);
+    PromiseResult result;
+    switch (event->check)
+    {
+    case WATCHER_CHECK_EVENT:
+        result = RunThenBundles(ctx, pp);
+        break;
+
+    case WATCHER_CHECK_ERROR:
+        /* Already logged as an error by the watcher, see HandleQueuedEvents() */
+        result = PROMISE_RESULT_FAIL;
+        break;
+
+    default:
+        ProgrammingError("Unexpected watcher check result %d for reactor events promise '%s'",
+                         (int) event->check, pp->promiser);
+    }
+
+    RecordEventsPromiseOutcome(ctx, pp, result);
+    return result;
 }
 
 void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise_hash, WatcherCheckResult check)

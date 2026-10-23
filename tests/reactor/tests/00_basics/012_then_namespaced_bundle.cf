@@ -1,0 +1,57 @@
+#######################################################
+#
+# Test bundles in another namespace in "then"
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        "test_ns:record_without_args",
+        test_ns:record_with_args(
+          "$(events_file)", "test_ns:record_with_args ran"
+        ),
+      };
+}
+
+body file control
+{
+  namespace => "test_ns";
+}
+
+bundle agent record_without_args
+{
+  vars:
+    "events_file" string => getenv("EVENTS_FILE", 999);
+
+  methods:
+    "any"
+      usebundle => default:record_event(
+        "$(events_file)", "test_ns:record_without_args ran"
+      );
+}
+
+bundle agent record_with_args(file, msg)
+{
+  methods:
+    "any" usebundle => default:record_event("$(file)", "$(msg)");
+}

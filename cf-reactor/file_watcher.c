@@ -173,3 +173,19 @@ WatcherCheckResult FileWatcherCheckFileDeleted(void *state)
     return FileWatcherRecordObservation(fws, exists, deleted, "deletion");
 }
 
+// =========== code for the file_created event ===========
+
+WatcherCheckResult FileWatcherCheckFileCreated(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    if (!FileLstat(fws, &exists, NULL))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const bool created = !fws->last_exists && exists;
+    return FileWatcherRecordObservation(fws, exists, created, "creation");
+}

@@ -169,6 +169,7 @@ static const EventArg NO_EXTRA_ARGS[] =
 static const EventType EVENT_TABLE[] =
 {
     FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
+    FileEventTypeNew(REACTOR_FILE_CREATED, FileWatcherCheckFileCreated),
     EventTypeNewNull()
 };
 

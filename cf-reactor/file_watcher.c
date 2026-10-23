@@ -60,6 +60,9 @@ typedef struct
             bool hashed;      /* Whether it was a regular file, that was hashed */
             unsigned char digest[EVP_MAX_MD_SIZE + 1];
         } content;
+
+        /* FileWatcherCheckFilePermissionsChanged() */
+        mode_t mode;
     } last;
 } FileWatcherState;
 
@@ -324,4 +327,28 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
     fws->last.content.hashed = hashed;
     memcpy(fws->last.content.digest, digest, sizeof(digest));
     return FileWatcherRecordObservation(fws, exists, modified, "content modification");
+}
+
+// =========== code for the file_permissions_changed event ===========
+
+WatcherCheckResult FileWatcherCheckFilePermissionsChanged(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const mode_t mode = exists ? sb.st_mode : 0;
+
+    /* Only changes of a file present at both checks */
+    const bool changed = fws->last_exists && exists &&
+        ((fws->last.mode & 07777) != (mode & 07777));
+
+    fws->last.mode = mode;
+    return FileWatcherRecordObservation(fws, exists, changed, "permissions change");
 }

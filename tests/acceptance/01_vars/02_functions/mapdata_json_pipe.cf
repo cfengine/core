@@ -19,7 +19,12 @@ bundle agent test
 
   vars:
     "items" data => '{"user":"stedolan","titles":["JQ Primer", "More JQ"]}';
-    "items_passthrough" data => mapdata("json_pipe", "$(G.cat)", items);
+
+    # G comes from dynamically loaded dcs.sub.cf, so $(G.cat) is unresolved
+    # during pre-evaluation and json_pipe would execute it literally
+    "items_passthrough"
+      data => mapdata("json_pipe", "$(G.cat)", items),
+      if => isvariable("G.cat");
 
     "items_jqinput"
       data => mapdata(

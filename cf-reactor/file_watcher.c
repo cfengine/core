@@ -26,14 +26,19 @@
 #include <watcher.h>
 #include <logging.h>
 #include <alloc.h>
+#include <file_lib.h>           /* safe_fopen() */
+#include <hash.h>               /* HashDigestFromId() */
 #include <conversion.h>         /* IntFromString() */
 #include <prototypes3.h>        /* cf_strtimestamp_local() */
 #include <sys/stat.h>
 #include <errno.h>
+#include <openssl/evp.h>
 
 /* Minimum time between two logs of a persisting failure to check the file,
  * since the file is checked on every poll */
 #define CHECK_ERROR_LOG_INTERVAL_SECS 60
+
+#define CONTENT_HASH_METHOD HASH_METHOD_SHA256
 
 typedef struct
 {
@@ -49,6 +54,13 @@ typedef struct
     {
         /* FileWatcherCheckFileModified() */
         struct timespec mtime;
+
+        /* FileWatcherCheckFileContentModified() */
+        struct
+        {
+            bool hashed;      /* Whether it was a regular file, that was hashed */
+            unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        } content;
 
         /* FileWatcherCheckFileSizeExceeds() */
         struct
@@ -254,6 +266,85 @@ WatcherCheckResult FileWatcherCheckFileModified(void *state)
 
     fws->last.mtime = mtime;
     return FileWatcherRecordObservation(fws, exists, modified, "modification");
+}
+
+// =========== code for the file_content_modified event ===========
+
+/* Hashes the content of the file into digest. Returns false and sets errno
+ * on failure. */
+static bool HashFileContent(const char *path, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+{
+    assert(path != NULL);
+
+    FILE *file = safe_fopen(path, "rb");
+    if (file == NULL)
+    {
+        return false;
+    }
+
+    EVP_MD_CTX *context = EVP_MD_CTX_create();
+    if (context == NULL ||
+        EVP_DigestInit_ex(context, HashDigestFromId(CONTENT_HASH_METHOD), NULL) != 1)
+    {
+        EVP_MD_CTX_destroy(context);
+        fclose(file);
+        errno = ENOMEM;
+        return false;
+    }
+
+    unsigned char buffer[4096];
+    size_t read_count;
+    while ((read_count = fread(buffer, 1, sizeof(buffer), file)) > 0)
+    {
+        EVP_DigestUpdate(context, buffer, read_count);
+    }
+
+    const bool success = !ferror(file);
+    const int read_errno = errno;
+    fclose(file);
+
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
+    EVP_DigestFinal_ex(context, digest, NULL);
+    EVP_MD_CTX_destroy(context);
+
+    errno = read_errno;
+    return success;
+}
+
+WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    bool hashed = false;
+    unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    if (exists && S_ISREG(sb.st_mode))
+    {
+        if (HashFileContent(fws->path, digest))
+        {
+            hashed = true;
+        }
+        else if (errno != ENOENT && errno != ENOTDIR) /* Not deleted since lstat() */
+        {
+            LogCheckError(fws, "hash", errno);
+            return WATCHER_CHECK_ERROR;
+        }
+    }
+
+    /* Only content changes of a regular file present at both checks */
+    const bool modified = fws->last.content.hashed && hashed &&
+        (memcmp(fws->last.content.digest, digest, sizeof(digest)) != 0);
+
+    fws->last.content.hashed = hashed;
+    memcpy(fws->last.content.digest, digest, sizeof(digest));
+    return FileWatcherRecordObservation(fws, exists, modified, "content modification");
 }
 
 // =========== code for the file_size_exceeds event ===========

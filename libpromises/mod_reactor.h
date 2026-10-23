@@ -30,6 +30,7 @@
 #define REACTOR_FILE_DELETED "file_deleted"
 #define REACTOR_FILE_CREATED "file_created"
 #define REACTOR_FILE_MODIFIED "file_modified"
+#define REACTOR_FILE_CONTENT_MODIFIED "file_content_modified"
 #define REACTOR_FILE_SIZE_EXCEEDS "file_size_exceeds"
 #define REACTOR_SIZE_THRESHOLD "size_threshold"
 

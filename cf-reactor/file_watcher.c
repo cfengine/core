@@ -47,6 +47,9 @@ typedef struct
     /* What the last successful check observed, depending on the event type */
     union
     {
+        /* FileWatcherCheckFileModified() */
+        struct timespec mtime;
+
         /* FileWatcherCheckFileSizeExceeds() */
         struct
         {
@@ -213,6 +216,44 @@ WatcherCheckResult FileWatcherCheckFileCreated(void *state)
 
     const bool created = !fws->last_exists && exists;
     return FileWatcherRecordObservation(fws, exists, created, "creation");
+}
+
+// =========== code for the file_modified event ===========
+
+static struct timespec StatMtime(const struct stat *sb)
+{
+    assert(sb != NULL);
+
+#if defined(HAVE_STRUCT_STAT_ST_MTIM)
+    return sb->st_mtim;
+#elif defined(HAVE_STRUCT_STAT_ST_MTIMESPEC)
+    return sb->st_mtimespec;
+#else
+    return (struct timespec) { .tv_sec = sb->st_mtime, .tv_nsec = 0 };
+#endif
+}
+
+WatcherCheckResult FileWatcherCheckFileModified(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const struct timespec mtime = exists ? StatMtime(&sb) : (struct timespec) { 0 };
+
+    /* Only modifications of a file present at both checks */
+    const bool modified = fws->last_exists && exists &&
+        ((fws->last.mtime.tv_sec != mtime.tv_sec) ||
+         (fws->last.mtime.tv_nsec != mtime.tv_nsec));
+
+    fws->last.mtime = mtime;
+    return FileWatcherRecordObservation(fws, exists, modified, "modification");
 }
 
 // =========== code for the file_size_exceeds event ===========

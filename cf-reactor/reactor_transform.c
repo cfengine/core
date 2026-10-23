@@ -176,6 +176,7 @@ static const EventType EVENT_TABLE[] =
 {
     FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
     FileEventTypeNew(REACTOR_FILE_CREATED, FileWatcherCheckFileCreated),
+    FileEventTypeNew(REACTOR_FILE_MODIFIED, FileWatcherCheckFileModified),
     EventTypeNew(REACTOR_FILE_SIZE_EXCEEDS, RVAL_TYPE_SCALAR, FILE_SIZE_EXCEEDS_ARGS,
                  FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds),
     EventTypeNewNull()

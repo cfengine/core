@@ -65,6 +65,13 @@ typedef struct
         /* FileWatcherCheckFilePermissionsChanged() */
         mode_t mode;
 
+        /* FileWatcherCheckFileOwnerChanged() */
+        struct
+        {
+            uid_t uid;
+            gid_t gid;
+        } owner;
+
         /* FileWatcherCheckFileSizeExceeds() */
         struct
         {
@@ -372,6 +379,32 @@ WatcherCheckResult FileWatcherCheckFilePermissionsChanged(void *state)
 
     fws->last.mode = mode;
     return FileWatcherRecordObservation(fws, exists, changed, "permissions change");
+}
+
+// =========== code for the file_owner_changed event ===========
+
+WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const uid_t uid = exists ? sb.st_uid : 0;
+    const gid_t gid = exists ? sb.st_gid : 0;
+
+    /* Only changes of a file present at both checks */
+    const bool changed = fws->last_exists && exists &&
+        ((fws->last.owner.uid != uid) || (fws->last.owner.gid != gid));
+
+    fws->last.owner.uid = uid;
+    fws->last.owner.gid = gid;
+    return FileWatcherRecordObservation(fws, exists, changed, "owner change");
 }
 
 // =========== code for the file_size_exceeds event ===========

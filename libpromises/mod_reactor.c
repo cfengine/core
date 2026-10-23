@@ -42,6 +42,7 @@ static const ConstraintSyntax when_constraints[] =
 
     /* Row models */
     ConstraintSyntaxNewString(REACTOR_FILE_DELETED, CF_ANYSTRING, "File to react for on deletion", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString(REACTOR_FILE_CREATED, CF_ANYSTRING, "File to react for on creation", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString(REACTOR_FILE_SIZE_EXCEEDS, CF_ANYSTRING, "File to react for when its size grows above '" REACTOR_SIZE_THRESHOLD "'", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt(REACTOR_SIZE_THRESHOLD, CF_VALRANGE, "Size in bytes above which '" REACTOR_FILE_SIZE_EXCEEDS "' fires", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("interval", REACTOR_INTERVAL_RANGE, "Seconds between two checks for the event", SYNTAX_STATUS_NORMAL),

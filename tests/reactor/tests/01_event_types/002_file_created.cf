@@ -1,0 +1,48 @@
+#######################################################
+#
+# Test what is a creation for a file_created event
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when created(file)
+{
+  file_created => "$(file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "file_a" string => getenv("FILE_A", 999);
+    "file_b" string => getenv("FILE_B", 999);
+    "file_c" string => getenv("FILE_C", 999);
+    "file_d" string => getenv("FILE_D", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    # a regular file
+    "$(promise_name)_A"
+      when => created("$(file_a)"),
+      then => record_event("$(events_file)", "A created");
+
+    # a directory
+    "$(promise_name)_B"
+      when => created("$(file_b)"),
+      then => record_event("$(events_file)", "B created");
+
+    # a dangling symlink
+    "$(promise_name)_C"
+      when => created("$(file_c)"),
+      then => record_event("$(events_file)", "C created");
+
+    # a file present from the start
+    "$(promise_name)_D"
+      when => created("$(file_d)"),
+      then => record_event("$(events_file)", "D created");
+}

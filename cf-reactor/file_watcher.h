@@ -34,5 +34,6 @@ void FileWatcherStateDestroy(void *state);
 
 WatcherCheckResult FileWatcherCheckFileDeleted(void *state);
 WatcherCheckResult FileWatcherCheckFileCreated(void *state);
+WatcherCheckResult FileWatcherCheckFileModified(void *state);
 
 #endif

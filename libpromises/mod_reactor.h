@@ -29,6 +29,7 @@
 
 #define REACTOR_FILE_DELETED "file_deleted"
 #define REACTOR_FILE_CREATED "file_created"
+#define REACTOR_FILE_MODIFIED "file_modified"
 
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"

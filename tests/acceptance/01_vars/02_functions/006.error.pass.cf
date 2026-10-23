@@ -2,6 +2,9 @@
 #
 # Test diskfree()
 #
+# This is an .error.pass.cf test, because diskfree() is called on the
+# non-existent path '/lkjqeroiu' on purpose and logs an error.
+#
 #######################################################
 body common control
 {

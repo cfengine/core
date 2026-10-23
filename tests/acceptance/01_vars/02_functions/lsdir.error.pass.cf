@@ -2,6 +2,9 @@
 #
 # Test lsdir()
 #
+# This is an .error.pass.cf test, because lsdir() is called on the
+# non-existent directory '$(G.testdir)/b' on purpose and logs an error.
+#
 #######################################################
 body common control
 {

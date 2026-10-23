@@ -2,6 +2,10 @@
 #
 # Test that 'classes' body works on 'vars' promises
 #
+# This is an .error.pass.cf test, because execresult() of the
+# non-existent '/nonexisting' fails on purpose and logs errors, to test
+# that repair_failed classes are set.
+#
 #######################################################
 body common control
 {

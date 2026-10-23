@@ -51,7 +51,8 @@ bundle agent test
     "cnt"
       int => readstringarrayidx(
         "ary", "$(G.testfile)", "NoComment", ":", 6, 1000
-      );
+      ),
+      if => fileexists("$(G.testfile)");
 
     "num" int => "6";
 }

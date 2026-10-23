@@ -1,3 +1,6 @@
+# This is an .error.pass.cf test, because mergedata() is given data
+# which is not a container on purpose and logs an error, the test checks
+# that the agent does not crash.
 body common control
 {
   inputs => { "../../default.sub.cf" };
@@ -8,10 +11,10 @@ bundle agent test
 {
   meta:
     "description" -> { "CFE-2704" }
-      string => "Test that attempting to merge incompatible data does not segfault. Variant 1.";
+      string => "Test that attempting to merge incompatible data does not segfault.";
 
   vars:
-    "data" data => '{"env":"test"}';
+    "data" data => "{\"env\":\"test\"}";
     "node" data => mergedata("[]", "data[env]");
 }
 

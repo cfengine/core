@@ -44,7 +44,8 @@ bundle agent test
 
   vars:
     "filtered"
-      data => classfilterdata(readjson("$(G.testfile).json"), "auto", "if");
+      data => classfilterdata(readjson("$(G.testfile).json"), "auto", "if"),
+      if => fileexists("$(G.testfile).json");
 }
 
 bundle agent check

@@ -42,7 +42,8 @@ bundle agent test
 {
   vars:
     "cnt"
-      int => readrealarray("ary", "$(G.testfile)", "NoComment", ":", 10, 1000);
+      int => readrealarray("ary", "$(G.testfile)", "NoComment", ":", 10, 1000),
+      if => fileexists("$(G.testfile)");
 
     "num" int => "3";
 }

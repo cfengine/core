@@ -50,6 +50,11 @@ bundle agent check
       ),
       with => regex_replace("$(this.promise_filename)", "\.cf$", ".sub.cf", "");
 
+    # Indent the sub-agent output in the DEBUG report, so that errors it
+    # prints are not mistaken for errors of the test by testall
+    "output_indented"
+      string => regex_replace("$(run[output])", "^", "  | ", "gm");
+
   classes:
     "ok"
       expression => regcmp(
@@ -65,7 +70,7 @@ bundle agent check
 
     DEBUG::
       "$(this.bundle): agent exited '$(run[exit_code])', output was:";
-      "$(run[output])";
+      "$(output_indented)";
 }
 
 bundle agent destroy

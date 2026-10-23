@@ -35,9 +35,9 @@ bundle agent test
 
     "five"
       string => ifelse(
-        "this is not true",
+        "this_is_not_true",
         "5 parameters broken",
-        "this is also not true",
+        "this_is_also_not_true",
         "5 parameters broken 2",
         "5 parameters OK"
       );

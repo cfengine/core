@@ -331,7 +331,9 @@ static inline void ManifestFileDetails(const char *path, struct stat *st, bool c
     }
 }
 
-bool ManifestFile(const char *path, bool chrooted)
+/* st_orig, if not NULL, is the original file, to report a change of type. */
+static bool ManifestFileInternal(const char *path, bool chrooted,
+                                 const struct stat *st_orig)
 {
     PrintDelimiter();
     const char *real_path = path;
@@ -348,7 +350,17 @@ bool ManifestFile(const char *path, bool chrooted)
         return true;
     }
 
-    printf("'%s' is a %s\n", path, GetFileTypeDescription(st.st_mode));
+    if ((st_orig != NULL) &&
+        ((st_orig->st_mode & S_IFMT) != (st.st_mode & S_IFMT)))
+    {
+        printf("'%s' changed type from %s to %s\n", path,
+               GetFileTypeDescription(st_orig->st_mode),
+               GetFileTypeDescription(st.st_mode));
+    }
+    else
+    {
+        printf("'%s' is a %s\n", path, GetFileTypeDescription(st.st_mode));
+    }
     ManifestStatInfo(&st);
     ManifestFileDetails(real_path, &st, chrooted);
 
@@ -360,6 +372,11 @@ bool ManifestRename(const char *orig_name, const char *new_name)
     PrintDelimiter();
     printf("'%s' is the new name of '%s'\n", new_name, orig_name);
     return true;
+}
+
+bool ManifestFile(const char *path, bool chrooted)
+{
+    return ManifestFileInternal(path, chrooted, NULL);
 }
 
 static bool RunDiff(const char *path1, const char *path2)
@@ -490,10 +507,7 @@ static void DiffStatInfo(const char *path, const struct stat *st_orig, const str
 
 static bool DiffFile(const char *path)
 {
-    const char *chrooted_path = ToChangesChroot(path);
-
     struct stat st_orig;
-    struct stat st_chrooted;
     if (lstat(path, &st_orig) == -1)
     {
         /* Original final doesn't exist, must be a new file in the changes
@@ -502,38 +516,19 @@ static bool DiffFile(const char *path)
         return true;
     }
 
-    PrintDelimiter();
-    if (lstat(chrooted_path, &st_chrooted) == -1)
+    const char *chrooted_path = ToChangesChroot(path);
+    struct stat st_chrooted;
+    if ((lstat(chrooted_path, &st_chrooted) == 0) &&
+        ((st_orig.st_mode & S_IFMT) == (st_chrooted.st_mode & S_IFMT)) &&
+        (S_ISREG(st_chrooted.st_mode) || S_ISDIR(st_chrooted.st_mode)))
     {
-        /* TODO: should this do print info about the original file? */
-        printf("'%s' no longer exists\n", path);
-        return true;
+        PrintDelimiter();
+        DiffStatInfo(path, &st_orig, &st_chrooted);
+        return RunDiff(path, chrooted_path);
     }
 
-    if ((st_orig.st_mode & S_IFMT) != (st_chrooted.st_mode & S_IFMT))
-    {
-        /* File type changed. */
-        printf("'%s' changed type from %s to %s\n", path,
-               GetFileTypeDescription(st_orig.st_mode),
-               GetFileTypeDescription(st_chrooted.st_mode));
-        ManifestStatInfo(&st_chrooted);
-        ManifestFileDetails(path, &st_chrooted, true);
-        return true;
-    }
-    else
-    {
-        switch (st_chrooted.st_mode & S_IFMT) {
-        case S_IFREG:
-        case S_IFDIR:
-            DiffStatInfo(path, &st_orig, &st_chrooted);
-            return RunDiff(path, chrooted_path);
-        default:
-            printf("'%s' is a %s\n", path, GetFileTypeDescription(st_chrooted.st_mode));
-            ManifestStatInfo(&st_chrooted);
-            ManifestFileDetails(path, &st_chrooted, true);
-            return true;
-        }
-    }
+    /* Gone, changed type, or not something 'diff' can compare. */
+    return ManifestFileInternal(path, true, &st_orig);
 }
 
 bool ManifestRenamedFiles()

@@ -1872,6 +1872,44 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
 
 /*********************************************************************/
 
+static FnCallResult FnCallIfThen(EvalContext *ctx,
+                                 ARG_UNUSED const Policy *policy,
+                                 const FnCall *fp,
+                                 const Rlist *finalargs)
+{
+    assert(fp != NULL);
+
+    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
+    for (const Rlist *arg = finalargs; arg != NULL; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(fp->name, arg->val, CF_DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "Function '%s', %s", fp->name, SyntaxTypeMatchToString(err));
+        }
+    }
+
+    /* Unlike ifelse(), there is no fall-through value. */
+    const size_t argcount = RlistLen(finalargs);
+    if ((argcount == 0) || ((argcount % 2) != 0))
+    {
+        FatalError(ctx, "Function '%s' requires pairs of class expressions and values", fp->name);
+    }
+
+    for (const Rlist *arg = finalargs; arg != NULL; arg = arg->next->next)
+    {
+        if (IsDefinedClass(ctx, RlistScalarValue(arg)))
+        {
+            return FnReturn(RlistScalarValue(arg->next));
+        }
+    }
+
+    /* None is true, leave the variable undefined. */
+    return FnFailure();
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     assert(finalargs != NULL);
@@ -11071,6 +11109,13 @@ static const FnCallArg IFELSE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg IFTHEN_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Class expression"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Value if the preceding class expression is true"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg INT_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Numeric string to convert to integer"},
@@ -11981,6 +12026,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("ifelse", CF_DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(1, -1)),
+    FnCallTypeNew("ifthen", CF_DATA_TYPE_STRING, IFTHEN_ARGS, &FnCallIfThen, "Return the value of the first true class expression, or nothing if none is true",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(2, -1)),
     FnCallTypeNew("int", CF_DATA_TYPE_INT, INT_ARGS, &FnCallInt, "Convert numeric string to int",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1 that are also in list or array or data container arg2",

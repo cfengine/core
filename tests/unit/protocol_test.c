@@ -5,8 +5,35 @@
 #include <server.h>
 #include <server_common.h>
 #include <server_classic.h>
+#include <dbm_api.h>
+#include <known_dirs.h>
+#include <misc_lib.h>                                          /* xsnprintf */
 
 #include <server_classic.c>                            /* GetCommandClassic */
+
+char CFWORKDIR[CF_BUFSIZE];
+
+void tests_setup(void)
+{
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/CFENGINE_protocol_test.XXXXXX";
+    char *workdir = strchr(env, '=');
+    assert(workdir && workdir[1] == '/');
+    workdir++;
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+
+    mkdir(GetStateDir(), 0766);
+}
+
+void tests_teardown(void)
+{
+    char cmd[CF_BUFSIZE];
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
+}
 
 
 /*
@@ -450,14 +477,59 @@ static void test_user_name(void)
     assert_true(IsUserNameValid(valid_user_name));
 }
 
+static void test_context_access_control_per_class(void)
+{
+    /* Two persistent classes, only "zz_allowed" is admitted to the client. */
+    {
+        CF_DB *dbp;
+        PersistentClassInfo info = { .expires = UINT_MAX,
+                                     .policy = CONTEXT_STATE_POLICY_PRESERVE };
+        assert_true(OpenDB(&dbp, dbid_state));
+        assert_true(WriteDB(dbp, "aa_denied", &info, sizeof(info)));
+        assert_true(WriteDB(dbp, "zz_allowed", &info, sizeof(info)));
+        CloseDB(dbp);
+    }
+
+    Auth *ap = xcalloc(1, sizeof(Auth));
+    ap->path = xstrdup("zz_allowed");
+    ap->classpattern = true;
+    PrependItem(&ap->accesslist, "127.0.0.1", NULL);
+    SERVER_ACCESS.varadmit = ap;
+
+    ServerConnectionState conn = { 0 };
+    strlcpy(conn.ipaddr, "127.0.0.1", sizeof(conn.ipaddr));
+    strlcpy(conn.hostname, "client.example.com", sizeof(conn.hostname));
+
+    EvalContext *ctx = EvalContextNew();
+    char request[] = "CONTEXT .*";
+    Item *classes = ContextAccessControl(ctx, request, &conn, false);
+
+    assert_true(IsItemIn(classes, "zz_allowed"));
+    assert_false(IsItemIn(classes, "aa_denied"));
+
+    DeleteItemList(classes);
+    EvalContextDestroy(ctx);
+    SERVER_ACCESS.varadmit = NULL;
+    DeleteItemList(ap->accesslist);
+    free(ap->path);
+    free(ap);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
+    tests_setup();
+
     const UnitTest tests[] =
     {
           unit_test(test_command_parser),
-          unit_test(test_user_name)
+          unit_test(test_user_name),
+          unit_test(test_context_access_control_per_class)
     };
 
-    return run_tests(tests);
+    int ret = run_tests(tests);
+
+    tests_teardown();
+
+    return ret;
 }

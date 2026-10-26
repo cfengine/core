@@ -72,6 +72,15 @@ int NovaWin_GetEnv(char *varName, char *varContents, int varContentsSz);
 
 /* win_user.c */
 
+DWORD NovaWin_LookupAccountName(const char *name, SID *sid, DWORD sid_sz,
+                                SID_NAME_USE *type);
+
+/* True if a NovaWin_LookupAccountName() error means the name does not exist */
+static inline bool NovaWin_IsAccountNotFound(DWORD error)
+{
+    return error == ERROR_NONE_MAPPED || error == ERROR_NO_SUCH_USER;
+}
+
 int NovaWin_UserNameToSid(char *userName, SID *sid, DWORD sidSz, int shouldExist);
 int NovaWin_GroupNameToSid(char *groupName, SID *sid, DWORD sidSz, int shouldExist);
 int NovaWin_NameToSid(char *name, SID *sid, DWORD sidSz);

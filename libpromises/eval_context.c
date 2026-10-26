@@ -1746,6 +1746,16 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
     return pexp;
 }
 
+void EvalContextStackPushExpandedPromiseIterationFrame(EvalContext *ctx, Promise *pexp)
+{
+    assert(pexp != NULL);
+    assert(LastStackFrame(ctx, 0) != NULL);
+    assert(LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, NULL));
+    LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
+}
+
 void EvalContextStackPopFrame(EvalContext *ctx)
 {
     assert(ctx != NULL);

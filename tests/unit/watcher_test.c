@@ -12,9 +12,9 @@
 #include <fcntl.h>              /* open() */
 
 /* The registry only hashes the expanded promise it is given (its promiser
- * here, as it has no constraints, comment or parent) and hands the
- * unexpanded one (org_pp) back to the WatcherEventFn, so minimal promises
- * are enough. */
+ * here, as it has no constraints, comment or parent) and hands a copy of it
+ * back to the WatcherEventFn, so minimal promises are enough. Their org_pp
+ * tells apart the identical promises of different policies. */
 static const Promise unexpanded_promise;
 static const Promise expanded_promise = {
     .promiser = "test-event",
@@ -70,7 +70,7 @@ static bool WaitForQueuedEvent(int fd, int tenths)
 #define MAX_RECORDED_EVENTS 8
 
 static int handled_event_count = 0;
-static const Promise *last_event_promise = NULL;
+static const Promise *last_event_org_promise = NULL;
 static char last_event_promise_hash[CF_HOSTKEY_STRING_SIZE];
 static WatcherCheckResult last_event_check = WATCHER_CHECK_NO_EVENT;
 
@@ -78,15 +78,18 @@ static WatcherCheckResult last_event_check = WATCHER_CHECK_NO_EVENT;
 static char event_promise_hashes[MAX_RECORDED_EVENTS][CF_HOSTKEY_STRING_SIZE];
 
 static void RecordEvent(ARG_UNUSED EvalContext *ctx, const Promise *pp,
-                        const char *promise_hash, WatcherCheckResult check)
+                        WatcherCheckResult check)
 {
+    char promise_hash[CF_HOSTKEY_STRING_SIZE];
+    WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
+
     if (handled_event_count < MAX_RECORDED_EVENTS)
     {
         strlcpy(event_promise_hashes[handled_event_count], promise_hash,
                 sizeof(event_promise_hashes[handled_event_count]));
     }
     handled_event_count++;
-    last_event_promise = pp;
+    last_event_org_promise = pp->org_pp;
     strlcpy(last_event_promise_hash, promise_hash, sizeof(last_event_promise_hash));
     last_event_check = check;
 }
@@ -96,7 +99,7 @@ static void AssertLastEventFor(const Promise *pp)
 {
     char promise_hash[CF_HOSTKEY_STRING_SIZE];
     WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
-    assert_true(last_event_promise == pp->org_pp);
+    assert_true(last_event_org_promise == pp->org_pp);
     assert_string_equal(last_event_promise_hash, promise_hash);
 }
 
@@ -120,7 +123,7 @@ static int RecordedEventCountFor(const Promise *pp)
 static void ResetRecordedEvents(void)
 {
     handled_event_count = 0;
-    last_event_promise = NULL;
+    last_event_org_promise = NULL;
     last_event_promise_hash[0] = '\0';
     last_event_check = WATCHER_CHECK_NO_EVENT;
     for (int i = 0; i < MAX_RECORDED_EVENTS; i++)
@@ -274,9 +277,8 @@ static void test_event_watcher_pause_handles_queued_events(void)
      * second), without handling it */
     assert_true(WaitForQueuedEvent(fd, 50));
 
-    /* Pausing handles the queued event, with the unexpanded promise and the
-     * promise hash of its watcher, so that the watchers can be set aside without
-     * losing it */
+    /* Pausing handles the queued event, with the promise of its watcher, so
+     * that the watchers can be set aside without losing it */
     ResetRecordedEvents();
     EventWatcherPause(NULL, RecordEvent);
     assert_int_equal(handled_event_count, 1);

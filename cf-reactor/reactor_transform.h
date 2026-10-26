@@ -47,13 +47,12 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
  * outcome of the bundle as the outcome of the events promise. If the watcher
  * failed to check for its event, record a failure instead.
  *
- * @param pp the unexpanded events promise the watcher was registered for
- * @param promise_hash the hash of the expanded promise the watcher was
- *                     registered with, selecting the iteration of the events
- *                     promise to keep
+ * @param pp the expanded events promise the watcher was registered with,
+ *           kept as is: its class guard, if/unless and functions are not
+ *           evaluated again
  * @param check whether the event happened or the watcher failed to check for
  *              it (see WatcherEventFn)
  */
-void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise_hash, WatcherCheckResult check);
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, WatcherCheckResult check);
 
 #endif

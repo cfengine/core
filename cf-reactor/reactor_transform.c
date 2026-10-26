@@ -483,30 +483,14 @@ static PromiseResult RunThenBundles(EvalContext *ctx, const Promise *pp)
     return result;
 }
 
-typedef struct
-{
-    const char *promise_hash;
-    WatcherCheckResult check;
-} ReactorEventParam;
-
-/* Promise actuator for an events promise whose watcher fired, or failed to
- * check for its event. Only acts on the iteration the watcher was registered
- * for. */
-static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *pp, void *param)
+/* Keeps the iteration of an events promise whose watcher fired, or failed to
+ * check for its event. */
+static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *pp, WatcherCheckResult check)
 {
     assert(pp != NULL);
-    assert(param != NULL);
-    const ReactorEventParam *event = param;
-
-    char promise_hash[CF_HOSTKEY_STRING_SIZE];
-    WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
-    if (!StringEqual(promise_hash, event->promise_hash))
-    {
-        return PROMISE_RESULT_SKIPPED;
-    }
 
     PromiseResult result;
-    switch (event->check)
+    switch (check)
     {
     case WATCHER_CHECK_EVENT:
         result = RunThenBundles(ctx, pp);
@@ -519,17 +503,16 @@ static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *p
 
     default:
         ProgrammingError("Unexpected watcher check result %d for reactor events promise '%s'",
-                         (int) event->check, pp->promiser);
+                         (int) check, pp->promiser);
     }
 
     RecordEventsPromiseOutcome(ctx, pp, result);
     return result;
 }
 
-void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise_hash, WatcherCheckResult check)
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, WatcherCheckResult check)
 {
     assert(pp != NULL);
-    assert(promise_hash != NULL);
 
     /* cf-reactor keeps the same EvalContext across events. Like an agent run,
      * the bundle runs see the time classes of now and the persistent classes
@@ -541,11 +524,18 @@ void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise
     VariableTable *variables = NULL;
     EvalContextSnapshotTake(ctx, &classes, &variables);
 
-    ReactorEventParam event = { .promise_hash = promise_hash, .check = check };
-
+    /* pp is the iteration the watcher was registered with, expanded when its
+     * bundle was evaluated. It is kept as is rather than expanded again, as
+     * the bundle-local classes its class guard and if/unless were evaluated
+     * with are gone, and its functions could return something else. */
     EvalContextStackPushBundleFrame(ctx, PromiseGetBundle(pp), NULL, false, NULL);
     EvalContextStackPushBundleSectionFrame(ctx, pp->parent_section);
-    ExpandPromise(ctx, pp, KeepEventsPromiseOnEvent, &event);
+    EvalContextStackPushPromiseFrame(ctx, pp);
+    Promise *pexp = PromiseCopy(pp);
+    EvalContextStackPushExpandedPromiseIterationFrame(ctx, pexp);
+    KeepEventsPromiseOnEvent(ctx, pexp, check);
+    EvalContextStackPopFrame(ctx); /* promise iteration, destroys pexp */
+    EvalContextStackPopFrame(ctx); /* promise */
     EvalContextStackPopFrame(ctx); /* bundle section */
     EvalContextStackPopFrame(ctx); /* bundle */
 

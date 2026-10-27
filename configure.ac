@@ -2032,6 +2032,7 @@ AC_CONFIG_FILES([Makefile
     tests/acceptance/25_cf-execd/Makefile
     tests/unit/Makefile
     tests/load/Makefile
+    tests/reactor/Makefile
     tests/static-check/Makefile
     tests/valgrind-check/Makefile
     tests/asan-check/Makefile])

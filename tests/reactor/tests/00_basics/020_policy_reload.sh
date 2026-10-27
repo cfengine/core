@@ -30,7 +30,7 @@ reload_and_wait_for_paused_watchers() {
     kill -HUP "$reactor_pid"
     wait_for_log "Rereading policy file"
 
-    if ! timeout 60 sh -c 'until [ -f "$1" ]; do sleep 0.1; done' _ "$RELOAD_MARKER"
+    if ! wait_until [ -f "$RELOAD_MARKER" ]
     then
         echo "Timed out waiting for the policy to be reloaded, reactor log:" >&2
         cat "$LOG" >&2

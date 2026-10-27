@@ -42,6 +42,7 @@
 #include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE, REACTOR_FILE_DELETED
 #include <syntax.h>              // CheckConstraintTypeMatch(), PromiseTypeSyntaxGet(), BodySyntaxGetConstraintSyntax()
 #include <file_watcher.h>
+#include <user_watcher.h>
 #include <conversion.h>
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
@@ -166,9 +167,15 @@ static const EventArg NO_EXTRA_ARGS[] =
 #define FileEventTypeNew(name, check) \
     EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, FileWatcherStateNew, FileWatcherStateDestroy, check)
 
+/* A user event, about the user with the name of its constraint */
+#define UserEventTypeNew(name, check) \
+    EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, UserWatcherStateNew, UserWatcherStateDestroy, check)
+
 static const EventType EVENT_TABLE[] =
 {
     FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
+    UserEventTypeNew(REACTOR_USER_ADDED, UserWatcherCheckUserAdded),
+    UserEventTypeNew(REACTOR_USER_REMOVED, UserWatcherCheckUserRemoved),
     EventTypeNewNull()
 };
 

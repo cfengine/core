@@ -1,0 +1,60 @@
+body common control
+{
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testroot)/target-old" create => "true";
+    "$(G.testroot)/target-new" create => "true";
+
+    "$(G.testroot)/wrong-target"
+      link_from => linkfrom("$(G.testroot)/target-old", "symlink");
+
+    "$(G.testroot)/obstruction"
+      create => "true",
+      content => "I am in the way";
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "(solaris|aix|hpux|windows)",
+      # ENT-6540 exotics fail to delete chroot
+      # ENT-10254 tests fail on Windows due to CRLF
+      meta => { "ENT-6540", "ENT-10254" };
+
+    "description" -> { "ENT-14713" }
+      string => "Test that --simulate=diff shows the new target of a symlink that replaced a wrong link or an obstructing file";
+}
+
+bundle agent check
+{
+  vars:
+    "command"
+      string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub --simulate=diff";
+
+    "new_target" string => "\QTarget: '$(G.testroot)/target-new'\E";
+
+    # Bound the gap to one file's section (6 output lines today, +1 slack)
+    "same_section" string => "\n(?:[^\n]*\n){0,7}";
+
+    "wanted"
+      string => concat(
+        ".*\Q'$(G.testroot)/wrong-target' is a symbolic link\E$(same_section)$(new_target)",
+        ".*\Q'$(G.testroot)/obstruction' changed type from regular file to symbolic link\E$(same_section)$(new_target).*"
+      );
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(
+        $(wanted),
+        ".*(Invalid target|Target: '[^/]).*",
+        $(command),
+        $(this.promise_filename)
+      );
+}

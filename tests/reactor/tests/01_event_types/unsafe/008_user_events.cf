@@ -1,0 +1,38 @@
+#######################################################
+#
+# Test the user_added and user_removed events
+#
+#######################################################
+body common control
+{
+  inputs => { "../../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when added(user)
+{
+  user_added => "$(user)";
+}
+
+body when removed(user)
+{
+  user_removed => "$(user)";
+}
+
+bundle reactor test
+{
+  vars:
+    "test_user" string => getenv("TEST_USER", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)_added"
+      when => added("$(test_user)"),
+      then => record_event("$(events_file)", "added");
+
+    "$(promise_name)_removed"
+      when => removed("$(test_user)"),
+      then => record_event("$(events_file)", "removed");
+}

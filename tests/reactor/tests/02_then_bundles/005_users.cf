@@ -5,7 +5,7 @@
 #######################################################
 body common control
 {
-  inputs => { "../../../lib.cf" };
+  inputs => { "../../lib.cf" };
   bundlesequence => { "test" };
   version => "1.0";
 }

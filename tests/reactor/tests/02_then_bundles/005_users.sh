@@ -4,7 +4,7 @@
 
 set -ex
 
-. "$(dirname "$0")/../../../lib.sh"
+. "$(dirname "$0")/../../lib.sh"
 
 POLICY_FILE="$1"
 

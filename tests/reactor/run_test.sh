@@ -7,6 +7,9 @@
 # skipped, anything else if it failed. Used as the test driver by "make check"
 # and by run.sh.
 #
+# The output of the test, with its set -x trace, is only printed if it didn't
+# pass, so that the output of the tests that pass doesn't bury it.
+#
 # Tests in an unsafe/ directory modify the system they are running on, so they
 # are skipped unless UNSAFE_TESTS=1.
 #
@@ -89,4 +92,9 @@ LOG="$WORKDIR/reactor.log"
 PROMISE_NAME=$(basename "$t" .sh)
 export WORKDIR CFENGINE_TEST_OVERRIDE_WORKDIR LOG PROMISE_NAME
 
-sh "$t" "$policy"
+sh "$t" "$policy" > "$WORKDIR/test.log" 2>&1
+result=$?
+if [ "$result" -ne 0 ]; then
+    cat "$WORKDIR/test.log"
+fi
+exit "$result"

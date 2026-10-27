@@ -1,0 +1,45 @@
+#######################################################
+#
+# Test that persistent classes remain defined between "then" bundle runs
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+body classes if_ok(class)
+{
+  promise_kept => { "$(class)" };
+  promise_repaired => { "$(class)" };
+  persist_time => "1";
+}
+
+bundle agent run_if(b, file, msg)
+{
+  methods:
+    !has_run::
+      "any"
+        usebundle => $(b)("$(file)", "$(msg)"),
+        classes => if_ok("has_run");
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => run_if("record_event", "$(events_file)", "$(test) was deleted");
+}

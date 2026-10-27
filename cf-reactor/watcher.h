@@ -54,10 +54,8 @@ typedef struct
  * @brief Called on the main thread for every event of a registered watcher,
  *        and whenever a watcher starts failing to check for its event.
  *
- * @param pp the (unexpanded) events promise the watcher was registered for
- * @param promise_hash the hash of the expanded promise the watcher was
- *                     registered with (see WatcherPromiseHash()), selecting
- *                     the iteration of the events promise
+ * @param pp the expanded events promise the watcher was registered with (a
+ *           copy of it, owned by the watcher)
  * @param check WATCHER_CHECK_EVENT if the event happened, or
  *              WATCHER_CHECK_ERROR if the watcher failed to check for it
  *              (only reported once until a check succeeds again)
@@ -65,7 +63,7 @@ typedef struct
  *       EventWatcherPause(), as the events of the watchers are being
  *       handled.
  */
-typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, const char *promise_hash, WatcherCheckResult check);
+typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, WatcherCheckResult check);
 
 /**
  * @brief Hash of an expanded events promise, identifying its watcher.
@@ -92,10 +90,10 @@ void WatcherRegistryFinalize(void);
  * reference for the next checks, so that only what happens from now on
  * fires. If that check fails, the watcher is not registered.
  *
- * @param pp the expanded events promise. Its hash and its unexpanded
- *           promise (pp->org_pp) are passed back to the WatcherEventFn on
- *           event. The unexpanded promise is not owned, so the policy
- *           holding it must not be destroyed before EventWatcherPause().
+ * @param pp the expanded events promise. The watcher keeps a copy of it
+ *           (see PromiseCopy()), passed back to the WatcherEventFn on event.
+ *           The copy refers to the policy holding pp, which must not be
+ *           destroyed before EventWatcherPause().
  * @param opt what the watcher checks for, see WatcherOptions. opt->state is
  *            owned by the registry, which destroys it right away if not
  *            used, so it must not be used by the caller afterwards.
@@ -132,7 +130,8 @@ void EventWatcherResume(void);
  * immediately. Without watchers, the watcher thread sleeps until woken up, so
  * this must be called after registering watchers outside of an
  * EventWatcherPause()/EventWatcherResume() pair (which wakes it up itself),
- * i.e. after the watchers of the initial policy.
+ * i.e. after the watchers of the initial policy. Logs the number of
+ * registered watchers.
  */
 void EventWatcherWakeUp(void);
 void EventWatcherFinalize(void);

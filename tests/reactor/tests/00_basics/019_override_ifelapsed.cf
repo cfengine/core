@@ -1,0 +1,52 @@
+#######################################################
+#
+# Test that the ifelapsed of 0 that cf-reactor uses by default can be
+# overridden by the promises of the "then" bundles
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+body action if_elapsed(minutes)
+{
+  ifelapsed => "$(minutes)";
+}
+
+bundle agent record(file_default, file_ifelapsed, msg)
+{
+  reports:
+    # Must come before the report below: once that one is written, this one
+    # has already either been written or skipped because of its ifelapsed
+    "$(msg)"
+      report_to_file => "$(file_ifelapsed)",
+      action => if_elapsed("60");
+
+    "$(msg)" report_to_file => "$(file_default)";
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file_default" string => getenv("EVENTS_FILE_DEFAULT", 999);
+    "events_file_ifelapsed" string => getenv("EVENTS_FILE_IFELAPSED", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => record(
+        "$(events_file_default)",
+        "$(events_file_ifelapsed)",
+        "$(test) was deleted"
+      );
+}

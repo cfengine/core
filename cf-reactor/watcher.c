@@ -51,9 +51,8 @@ typedef struct
     WatcherCheckFn check_callback;
     WatcherStateDestroyFn destroy_state;
     void *state;
-    const Promise *promise; // the unexpanded events promise, owned by the policy
-    char *promise_hash; // hash of the expanded events promise, see WatcherPromiseHash()
-    char *promiser; // expanded promiser of the iteration of `promise`
+    Promise *promise; // copy of the expanded events promise, see PromiseCopy()
+    char *promise_hash; // hash of `promise`, see WatcherPromiseHash()
     time_t poll_interval_secs;
     time_t next_due;
     WatcherCheckResult last_check; // only touched by the watcher thread
@@ -174,8 +173,7 @@ bool WatcherRegister(const Promise *pp, WatcherOptions *opt)
 
     Watcher *w = xmalloc(sizeof(Watcher));
     w->promise_hash = xstrdup(promise_hash);
-    w->promise = pp->org_pp;
-    w->promiser = xstrdup(pp->promiser);
+    w->promise = PromiseCopy(pp);
     w->poll_interval_secs = opt->interval;
     w->next_due = 0; /* due immediately on the watcher thread's first pass */
     w->last_check = WATCHER_CHECK_NO_EVENT;
@@ -198,8 +196,8 @@ static void WatcherDestroy(void *item)
     {
         w->destroy_state(w->state);
     }
+    PromiseDestroy(w->promise);
     free(w->promise_hash);
-    free(w->promiser);
     free(w);
 }
 
@@ -299,15 +297,16 @@ bool EventWatcherInitialize(int *fd)
 
     *fd = WakeupChannelReadFd(&wakeup_channel);
 
-    Log(LOG_LEVEL_VERBOSE, "Started cf-reactor event watcher with %zu watcher(s)", MapSize(watchers));
+    /* No watchers yet, they are registered from the policy afterwards and
+     * counted by EventWatcherWakeUp() */
+    Log(LOG_LEVEL_VERBOSE, "Started cf-reactor event watcher");
     return true;
 }
 
 /* Watchers are only destroyed by the main thread (EventWatcherResume()),
  * which is also the one handling events, and never while events are queued,
  * so the watchers of queued events can be used without holding
- * watchers_mutex. Their promiser and promise are never modified by the
- * watcher thread. */
+ * watchers_mutex. Their promise is never modified by the watcher thread. */
 static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
 {
     assert(on_event != NULL);
@@ -319,13 +318,13 @@ static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
         const Watcher *w = event->watcher;
         if (event->check == WATCHER_CHECK_ERROR)
         {
-            Log(LOG_LEVEL_ERR, "Reactor watcher '%s' failed to check for its event", w->promiser);
+            Log(LOG_LEVEL_ERR, "Reactor watcher '%s' failed to check for its event", w->promise->promiser);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired", w->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired", w->promise->promiser);
         }
-        on_event(ctx, w->promise, w->promise_hash, event->check);
+        on_event(ctx, w->promise, event->check);
         free(event);
     }
 }
@@ -395,6 +394,12 @@ void EventWatcherResume(void)
 
 void EventWatcherWakeUp(void)
 {
+    /* Called once the watchers of the (re-)read policy are registered */
+    ThreadLock(&watchers_mutex);
+    const size_t count = MapSize(watchers);
+    ThreadUnlock(&watchers_mutex);
+    Log(LOG_LEVEL_VERBOSE, "cf-reactor event watcher has %zu watcher(s)", count);
+
     if (watcher_thread != NULL)
     {
         StoppableThreadWake(watcher_thread);

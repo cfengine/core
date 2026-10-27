@@ -1,0 +1,60 @@
+#######################################################
+#
+# Test that classes and vars are reset between "then" bundle runs
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle agent run_A(b, file, msg, marker)
+{
+  classes:
+    "marker" expression => fileexists("$(marker)");
+
+  methods:
+    !marker::
+      "any" usebundle => $(b)("$(file)", "$(msg)");
+}
+
+bundle agent run_B(b, file, value_file)
+{
+  vars:
+    # changed by the test between the events
+    "value" string => readfile("$(value_file)");
+
+  methods:
+    "any" usebundle => $(b)("$(file)", "$(value)");
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file_A" string => getenv("EVENTS_FILE_A", 999);
+    "events_file_B" string => getenv("EVENTS_FILE_B", 999);
+    "marker" string => getenv("MARKER_FILE", 999);
+    "value_file" string => getenv("VALUE_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        run_A(
+          "record_event",
+          "$(events_file_A)",
+          "$(test) was deleted",
+          "$(marker)"
+        ),
+        run_B("record_event", "$(events_file_B)", "$(value_file)"),
+      };
+}

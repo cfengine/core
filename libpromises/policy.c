@@ -1544,6 +1544,37 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     return cp;
 }
 
+Promise *PromiseCopy(const Promise *pp)
+{
+    assert(pp != NULL);
+
+    Promise *copy = xcalloc(1, sizeof(Promise));
+    copy->parent_section = pp->parent_section;
+    copy->classes = SafeStringDuplicate(pp->classes);
+    copy->comment = SafeStringDuplicate(pp->comment);
+    copy->promiser = SafeStringDuplicate(pp->promiser);
+    copy->promisee = (pp->promisee.item != NULL) ?
+        RvalCopy(pp->promisee) : (Rval) { NULL, RVAL_TYPE_NOPROMISEE };
+    copy->org_pp = pp->org_pp;
+    copy->offset = pp->offset;
+
+    if (pp->conlist != NULL)
+    {
+        copy->conlist = SeqNew(SeqLength(pp->conlist), ConstraintDestroy);
+        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+        {
+            const Constraint *cp = SeqAt(pp->conlist, i);
+            Constraint *cp_copy = ConstraintNew(cp->lval, RvalCopy(cp->rval), cp->classes, cp->references_body);
+            cp_copy->type = POLICY_ELEMENT_TYPE_PROMISE;
+            cp_copy->parent.promise = copy;
+            cp_copy->offset = cp->offset;
+            SeqAppend(copy->conlist, cp_copy);
+        }
+    }
+
+    return copy;
+}
+
 Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bool references_body)
 {
     Constraint *cp = ConstraintNew(lval, rval, "any", references_body);

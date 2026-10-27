@@ -206,6 +206,14 @@ void BundleSectionDestroy(BundleSection *section);
 
 void PromiseDestroy(Promise *pp);
 
+/**
+ * @brief Deep copy of a promise and its constraints, e.g. of an expanded
+ *        promise to keep after its iteration. The copy refers to the same
+ *        bundle section and unexpanded promise, so it must not be used once
+ *        the policy is destroyed.
+ */
+Promise *PromiseCopy(const Promise *pp);
+
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, bool references_body);
 
 const char *PromiseGetNamespace(const Promise *pp);

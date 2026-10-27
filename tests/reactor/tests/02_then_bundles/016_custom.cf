@@ -1,0 +1,47 @@
+#######################################################
+#
+# Test custom promises in a "then" bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+promise agent reactor_test
+{
+  interpreter => "/bin/sh";
+  path => "$(sys.workdir)/modules/promises/reactor_test.sh";
+}
+
+bundle agent run_custom(output)
+{
+  reactor_test:
+    "$(output)"
+      message => "ran",
+      classes => then_outcome("custom");
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "output" string => getenv("OUTPUT_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        run_custom("$(output)"),
+        record_then_outcome("$(events_file)", "custom"),
+      };
+}

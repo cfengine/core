@@ -1,0 +1,44 @@
+#######################################################
+#
+# Test meta promises in a "then" bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+# Not named run_meta: the meta variables of a bundle whose name ends with
+# "_meta" are in the scope of the bundle itself, not in <bundle>_meta
+bundle agent run_meta_promises(events_file, value_file)
+{
+  meta:
+    "value" string => readfile("$(value_file)");
+
+  methods:
+    "any"
+      usebundle => record_event(
+        "$(events_file)", "meta $(run_meta_promises_meta.value)"
+      );
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "value_file" string => getenv("VALUE_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => run_meta_promises("$(events_file)", "$(value_file)");
+}

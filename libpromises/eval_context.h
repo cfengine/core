@@ -218,6 +218,12 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
 void EvalContextStackPushBundleSectionFrame(EvalContext *ctx, const BundleSection *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx);
+/**
+ * @brief Like EvalContextStackPushPromiseIterationFrame(), for an iteration
+ *        whose promise is already expanded: its constraints, class guard and
+ *        if/unless are not evaluated again. The frame takes ownership of pexp.
+ */
+void EvalContextStackPushExpandedPromiseIterationFrame(EvalContext *ctx, Promise *pexp);
 void EvalContextStackPopFrame(EvalContext *ctx);
 const char *EvalContextStackToString(EvalContext *ctx);
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args);

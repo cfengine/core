@@ -1,6 +1,11 @@
+#######################################################
+#
+# Test interval
+#
+#######################################################
 body common control
 {
-  inputs => { "../lib.cf" };
+  inputs => { "../../lib.cf" };
   bundlesequence => { "test" };
   version => "1.0";
 }
@@ -8,6 +13,7 @@ body common control
 body when deleted(file)
 {
   file_deleted => "$(file)";
+  interval => 10;
 }
 
 bundle reactor test

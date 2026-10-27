@@ -1,0 +1,41 @@
+#######################################################
+#
+# Test an agent bundle as a "then" bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle agent run_agent_bundle(events_file, value_file)
+{
+  vars:
+    "value" string => readfile("$(value_file)");
+
+  reports:
+    "$(with): agent $(value)"
+      with => strftime("localtime", "%Y-%m-%d %H:%M:%S", now()),
+      report_to_file => "$(events_file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "value_file" string => getenv("VALUE_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => run_agent_bundle("$(events_file)", "$(value_file)");
+}

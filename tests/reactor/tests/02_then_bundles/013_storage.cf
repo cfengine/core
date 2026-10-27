@@ -20,7 +20,7 @@ body volume any_free_space
   freespace => "1k";
 }
 
-bundle agent run_storage
+bundle reactor run_storage
 {
   storage:
     "$(sys.workdir)"

@@ -26,7 +26,7 @@ body database_server no_server
   db_server_connection_db => "postgres";
 }
 
-bundle agent run_databases
+bundle reactor run_databases
 {
   databases:
     "reactor_test"

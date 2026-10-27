@@ -22,7 +22,7 @@ body service_method record_service(events_file, service)
   );
 }
 
-bundle agent run_services(events_file)
+bundle reactor run_services(events_file)
 {
   services:
     "reactor_test_service"

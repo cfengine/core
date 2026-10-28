@@ -480,10 +480,12 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
         goto err3;
     }
 
-    X509_NAME *name = X509_get_subject_name(x509);
+    /* OpenSSL 4 returns a const name from X509_get_subject_name(), so build
+     * a new one and set it. */
+    X509_NAME *name = X509_NAME_new();
     if (name == NULL)
     {
-        Log(LOG_LEVEL_ERR, "X509_get_subject_name: %s",
+        Log(LOG_LEVEL_ERR, "X509_NAME_new: %s",
             TLSErrorString(ERR_get_error()));
         goto err3;
     }
@@ -492,9 +494,11 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     ret += X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
                                       (const unsigned char *) "a",
                                       -1, -1, 0);
+    ret += X509_set_subject_name(x509, name);
     ret += X509_set_issuer_name(x509, name);
+    X509_NAME_free(name);
     ret += X509_set_pubkey(x509, pkey);
-    if (ret < 3)
+    if (ret < 4)
     {
         Log(LOG_LEVEL_ERR, "Failed to set certificate details: %s",
             TLSErrorString(ERR_get_error()));

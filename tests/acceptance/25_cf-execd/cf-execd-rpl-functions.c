@@ -66,14 +66,29 @@ static void *FeedSmtpDirectives(void *data)
     COND_SEND("250 to@test.com... Recipient ok\r\n");
     COND_RECV(recvbuf);
     COND_SEND("354 Enter mail, end with \".\" on a line by itself\r\n");
-    while (true)
+    /* The end of DATA marker may be split across several recv() calls, so
+     * track the last bytes of the stream rather than each chunk alone. */
+    char last[5] = { '\0', '\0', '\0', '\r', '\n' };
+    bool done = false;
+    while (!done)
     {
         COND_RECV(recvbuf);
-        if ((rcvd == 3 && memcmp(recvbuf + rcvd - 3, ".\r\n", 3) == 0) ||
-            (rcvd > 3 && memcmp(recvbuf + rcvd - 4, "\n.\r\n", 4) == 0))
+        if (rcvd == 0)
         {
-            break;
+            Log(LOG_LEVEL_ERR, "Connection closed before end of DATA in %s:%i", __FILE__, __LINE__);
+            return NULL;
         }
+        /* It's a sliding window:
+         * For each received byte we left shift the buffer and append the new
+         * byte to the end. The client waits for our reply after sending the
+         * End-of-Data marker, so the marker can only appear at the end of
+         * the received data. */
+        for (int i = 0; i < rcvd; i++)
+        {
+            memmove(last, last + 1, sizeof(last) - 1);
+            last[sizeof(last) - 1] = recvbuf[i];
+        }
+        done = (memcmp(last, "\r\n.\r\n", sizeof(last)) == 0);
     }
     COND_SEND("250 Message accepted for delivery\r\n");
     COND_RECV(recvbuf);

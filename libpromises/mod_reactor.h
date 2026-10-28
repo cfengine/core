@@ -29,6 +29,13 @@
 #include <policy.h>
 
 #define REACTOR_FILE_DELETED "file_deleted"
+#define REACTOR_FILE_CREATED "file_created"
+#define REACTOR_FILE_MODIFIED "file_modified"
+#define REACTOR_FILE_CONTENT_MODIFIED "file_content_modified"
+#define REACTOR_FILE_PERMISSIONS_CHANGED "file_permissions_changed"
+#define REACTOR_FILE_OWNER_CHANGED "file_owner_changed"
+#define REACTOR_FILE_SIZE_EXCEEDS "file_size_exceeds"
+#define REACTOR_SIZE_THRESHOLD "size_threshold"
 
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"

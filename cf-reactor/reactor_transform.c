@@ -154,6 +154,12 @@ static const EventArg NO_EXTRA_ARGS[] =
     { NULL, RVAL_TYPE_NOPROMISEE }
 };
 
+static const EventArg FILE_SIZE_EXCEEDS_ARGS[] =
+{
+    { REACTOR_SIZE_THRESHOLD, RVAL_TYPE_SCALAR },
+    { NULL, RVAL_TYPE_NOPROMISEE }
+};
+
 #define EventTypeNew(name, type, args, new_state, destroy_state, check) \
     { name, type, args, new_state, destroy_state, check }
 #define EventTypeNewNull() EventTypeNew(NULL, RVAL_TYPE_NOPROMISEE, NULL, NULL, NULL, NULL)
@@ -165,6 +171,13 @@ static const EventArg NO_EXTRA_ARGS[] =
 static const EventType EVENT_TABLE[] =
 {
     FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
+    FileEventTypeNew(REACTOR_FILE_CREATED, FileWatcherCheckFileCreated),
+    FileEventTypeNew(REACTOR_FILE_MODIFIED, FileWatcherCheckFileModified),
+    FileEventTypeNew(REACTOR_FILE_CONTENT_MODIFIED, FileWatcherCheckFileContentModified),
+    FileEventTypeNew(REACTOR_FILE_PERMISSIONS_CHANGED, FileWatcherCheckFilePermissionsChanged),
+    FileEventTypeNew(REACTOR_FILE_OWNER_CHANGED, FileWatcherCheckFileOwnerChanged),
+    EventTypeNew(REACTOR_FILE_SIZE_EXCEEDS, RVAL_TYPE_SCALAR, FILE_SIZE_EXCEEDS_ARGS,
+                 FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds),
     EventTypeNewNull()
 };
 

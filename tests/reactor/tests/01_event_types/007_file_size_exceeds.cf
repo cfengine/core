@@ -1,0 +1,43 @@
+#######################################################
+#
+# Test what is a size exceeding the threshold for a file_size_exceeds event
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when size_exceeds(file, size)
+{
+  file_size_exceeds => "$(file)";
+  size_threshold => "$(size)";
+}
+
+bundle reactor test
+{
+  vars:
+    "file_a" string => getenv("FILE_A", 999);
+    "file_b" string => getenv("FILE_B", 999);
+    "file_c" string => getenv("FILE_C", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    # a regular file growing
+    "$(promise_name)_A"
+      when => size_exceeds("$(file_a)", "10"),
+      then => record_event("$(events_file)", "A exceeds");
+
+    # a regular file created after the start
+    "$(promise_name)_B"
+      when => size_exceeds("$(file_b)", "10"),
+      then => record_event("$(events_file)", "B exceeds");
+
+    # a regular file above the threshold from the start
+    "$(promise_name)_C"
+      when => size_exceeds("$(file_c)", "10"),
+      then => record_event("$(events_file)", "C exceeds");
+}

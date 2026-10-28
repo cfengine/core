@@ -47,6 +47,7 @@ libcf_reactor_la_SOURCES = \
 	stoppable_thread.c stoppable_thread.h \
 	user_watcher.c user_watcher.h \
 	wakeup_channel.c wakeup_channel.h \
+	watch_backends.c watch_backends.h \
 	watcher.c watcher.h
 
 if !BUILTIN_EXTENSIONS

@@ -46,6 +46,22 @@
 
 #define WATCHER_THREAD_EXIT_TIMEOUT_SECS 5
 
+/**
+ * Seconds on a clock that only moves forward, for scheduling checks. With the
+ * wall clock, stepping it back would postpone every check by the size of the
+ * step. Falls back to the wall clock where there is no monotonic clock.
+ */
+static time_t WatcherClockNow(void)
+{
+    struct timespec ts;
+#ifdef CLOCK_MONOTONIC
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+#else
+    clock_gettime(CLOCK_REALTIME, &ts);
+#endif
+    return ts.tv_sec;
+}
+
 typedef struct
 {
     WatcherCheckFn check_callback;
@@ -54,7 +70,7 @@ typedef struct
     Promise *promise; // copy of the expanded events promise, see PromiseCopy()
     char *promise_hash; // hash of `promise`, see WatcherPromiseHash()
     time_t poll_interval_secs;
-    time_t next_due;
+    time_t next_due; // on WatcherClockNow()'s clock
     WatcherCheckResult last_check; // only touched by the watcher thread
 } Watcher;
 
@@ -212,7 +228,7 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
 
     while (!IsPendingTermination() && !StoppableThreadShouldStop(thread))
     {
-        time_t now = time(NULL);
+        time_t now = WatcherClockNow();
         time_t sleep_for = MAX_WATCHER_THREAD_SLEEP_SECS;
         bool any_event = false;
 

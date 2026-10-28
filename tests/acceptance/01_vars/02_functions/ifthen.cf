@@ -1,0 +1,54 @@
+######################################################
+#
+# Test that ifthen() behaves as expected
+#
+#####################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "ENT-14719" }
+      string => "Test that ifthen() returns the value of the first true class expression and leaves the variable undefined if none is true";
+
+  vars:
+    "single" string => ifthen("any", "single value");
+    "first" string => ifthen("!any", "wrong", "any", "first", "any", "second");
+    "nested" string => ifthen(not("!any"), "nested");
+    "expanded_var" string => "expanded";
+    "expanded" string => ifthen("any", "$(expanded_var)");
+    "none" string => ifthen("!any", "wrong");
+
+    # Unlike 3-argument ifelse(), not evaluated while an argument has an
+    # unresolved variable, even if an earlier pair is true.
+    "unresolved"
+      string => ifthen("any", "value", "any", "$(no_such_bundle.no_such_var)");
+}
+
+#######################################################
+bundle agent check
+{
+  classes:
+    "ok"
+      and => {
+        strcmp("$(test.single)", "single value"),
+        strcmp("$(test.first)", "first"),
+        strcmp("$(test.nested)", "nested"),
+        strcmp("$(test.expanded)", "expanded"),
+        not(isvariable("test.none")),
+        not(isvariable("test.unresolved")),
+      };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

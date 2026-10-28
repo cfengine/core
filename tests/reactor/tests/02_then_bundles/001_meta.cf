@@ -17,7 +17,7 @@ body when deleted(file)
 
 # Not named run_meta: the meta variables of a bundle whose name ends with
 # "_meta" are in the scope of the bundle itself, not in <bundle>_meta
-bundle agent run_meta_promises(events_file, value_file)
+bundle reactor run_meta_promises(events_file, value_file)
 {
   meta:
     "value" string => readfile("$(value_file)");

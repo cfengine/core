@@ -93,9 +93,29 @@ bool IsBuiltInPromiseType(const char *const promise_type)
     return false;
 }
 
+/* Returns the bundle type whose promise types bundles of the given type can
+ * also have, or NULL. Reactor bundles can have every promise type of agent
+ * bundles, as cf-reactor evaluates them like cf-agent does, in addition to
+ * their own (events promises). */
+static const char *BundleTypeGetInheritedType(const char *bundle_type)
+{
+    assert(bundle_type != NULL);
+
+    if (StringEqual(bundle_type, CF_REACTORC))
+    {
+        return CF_AGENTC;
+    }
+    return NULL;
+}
+
 const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type)
 {
     const PromiseTypeSyntax *pts = PromiseTypeSyntaxGetStrict(bundle_type, promise_type);
+    const char *inherited_type = BundleTypeGetInheritedType(bundle_type);
+    if (!pts && inherited_type != NULL)
+    {
+        pts = PromiseTypeSyntaxGetStrict(inherited_type, promise_type);
+    }
     if (!pts)
     {
         pts = PromiseTypeSyntaxGetStrict("*", promise_type);
@@ -1116,8 +1136,28 @@ static JsonElement *BundleTypesToJson(void)
         JsonObjectAppendObject(bundle_types, "common", bundle_type);
     }
 
+    // Append the promise types of the bundle types they inherit from, before
+    // the common promise types are appended to them
     JsonIterator it = JsonIteratorInit(bundle_types);
     const char *bundle_type = NULL;
+    while ((bundle_type = JsonIteratorNextKey(&it)))
+    {
+        const char *inherited_type = BundleTypeGetInheritedType(bundle_type);
+        if (inherited_type == NULL)
+        {
+            continue;
+        }
+
+        JsonElement *promise_types = JsonObjectGetAsArray(JsonObjectGetAsObject(bundle_types, bundle_type), "promiseTypes");
+        JsonElement *inherited_promise_types = JsonObjectGetAsArray(JsonObjectGetAsObject(bundle_types, inherited_type), "promiseTypes");
+        assert(inherited_promise_types != NULL);
+        for (size_t i = 0; i < JsonLength(inherited_promise_types); i++)
+        {
+            JsonArrayAppendString(promise_types, JsonArrayGetAsString(inherited_promise_types, i));
+        }
+    }
+
+    it = JsonIteratorInit(bundle_types);
     while ((bundle_type = JsonIteratorNextKey(&it)))
     {
         JsonElement *promise_types = JsonObjectGetAsArray(JsonObjectGetAsObject(bundle_types, bundle_type), "promiseTypes");

@@ -455,6 +455,103 @@ static void test_body_action_with_log_repaired_needs_log_string(void)
     }
 }
 
+#define REACTOR_WHEN_BODY "body when deleted(file) { file_deleted => '$(file)'; }"
+
+static void test_reactor_bundle_with_events(void)
+{
+    {
+        /* Only meta, vars, classes and events promises */
+        Seq *errs = LoadAndCheckString(REACTOR_WHEN_BODY
+                                       "bundle reactor foo {"
+                                       "  meta: 'tags' slist => { 'a' };"
+                                       "  vars: 'f' string => '/tmp/a';"
+                                       "  classes: 'c' expression => 'any';"
+                                       "  events: 'e' when => deleted('$(f)'), then => 'bar';"
+                                       "}"
+                                       "bundle reactor bar {"
+                                       "  reports: 'deleted';"
+                                       "}");
+        assert_int_equal(0, errs->length);
+        SeqDestroy(errs);
+    }
+
+    {
+        /* A built-in promise type of agent bundles */
+        Seq *errs = LoadAndCheckString(REACTOR_WHEN_BODY
+                                       "bundle reactor foo {"
+                                       "  files: '/tmp/a' create => 'true';"
+                                       "  events: 'e' when => deleted('/tmp/a'), then => 'bar';"
+                                       "}"
+                                       "bundle agent bar {"
+                                       "  reports: 'deleted';"
+                                       "}");
+        assert_int_equal(1, errs->length);
+        SeqDestroy(errs);
+    }
+
+    {
+        /* A custom promise type */
+        Seq *errs = LoadAndCheckString(REACTOR_WHEN_BODY
+                                       "bundle reactor foo {"
+                                       "  git: '/tmp/a' repository => 'x';"
+                                       "  events: 'e' when => deleted('/tmp/a'), then => 'bar';"
+                                       "}"
+                                       "bundle agent bar {"
+                                       "  reports: 'deleted';"
+                                       "}");
+        assert_int_equal(1, errs->length);
+        SeqDestroy(errs);
+    }
+}
+
+static void test_reactor_bundle_without_events(void)
+{
+    /* The promise types of agent bundles */
+    Seq *errs = LoadAndCheckString("bundle reactor foo(file) {"
+                                   "  vars: 'f' string => '$(file)';"
+                                   "  files: '$(f)' create => 'true';"
+                                   "  methods: 'm' usebundle => bar;"
+                                   "  reports: 'created';"
+                                   "}"
+                                   "bundle agent bar {"
+                                   "  reports: 'bar';"
+                                   "}");
+    assert_int_equal(0, errs->length);
+    SeqDestroy(errs);
+}
+
+static void test_reactor_then_bundle_with_events(void)
+{
+    {
+        Seq *errs = LoadAndCheckString(REACTOR_WHEN_BODY
+                                       "bundle reactor foo {"
+                                       "  events: 'e' when => deleted('/tmp/a'), then => { 'bar', baz('x') };"
+                                       "}"
+                                       "bundle reactor bar {"
+                                       "  events: 'e' when => deleted('/tmp/b'), then => 'foo';"
+                                       "}"
+                                       "bundle reactor baz(x) {"
+                                       "  events: 'e' when => deleted('$(x)'), then => 'foo';"
+                                       "}");
+        /* bar and baz refer to foo, foo refers to bar and baz */
+        assert_int_equal(4, errs->length);
+        SeqDestroy(errs);
+    }
+
+    {
+        /* Agent bundles are looked up before reactor bundles */
+        Seq *errs = LoadAndCheckString(REACTOR_WHEN_BODY
+                                       "bundle reactor foo {"
+                                       "  events: 'e' when => deleted('/tmp/a'), then => 'foo';"
+                                       "}"
+                                       "bundle agent foo {"
+                                       "  reports: 'deleted';"
+                                       "}");
+        assert_int_equal(0, errs->length);
+        SeqDestroy(errs);
+    }
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -481,6 +578,10 @@ int main()
         unit_test(test_promiser_empty_varref),
 
         unit_test(test_body_action_with_log_repaired_needs_log_string),
+
+        unit_test(test_reactor_bundle_with_events),
+        unit_test(test_reactor_bundle_without_events),
+        unit_test(test_reactor_then_bundle_with_events),
     };
 
     return run_tests(tests);

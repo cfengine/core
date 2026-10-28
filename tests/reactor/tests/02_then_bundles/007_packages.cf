@@ -24,7 +24,7 @@ body package_module reactor_test
   default_options => { "$(test.installed)" };
 }
 
-bundle agent run_packages
+bundle reactor run_packages
 {
   packages:
     "reactor_test_pkg"

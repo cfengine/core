@@ -6,6 +6,39 @@
 
 cf-reactor periodically reads the policy to set up the in-memory datastructures needed to react to events. It evaluates reactor bundles and parses events promises to create the corresponding `watchers`. These watchers stay active until the next policy read, when they are rebuilt.
 
+Reactor bundles are of two mutually exclusive kinds:
+
+- **With events promises**: they can only have `meta`, `vars`, `classes` and `events` promises. On every policy read, each of them without arguments is evaluated in that order, the events promises last, registering the watchers.
+- **Without events promises**: they can have every promise type of agent bundles (built-in and custom). They are not evaluated on policy read, they are run from the `then` attribute of events promises, like cf-agent runs agent bundles (`ScheduleAgentOperations()`, in normal or top-down order).
+
+This is checked when the policy is loaded (see `ReactorBundleCheck()`): having another promise type alongside events promises in a reactor bundle, or referring to a reactor bundle with events promises in a `then` attribute, is an error.
+
+```cf3
+bundle reactor set_up_events
+{
+  vars:
+    "file" string => "/tmp/a";
+
+  events:
+    "recreate_a"
+      when => file_deleted("$(file)"),
+      then => { create_file("$(file)"), report_recreated };
+}
+
+bundle reactor create_file(file)
+{
+  files:
+    "$(file)"
+      create => "true";
+}
+
+bundle reactor report_recreated
+{
+  reports:
+    "Recreated the file";
+}
+```
+
 Events promises are parsed into watcher instances, each holding: the event `key` from the events promise, an event `type` (e.g. file deletion), a `state` with whatever state the check needs (e.g. the name of the file being watched), and a `check function` that detects the event by comparing the current state to the state recorded at the last check (e.g. whether the file still exists). It returns `true` only on the specific transition being watched for, so it fires once per change and does not stay `true` afterwards.
 
 ### Events
@@ -22,7 +55,7 @@ On Linux, we could use inotify instead in the future, and let the kernel poll fo
 
 ### Running bundles
 
-On dispatch, the bundle corresponding to an event is run, however it doesn't do a full agent run.
+On dispatch, the bundles in the `then` attribute of the events promise are run in order, however it doesn't do a full agent run. They can be agent, common or reactor bundles without events promises (looked up in that order), so a policy for cf-reactor doesn't need agent bundles.
 
 ## Implementation details
 

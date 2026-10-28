@@ -26,11 +26,40 @@
 #define CFENGINE_MOD_REACTOR_H
 
 #include <cf3.defs.h>
+#include <policy.h>
 
 #define REACTOR_FILE_DELETED "file_deleted"
 
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"
+
+/* Types of the bundles the 'then' attribute of events promises can refer to,
+ * in order of lookup, terminated by NULL */
+extern const char *const REACTOR_THEN_BUNDLE_TYPES[];
+
+/* Promise types of the reactor bundles with events promises, in order of
+ * evaluation, terminated by NULL */
+extern const char *const REACTOR_EVENTS_BUNDLE_PROMISE_TYPES[];
+
+/**
+ * @brief Whether the bundle is a reactor bundle with events promises.
+ *
+ * Reactor bundles are of two mutually exclusive kinds:
+ * - with events promises, they can only have the promise types of
+ *   REACTOR_EVENTS_BUNDLE_PROMISE_TYPES. cf-reactor evaluates them when it
+ *   reads the policy, registering the watchers of their events promises.
+ * - without events promises, they can have every promise type of agent
+ *   bundles. cf-reactor runs them like cf-agent runs agent bundles, from the
+ *   'then' attribute of events promises.
+ */
+bool BundleIsReactorEventsBundle(const Bundle *bp);
+
+/**
+ * @brief Checks that a reactor bundle with events promises has no other
+ *        promise types than those of REACTOR_EVENTS_BUNDLE_PROMISE_TYPES.
+ * @return false if it has, appending the errors to errors, true otherwise
+ */
+bool ReactorBundleCheck(const Bundle *bp, Seq *errors);
 
 extern const PromiseTypeSyntax CF_REACTOR_PROMISE_TYPES[];
 

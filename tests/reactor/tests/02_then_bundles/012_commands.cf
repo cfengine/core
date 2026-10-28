@@ -20,7 +20,7 @@ body contain in_shell
   useshell => "useshell";
 }
 
-bundle agent run_commands(events_file, output, module_file)
+bundle reactor run_commands(events_file, output, module_file)
 {
   commands:
     "echo ran >> '$(output)'"

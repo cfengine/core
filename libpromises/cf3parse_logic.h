@@ -231,7 +231,7 @@ static bool RelevantBundle(const char *agent, const char *blocktype)
     }
 
     /* Here are some additional bundle types handled by cfAgent, and by
-     * cf-reactor for the agent bundles it runs */
+     * cf-reactor for the agent and reactor bundles it runs */
 
     Item *ip = SplitString("edit_line,edit_xml", ',');
 

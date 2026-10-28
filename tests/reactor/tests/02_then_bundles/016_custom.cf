@@ -21,7 +21,7 @@ promise agent reactor_test
   path => "$(sys.workdir)/modules/promises/reactor_test.sh";
 }
 
-bundle agent run_custom(output)
+bundle reactor run_custom(output)
 {
   reactor_test:
     "$(output)"

@@ -15,12 +15,15 @@ body when deleted(file)
   file_deleted => "$(file)";
 }
 
-bundle reactor run_users(user)
+bundle reactor run_users
 {
   users:
-    # the user running the test, so that it is kept without being root
-    "$(user)"
-      policy => "present",
+    # a user that doesn't exist, so that the promise is kept without changing
+    # anything, whether or not the test runs as root. An existing user with
+    # policy "present" is unlocked if its password is locked, which happens
+    # to root on some systems.
+    "cf-reactor-test-no-such-user"
+      policy => "absent",
       classes => then_outcome("users");
 }
 
@@ -29,13 +32,10 @@ bundle reactor test
   vars:
     "test" string => getenv("TESTFILE", 999);
     "events_file" string => getenv("EVENTS_FILE", 999);
-    "user" string => getenv("TEST_USER", 999);
     "promise_name" string => basename("$(this.promise_filename)", ".cf");
 
   events:
     "$(promise_name)"
       when => deleted("$(test)"),
-      then => {
-        run_users("$(user)"), record_then_outcome("$(events_file)", "users")
-      };
+      then => { run_users, record_then_outcome("$(events_file)", "users") };
 }

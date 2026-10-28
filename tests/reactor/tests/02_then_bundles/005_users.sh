@@ -13,9 +13,6 @@ EVENTS_FILE="$WORKDIR/tmp/events"
 
 export TESTFILE EVENTS_FILE
 
-TEST_USER=$(id -un)
-export TEST_USER
-
 touch "$TESTFILE"
 
 start_reactor "$POLICY_FILE"

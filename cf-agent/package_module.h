@@ -28,6 +28,9 @@
 #include <cf3.defs.h>
 #include <package_module_wrapper.h>
 
+//TODO: use promise expireafter instead
+#define PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC 4 * 3600 /* 4 hours timeout */
+
 #define GLOBAL_PACKAGE_PROMISE_LOCK_NAME "new_packages_promise_lock"
 
 typedef enum

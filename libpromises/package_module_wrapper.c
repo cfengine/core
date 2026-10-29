@@ -49,7 +49,8 @@ void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper)
     }
 }
 
-PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
+PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module,
+                                              int timeout_secs)
 {
     assert(package_module && package_module->name);
 
@@ -60,6 +61,7 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
                              &(wrapper->script_exec_opts));
     wrapper->name = SafeStringDuplicate(package_module->name);
     wrapper->package_module = package_module;
+    wrapper->timeout_secs = timeout_secs;
 
     if (wrapper->path == NULL)
     {
@@ -142,7 +144,7 @@ int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *a
         }
     }
     int ret = PipeReadWriteData(wrapper->path, args, request, response,
-                                PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC,
+                                wrapper->timeout_secs,
                                 PACKAGE_PROMISE_TERMINATION_CHECK_SEC);
     free(all_args);
 

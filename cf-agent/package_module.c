@@ -76,7 +76,8 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
             continue;
         }
 
-        PackageModuleWrapper *module_wrapper = NewPackageModuleWrapper(module);
+        PackageModuleWrapper *module_wrapper =
+            NewPackageModuleWrapper(module, PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC);
 
         if (!module_wrapper)
         {

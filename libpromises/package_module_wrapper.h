@@ -27,8 +27,6 @@
 
 #include <cf3.defs.h>
 
-//TODO: use promise expireafter instead
-#define PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC 4 * 3600 /* 4 hours timeout */
 #define PACKAGE_PROMISE_TERMINATION_CHECK_SEC 1
 
 typedef struct
@@ -40,6 +38,7 @@ typedef struct
     char *script_exec_opts;
     PackageModuleBody *package_module;
     int supported_api_version;
+    int timeout_secs; /**< Timeout of each run of the package module */
 } PackageModuleWrapper;
 
 /**
@@ -49,11 +48,13 @@ typedef struct
  *
  * @param package_module The package module body, not copied, so it must
  *                       outlive the wrapper
+ * @param timeout_secs The timeout of each run of the package module
  * @return The new wrapper, to be destroyed with DeletePackageModuleWrapper(),
  *         or NULL if the package module can't be run or doesn't support API
  *         version 1
  */
-PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module);
+PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module,
+                                              int timeout_secs);
 
 /**
  * @brief Destroys a package module wrapper.

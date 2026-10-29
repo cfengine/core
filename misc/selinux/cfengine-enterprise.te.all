@@ -17,6 +17,7 @@ require {
 	attribute non_auth_file_type;
 	type autofs_t;
 	type bin_t;
+	type bpf_t;
 	type cert_t;
 	type devlog_t;
 	type kernel_t;
@@ -749,6 +750,16 @@ allow cfengine_reactor_t postfix_spool_t:file { create getattr open read rename 
 allow cfengine_reactor_t sendmail_exec_t:file map;
 allow cfengine_reactor_t sendmail_exec_t:file { execute execute_no_trans open read };
 allow cfengine_reactor_t smtp_port_t:tcp_socket name_connect;
+
+# cf-reactor watch methods. A denial only makes a watcher fall back to polling.
+# The 'watch' and CAP_BPF/CAP_PERFMON rules are in the EL9/EL10 files, the EL8
+# policy doesn't define them.
+# ebpf reads the kernel's BTF (/sys/kernel/btf/vmlinux), then loads and
+# attaches its watch program (kprobe.multi or fentry)
+allow cfengine_reactor_t sysfs_t:file { getattr open read };
+allow cfengine_reactor_t self:bpf { map_create map_read map_write prog_load prog_run };
+# libbpf opens /sys/fs/bpf to try a BPF token, which it doesn't need
+dontaudit cfengine_reactor_t bpf_t:dir read;
 
 
 #============= cfengine_action_script_t ==============

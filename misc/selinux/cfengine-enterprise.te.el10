@@ -48,3 +48,15 @@ allow cfengine_reactor_t kernel_t:unix_stream_socket connectto;
 
 #============= cfengine_serverd_t ==============
 allow cfengine_serverd_t http_port_t:tcp_socket name_connect;
+
+#============= cf-reactor watch methods ==============
+# A denial only makes a watcher fall back to polling.
+# inotify and fanotify watch the watched file and its parent directory (or the
+# nearest existing ancestor), which can be anywhere
+allow cfengine_reactor_t file_type:dir watch;
+allow cfengine_reactor_t file_type:file watch;
+# Without CAP_SYS_ADMIN the kernel gives fanotify an unprivileged group, which
+# is all it needs (inode marks, own events still identified by PID)
+dontaudit cfengine_reactor_t self:capability sys_admin;
+# ebpf
+allow cfengine_reactor_t self:capability2 { bpf perfmon };

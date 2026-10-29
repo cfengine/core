@@ -30,7 +30,7 @@ static WatcherOptions *FileDeletedOptions(const char *path, time_t interval)
     Rlist *args = NULL;
     RlistAppendScalar(&args, path);
     opt = (WatcherOptions) {
-        .state = FileWatcherStateNew(args),
+        .state = FileWatcherStateNew(NULL, args),
         .check_callback = FileWatcherCheckFileDeleted,
         .destroy_state = FileWatcherStateDestroy,
         .interval = interval,

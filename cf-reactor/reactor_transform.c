@@ -264,8 +264,9 @@ static bool EventsPromiseGetInterval(const Promise *pp, time_t *interval)
     return true;
 }
 
-static bool ResolveWhenBody(const Promise *pp, WatcherOptions *opt)
+static bool ResolveWhenBody(const EvalContext *ctx, const Promise *pp, WatcherOptions *opt)
 {
+    assert(ctx != NULL);
     assert(pp != NULL);
     assert(opt != NULL);
     // Get the event and its arg
@@ -336,7 +337,7 @@ static bool ResolveWhenBody(const Promise *pp, WatcherOptions *opt)
         return false;
     }
 
-    opt->state = event->new_state(args);
+    opt->state = event->new_state(ctx, args);
     opt->check_callback = event->check;
     opt->destroy_state = event->destroy_state;
     RlistDestroy(args);
@@ -364,7 +365,7 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
     }
 
     WatcherOptions opt;
-    if (!ResolveWhenBody(pp, &opt))
+    if (!ResolveWhenBody(ctx, pp, &opt))
     {
         return PROMISE_RESULT_FAIL;
     }

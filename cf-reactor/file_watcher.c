@@ -82,7 +82,7 @@ typedef struct
 } FileWatcherState;
 
 
-void *FileWatcherStateNew(const Rlist *args)
+void *FileWatcherStateNew(ARG_UNUSED const EvalContext *ctx, const Rlist *args)
 {
     assert(args != NULL);
     const char *path = RlistScalarValue(args);
@@ -93,7 +93,7 @@ void *FileWatcherStateNew(const Rlist *args)
     return fws;
 }
 
-void *FileWatcherSizeStateNew(const Rlist *args)
+void *FileWatcherSizeStateNew(ARG_UNUSED const EvalContext *ctx, const Rlist *args)
 {
     assert(args != NULL && args->next != NULL);
     const char *path = RlistScalarValue(args);

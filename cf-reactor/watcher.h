@@ -35,7 +35,10 @@ typedef enum
   WATCHER_CHECK_ERROR,      /* unable to tell whether the event happened */
 } WatcherCheckResult;
 
-typedef void *(*WatcherStateNewFn)(const Rlist *args);
+/* Called on the main thread when the policy is evaluated. ctx must not be
+ * kept in the state: the EvalContext is not thread safe, so the watcher
+ * thread can't use it. */
+typedef void *(*WatcherStateNewFn)(const EvalContext *ctx, const Rlist *args);
 typedef WatcherCheckResult (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);
 

@@ -52,7 +52,8 @@ void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper)
 PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module,
                                               int timeout_secs)
 {
-    assert(package_module && package_module->name);
+    assert(package_module != NULL);
+    assert(package_module->name != NULL);
 
     PackageModuleWrapper *wrapper = xmalloc(sizeof(PackageModuleWrapper));
 
@@ -128,6 +129,8 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module,
 int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *args,
                               const char *request, Rlist **response)
 {
+    assert(wrapper != NULL);
+
     char *all_args = NULL;
     if (wrapper->script_path != NULL)
     {
@@ -203,6 +206,7 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
                                      char **script_exec_opts)
 {
 
+    assert(package_module != NULL);
     assert(exec_path != NULL);
     assert(script_path != NULL);
     assert(script_path_quoted != NULL);

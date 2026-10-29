@@ -37,7 +37,8 @@ typedef enum
 
 /* Called on the main thread when the policy is evaluated. ctx must not be
  * kept in the state: the EvalContext is not thread safe, so the watcher
- * thread can't use it. */
+ * thread can't use it. Returns NULL, after logging why, if the state can't
+ * be created. */
 typedef void *(*WatcherStateNewFn)(const EvalContext *ctx, const Rlist *args);
 typedef WatcherCheckResult (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);

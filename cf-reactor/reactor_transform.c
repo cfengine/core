@@ -351,9 +351,14 @@ static bool ResolveWhenBody(const EvalContext *ctx, const Promise *pp, WatcherOp
     }
 
     opt->state = event->new_state(ctx, args);
+    RlistDestroy(args);
+    if (opt->state == NULL)
+    {
+        /* The state constructor logs why */
+        return false;
+    }
     opt->check_callback = event->check;
     opt->destroy_state = event->destroy_state;
-    RlistDestroy(args);
     return true;
 }
 

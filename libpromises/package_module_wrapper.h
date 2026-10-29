@@ -83,6 +83,6 @@ int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *a
  * @return One "options=VALUE" line per option, or an empty string if there
  *         are none. To be freed by the caller.
  */
-char *ParseOptions(Rlist *options);
+char *PackageModuleFormatOptions(Rlist *options);
 
 #endif /* CFENGINE_PACKAGE_MODULE_WRAPPER_H */

@@ -262,7 +262,7 @@ PackageInfo *GetPackageData(const char *name, const char *version,
 
     Log(LOG_LEVEL_DEBUG, "Getting package '%s' data.", name);
 
-    char *options_str = ParseOptions(options);
+    char *options_str = PackageModuleFormatOptions(options);
     char *ver = version ?
         StringFormat("Version=%s\n", version) : NULL;
     char *arch = architecture ?
@@ -567,7 +567,7 @@ bool UpdateCache(Rlist* options, const PackageModuleWrapper *wrapper,
 
     Log(LOG_LEVEL_DEBUG, "Updating cache: %d", type);
 
-    char *options_str = ParseOptions(options);
+    char *options_str = PackageModuleFormatOptions(options);
     Rlist *response = NULL;
 
     const char *req_type = NULL;
@@ -667,7 +667,7 @@ PromiseResult RemovePackage(const char *name, Rlist* options,
 
     Log(LOG_LEVEL_DEBUG, "Removing package '%s'", name);
 
-    char *options_str = ParseOptions(options);
+    char *options_str = PackageModuleFormatOptions(options);
     char *ver = version ?
         StringFormat("Version=%s\n", version) : NULL;
     char *arch = architecture ?
@@ -712,7 +712,7 @@ static PromiseResult InstallPackageGeneric(Rlist *options,
         type == PACKAGE_TYPE_FILE ? "file" : "repo",
         packages_list_formatted);
 
-    char *options_str = ParseOptions(options);
+    char *options_str = PackageModuleFormatOptions(options);
     char *request = StringFormat("%s%s", options_str, packages_list_formatted);
 
     PromiseResult res = PROMISE_RESULT_CHANGE;

@@ -149,7 +149,7 @@ int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *a
     return ret;
 }
 
-char *ParseOptions(Rlist *options)
+char *PackageModuleFormatOptions(Rlist *options)
 {
     if (RlistIsNullList(options))
     {

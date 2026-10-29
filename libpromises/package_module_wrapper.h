@@ -25,4 +25,24 @@
 #ifndef CFENGINE_PACKAGE_MODULE_WRAPPER_H
 #define CFENGINE_PACKAGE_MODULE_WRAPPER_H
 
+#include <cf3.defs.h>
+
+//TODO: use promise expireafter instead
+#define PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC 4 * 3600 /* 4 hours timeout */
+#define PACKAGE_PROMISE_TERMINATION_CHECK_SEC 1
+
+typedef struct
+{
+    char *name;
+    char *path;
+    char *script_path;
+    char *script_path_quoted;
+    char *script_exec_opts;
+    PackageModuleBody *package_module;
+    int supported_api_version;
+} PackageModuleWrapper;
+
+PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module);
+void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper);
+
 #endif /* CFENGINE_PACKAGE_MODULE_WRAPPER_H */

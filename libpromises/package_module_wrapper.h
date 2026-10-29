@@ -87,6 +87,14 @@ int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *a
 char *PackageModuleFormatOptions(Rlist *options);
 
 /**
+ * @brief Copies a package module body.
+ *
+ * @param manager The package module body
+ * @return The copy, to be destroyed with PackageModuleBodyDestroy()
+ */
+PackageModuleBody *PackageModuleBodyCopy(const PackageModuleBody *manager);
+
+/**
  * @brief Destroys a package module body.
  *
  * @param manager The package module body, may be NULL

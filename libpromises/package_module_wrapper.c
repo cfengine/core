@@ -251,6 +251,20 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
     }
 }
 
+PackageModuleBody *PackageModuleBodyCopy(const PackageModuleBody *manager)
+{
+    assert(manager != NULL);
+
+    PackageModuleBody *copy = xmalloc(sizeof(PackageModuleBody));
+    copy->name = SafeStringDuplicate(manager->name);
+    copy->updates_ifelapsed = manager->updates_ifelapsed;
+    copy->installed_ifelapsed = manager->installed_ifelapsed;
+    copy->options = RlistCopy(manager->options);
+    copy->interpreter = SafeStringDuplicate(manager->interpreter);
+    copy->module_path = SafeStringDuplicate(manager->module_path);
+    return copy;
+}
+
 void PackageModuleBodyDestroy(PackageModuleBody *manager)
 {
     if (manager != NULL)

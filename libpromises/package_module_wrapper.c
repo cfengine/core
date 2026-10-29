@@ -123,8 +123,8 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
     return wrapper;
 }
 
-static int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *args,
-                                     const char *request, Rlist **response)
+int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *args,
+                              const char *request, Rlist **response)
 {
     char *all_args = NULL;
     if (wrapper->script_path != NULL)
@@ -149,7 +149,7 @@ static int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const 
     return ret;
 }
 
-static char *ParseOptions(Rlist *options)
+char *ParseOptions(Rlist *options)
 {
     if (RlistIsNullList(options))
     {

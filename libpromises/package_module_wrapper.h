@@ -44,5 +44,8 @@ typedef struct
 
 PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module);
 void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper);
+int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *args,
+                              const char *request, Rlist **response);
+char *ParseOptions(Rlist *options);
 
 #endif /* CFENGINE_PACKAGE_MODULE_WRAPPER_H */

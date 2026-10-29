@@ -145,6 +145,7 @@ libpromises_la_SOURCES = \
 	parser_state.h \
 	patches.c \
 	pipes.h pipes.c \
+	package_module_wrapper.c package_module_wrapper.h \
 	processes_select.c processes_select.h \
 	process_lib.h process_unix_priv.h \
 	promises.c promises.h \

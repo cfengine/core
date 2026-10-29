@@ -260,13 +260,10 @@ bool WatcherRegister(const Promise *pp, WatcherOptions *opt)
     {
         /* Without holding watchers_mutex, as the check may block (e.g.
          * lstat() on an unresponsive NFS mount). The watcher isn't registered
-         * yet, so the watcher thread can't check it concurrently. */
-        if (opt->check_callback(state) == WATCHER_CHECK_ERROR)
-        {
-            /* No reference for the next checks, so not registered */
-            opt->destroy_state(state);
-            return false;
-        }
+         * yet, so the watcher thread can't check it concurrently. A failure
+         * (e.g. the file locked on Windows) is logged by the check, and the
+         * watcher's first successful check becomes the reference instead. */
+        opt->check_callback(state);
     }
 
     /* Before the watcher is in the registry, so a wakeup from the method in

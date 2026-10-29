@@ -86,6 +86,11 @@ int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *a
  */
 char *PackageModuleFormatOptions(Rlist *options);
 
+/**
+ * @brief Destroys a package module body.
+ *
+ * @param manager The package module body, may be NULL
+ */
 void PackageModuleBodyDestroy(PackageModuleBody *manager);
 
 #endif /* CFENGINE_PACKAGE_MODULE_WRAPPER_H */

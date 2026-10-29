@@ -253,11 +253,12 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
 
 void PackageModuleBodyDestroy(PackageModuleBody *manager)
 {
-    assert(manager != NULL);
-
-    free(manager->name);
-    free(manager->interpreter);
-    free(manager->module_path);
-    RlistDestroy(manager->options);
-    free(manager);
+    if (manager != NULL)
+    {
+        free(manager->name);
+        free(manager->interpreter);
+        free(manager->module_path);
+        RlistDestroy(manager->options);
+        free(manager);
+    }
 }

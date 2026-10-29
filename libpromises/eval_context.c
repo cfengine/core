@@ -1150,18 +1150,6 @@ static void StackFrameDestroy(StackFrame *frame)
 }
 
 static
-void FreePackageManager(PackageModuleBody *manager)
-{
-    assert(manager != NULL);
-
-    free(manager->name);
-    free(manager->interpreter);
-    free(manager->module_path);
-    RlistDestroy(manager->options);
-    free(manager);
-}
-
-static
 PackagePromiseContext *PackagePromiseConfigNew()
 {
     PackagePromiseContext *package_promise_defaults =

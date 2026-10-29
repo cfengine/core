@@ -250,3 +250,15 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
         *script_exec_opts = NULL;
     }
 }
+
+static
+void FreePackageManager(PackageModuleBody *manager)
+{
+    assert(manager != NULL);
+
+    free(manager->name);
+    free(manager->interpreter);
+    free(manager->module_path);
+    RlistDestroy(manager->options);
+    free(manager);
+}

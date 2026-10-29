@@ -1,0 +1,63 @@
+body common control
+{
+  inputs => { "../default.sub.cf", "./normalize_agent_output.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  meta:
+    "test_skip_needs_work"
+      string => "using_fakeroot",
+      comment => "chown is faked under fakeroot; the chrooted stat won't reflect real ownership changes";
+
+  files:
+    "$(G.testroot)$(const.dirsep)chown-me"
+      create => "true",
+      comment => "Created as root:root, will be promised to bin:bin in the sub policy";
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "(solaris|aix|hpux|windows)",
+      meta => { "ENT-6540", "ENT-10254" };
+
+    "description" -> { "ENT-14694" }
+      string => "Test that --simulate=diff reports owner and group changes";
+
+  commands:
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)diff_mode_ownership.cf.sub --simulate=diff 2>&1 | $(G.grep) 'changed owner\|changed group' > $(this.promise_filename).actual"
+      contain => in_shell;
+}
+
+bundle agent check
+{
+  vars:
+    "actual" string => readfile("$(this.promise_filename).actual", inf);
+
+  classes:
+    "has_owner_change"
+      expression => regcmp(
+        ".*changed owner from 0/root to [0-9]+/bin.*", "$(actual)"
+      );
+
+    "has_group_change"
+      expression => regcmp(
+        ".*changed group from 0/root to [0-9]+/bin.*", "$(actual)"
+      );
+
+    "ok" and => { "has_owner_change", "has_group_change" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    !ok::
+      "actual output: $(actual)";
+}

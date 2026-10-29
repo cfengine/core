@@ -180,6 +180,14 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             return PROMISE_RESULT_NOOP;
         }
         /* else */
+
+        /* The mirrored symlink's target is in the chroot, show the real one. */
+        const char *real_linkbuf = linkbuf;
+        if (ChrootChanges() && IsAbsoluteFileName(linkbuf))
+        {
+            real_linkbuf = ToNormalRoot(linkbuf);
+        }
+
         if (attr->move_obstructions)
         {
             if (MakingChanges(ctx, pp, attr, &result, "remove incorrect link '%s'", destination))
@@ -187,7 +195,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
                 if (unlink(ToChangesPath(destination)) == -1)
                 {
                     RecordFailure(ctx, pp, attr, "Error removing link '%s' (points to '%s' not '%s')",
-                                  destination, linkbuf, to);
+                                  destination, real_linkbuf, to);
                     return PROMISE_RESULT_FAIL;
                 }
                 RecordChange(ctx, pp, attr, "Overrode incorrect link '%s'", destination);
@@ -205,7 +213,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         {
             RecordFailure(ctx, pp, attr,
                           "Link '%s' points to '%s' not '%s', but not moving obstructions",
-                          destination, linkbuf, to);
+                          destination, real_linkbuf, to);
             return PROMISE_RESULT_FAIL;
         }
     }

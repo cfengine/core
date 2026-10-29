@@ -1,0 +1,15 @@
+body common control
+{
+  inputs => { "../default.sub.cf" };
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testroot)/wrong-target"
+      link_from => linkfrom("$(G.testroot)/target-new", "symlink"),
+      move_obstructions => "true";
+    "$(G.testroot)/obstruction"
+      link_from => linkfrom("$(G.testroot)/target-new", "symlink"),
+      move_obstructions => "true";
+}

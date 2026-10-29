@@ -2,96 +2,79 @@
 
 # Usage: run.sh [--unsafe]
 #
-# Must be run from the tests/reactor directory.
+# Runs all the reactor tests, see run_test.sh, and prints a summary of their
+# results. The output of a test is only printed if it failed. They are also
+# run by "make check".
 #
 # Tests in an unsafe/ directory modify the system they are running on, so they
-# are only run with --unsafe.
+# are skipped unless run with --unsafe (or UNSAFE_TESTS=1).
 #
 # The binaries are taken from $CF_BINDIR if it is set, otherwise from the
 # CFEngine build tree this directory is part of if they are built, otherwise
 # from /var/cfengine/bin.
 
-fail=0
-
-unsafe=0
 if [ "$1" = "--unsafe" ]; then
-    unsafe=1
+    UNSAFE_TESTS=1
 fi
+export UNSAFE_TESTS
 
-banner() {
-    name=" $(basename "$(dirname "$1")")/$(basename "$1") "
-    width=72
-    left=$(( (width - ${#name}) / 2 ))
-    right=$(( width - ${#name} - left ))
-    [ "$left" -lt 0 ] && left=0
-    [ "$right" -lt 0 ] && right=0
-    printf '%s%s%s\n' \
-        "$(printf "%${left}s" '' | tr ' ' '=')" \
-        "$name" \
-        "$(printf "%${right}s" '' | tr ' ' '=')"
+dir=$(cd "$(dirname "$0")" && pwd)
+
+# for now()
+. "$dir/lib.sh"
+
+passed=0
+failed=0
+skipped=0
+total=0
+failures=""
+suite_start=$(now)
+
+# Run test $1 and print its result, with its output if it failed
+run_test() {
+    name=${1#"$dir/tests/"}
+    name=${name%.sh}
+    total=$((total + 1))
+
+    start=$(now)
+    output=$(sh "$dir/run_test.sh" "$1" 2>&1)
+    result=$?
+    elapsed=$(($(now) - start))
+
+    case $result in
+        0)
+            passed=$((passed + 1))
+            echo "--- PASS: $name (${elapsed}s)"
+            ;;
+        77)
+            skipped=$((skipped + 1))
+            echo "--- SKIP: $name (${elapsed}s)"
+            ;;
+        *)
+            failed=$((failed + 1))
+            failures="$failures  $name
+"
+            echo "--- FAIL: $name (${elapsed}s)"
+            echo "$output"
+            echo "---"
+            ;;
+    esac
 }
 
-error() {
-    echo "test '$1' FAILED" >&2
-    fail=1
-}
-
-# Print the path of binary $1, see the usage above.
-find_binary() {
-    if [ -n "$CF_BINDIR" ]; then
-        echo "$CF_BINDIR/$1"
-    elif [ -x "$PWD/../../$1/$1" ]; then
-        # in-tree build, may be a libtool wrapper script
-        echo "$PWD/../../$1/$1"
-    else
-        echo "/var/cfengine/bin/$1"
-    fi
-}
-
-CF_REACTOR=$(find_binary cf-reactor)
-CF_PROMISES=$(find_binary cf-promises)
-export CF_REACTOR
-
-for b in "$CF_REACTOR" "$CF_PROMISES"; do
-    if [ ! -x "$b" ]; then
-        echo "'$b' not found, build CFEngine or set CF_BINDIR" >&2
-        exit 2
-    fi
-done
-echo "Using $CF_REACTOR and $CF_PROMISES"
-
-for t in "$PWD"/tests/*/*.sh "$PWD"/tests/*/unsafe/*.sh; do
+for t in "$dir"/tests/*/*.sh "$dir"/tests/*/unsafe/*.sh; do
     # skip the pattern itself if there are no unsafe tests
     [ -f "$t" ] || continue
-    case "$t" in
-        */unsafe/*) [ "$unsafe" = 1 ] || continue ;;
-    esac
-
-    banner "$t"
-
-    # create throwaway work dir
-    WORKDIR=$(mktemp -d)
-    mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
-    ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises"
-
-    # Run a copy of the policy, keeping its path relative to lib.cf, as
-    # CFEngine refuses to read policy files writable by group or others, which
-    # those of a checkout made with a umask of 002 are
-    rel=${t#"$PWD"/}
-    policy="$WORKDIR/policy/${rel%.sh}.cf"
-    mkdir -p "$(dirname "$policy")"
-    cp lib.cf "$WORKDIR/policy/"
-    cp "${t%.sh}.cf" "$policy"
-    chmod 600 "$WORKDIR/policy/lib.cf" "$policy"
-
-    CFENGINE_TEST_OVERRIDE_WORKDIR="$WORKDIR"
-    LOG="$WORKDIR/reactor.log"
-    PROMISE_NAME=$(basename "$t" .sh)
-    export WORKDIR CFENGINE_TEST_OVERRIDE_WORKDIR LOG PROMISE_NAME
-
-    sh "$t" "$policy" || error "$t"
-
-    rm -rf "$WORKDIR"
+    run_test "$t"
 done
 
-exit $fail
+echo ""
+echo "=============================="
+echo "Test Results: $passed passed, $failed failed, $skipped skipped (total: $total, $(($(now) - suite_start))s)"
+if [ "$failed" -gt 0 ]; then
+    echo ""
+    echo "Failed tests:"
+    printf '%s' "$failures"
+    exit 1
+fi
+echo "=============================="
+echo "All reactor tests passed"

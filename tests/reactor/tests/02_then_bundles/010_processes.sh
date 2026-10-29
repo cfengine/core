@@ -21,8 +21,13 @@ start_process() {
     ( sleep 978654 & echo $! > "$PID_FILE" )
 }
 
+# Fail if process $1 still exists
+process_gone() {
+    ! kill -0 "$1" 2>/dev/null
+}
+
 wait_for_process_killed() {
-    if ! timeout 60 sh -c 'while kill -0 "$1" 2>/dev/null; do sleep 0.1; done' _ "$(cat "$PID_FILE")"
+    if ! wait_until process_gone "$(cat "$PID_FILE")"
     then
         echo "Process $(cat "$PID_FILE") not killed, reactor log:" >&2
         cat "$LOG" >&2

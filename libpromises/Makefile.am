@@ -149,6 +149,7 @@ libpromises_la_SOURCES = \
 	process_lib.h process_unix_priv.h \
 	promises.c promises.h \
 	prototypes3.h \
+	reactor_watch_backend.h \
 	rlist.c rlist.h \
 	scope.c scope.h \
 	shared_lib.c shared_lib.h \

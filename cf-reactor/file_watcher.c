@@ -32,6 +32,7 @@
 #include <prototypes3.h>        /* cf_strtimestamp_local() */
 #include <sys/stat.h>
 #include <errno.h>
+#include <string.h>             /* strerror() */
 #include <openssl/evp.h>
 
 /* Minimum time between two logs of a persisting failure to check the file,
@@ -39,6 +40,16 @@
 #define CHECK_ERROR_LOG_INTERVAL_SECS 60
 
 #define CONTENT_HASH_METHOD HASH_METHOD_SHA256
+
+/* What changes when a file's content may have changed, see StatSignatureOf() */
+typedef struct
+{
+    dev_t dev;
+    ino_t ino;
+    off_t size;
+    struct timespec mtime;
+    struct timespec ctime;
+} StatSignature;
 
 typedef struct
 {
@@ -60,6 +71,7 @@ typedef struct
         {
             bool hashed;      /* Whether it was a regular file, that was hashed */
             unsigned char digest[EVP_MAX_MD_SIZE + 1];
+            StatSignature signature; /* of the file when it was hashed */
         } content;
 
         /* FileWatcherCheckFilePermissionsChanged() */
@@ -81,6 +93,33 @@ typedef struct
     } last;
 } FileWatcherState;
 
+/**
+ * Copy of path in a form stat() accepts. On Windows, msvcrt's stat() fails
+ * with ENOENT for a path with a trailing separator, or with the \\?\ (or
+ * //?/) prefix, so a watcher with such a path would never see its file.
+ */
+static char *WatchPathCopy(const char *path)
+{
+    assert(path != NULL);
+
+    char *copy = xstrdup(path);
+#ifdef __MINGW32__
+    if ((copy[0] == '\\' || copy[0] == '/') && (copy[1] == '\\' || copy[1] == '/') &&
+        copy[2] == '?' && (copy[3] == '\\' || copy[3] == '/'))
+    {
+        memmove(copy, copy + 4, strlen(copy + 4) + 1);
+    }
+
+    /* Keeps the separator of a drive's root, e.g. C:/ */
+    size_t length = strlen(copy);
+    while (length > 1 && (copy[length - 1] == '\\' || copy[length - 1] == '/') &&
+           !(length == 3 && copy[1] == ':'))
+    {
+        copy[--length] = '\0';
+    }
+#endif
+    return copy;
+}
 
 void *FileWatcherStateNew(const Rlist *args)
 {
@@ -88,7 +127,7 @@ void *FileWatcherStateNew(const Rlist *args)
     const char *path = RlistScalarValue(args);
 
     FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
-    fws->path = xstrdup(path);
+    fws->path = WatchPathCopy(path);
 
     return fws;
 }
@@ -100,7 +139,7 @@ void *FileWatcherSizeStateNew(const Rlist *args)
     const long size_threshold = IntFromString(RlistScalarValue(args->next));
 
     FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
-    fws->path = xstrdup(path);
+    fws->path = WatchPathCopy(path);
     fws->last.file_size.threshold = size_threshold;
 
     return fws;
@@ -129,8 +168,10 @@ static void LogCheckError(FileWatcherState *fws, const char *op, int err)
     if (fws->last_error_logged == 0 ||
         now - fws->last_error_logged >= CHECK_ERROR_LOG_INTERVAL_SECS)
     {
+        /* strerror(), as err is an errno value: GetErrorStrFromCode()
+         * takes a Windows error code on Windows */
         Log(LOG_LEVEL_ERR, "Unable to %s '%s' while checking for file events: %s",
-            op, fws->path, GetErrorStrFromCode(err));
+            op, fws->path, strerror(err));
         fws->last_error_logged = now;
     }
 }
@@ -154,6 +195,19 @@ static bool FileLstat(FileWatcherState *fws, bool *exists, struct stat *sb)
         fws->last_error_logged = 0;
         return true;
     }
+
+#ifdef __MINGW32__
+    /* msvcrt's stat() also fails with ENOENT while the file's directory is
+     * open without sharing (FindFirstFile() gets a sharing violation), when
+     * the file is still there: then whether it changed is unknown */
+    WIN32_FILE_ATTRIBUTE_DATA attributes;
+    if (errno == ENOENT &&
+        GetFileAttributesExA(fws->path, GetFileExInfoStandard, &attributes))
+    {
+        LogCheckError(fws, "lstat", EBUSY);
+        return false;
+    }
+#endif
 
     if (errno == ENOENT || errno == ENOTDIR)
     {
@@ -280,6 +334,37 @@ WatcherCheckResult FileWatcherCheckFileModified(void *state)
 
 // =========== code for the file_content_modified event ===========
 
+static struct timespec StatCtime(const struct stat *sb)
+{
+    assert(sb != NULL);
+
+#if defined(HAVE_STRUCT_STAT_ST_MTIM)
+    return sb->st_ctim;
+#elif defined(HAVE_STRUCT_STAT_ST_MTIMESPEC)
+    return sb->st_ctimespec;
+#else
+    return (struct timespec) { .tv_sec = sb->st_ctime, .tv_nsec = 0 };
+#endif
+}
+
+/* Content can't change without one of these changing too: writing updates
+ * mtime and ctime, replacing the file changes the inode, and setting mtime
+ * back still updates ctime. So the file is only hashed again when they
+ * differ, which keeps frequent checks of many files cheap. */
+static StatSignature StatSignatureOf(const struct stat *sb)
+{
+    assert(sb != NULL);
+
+    StatSignature signature;
+    memset(&signature, 0, sizeof(signature)); /* no padding garbage for memcmp() */
+    signature.dev = sb->st_dev;
+    signature.ino = sb->st_ino;
+    signature.size = sb->st_size;
+    signature.mtime = StatMtime(sb);
+    signature.ctime = StatCtime(sb);
+    return signature;
+}
+
 /* Hashes the content of the file into digest. Returns false and sets errno
  * on failure. */
 static bool HashFileContent(const char *path, unsigned char digest[EVP_MAX_MD_SIZE + 1])
@@ -335,7 +420,15 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
 
     bool hashed = false;
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    if (exists && S_ISREG(sb.st_mode))
+    const StatSignature signature = exists ? StatSignatureOf(&sb) : (StatSignature) { 0 };
+    if (exists && S_ISREG(sb.st_mode) && fws->last.content.hashed &&
+        memcmp(&fws->last.content.signature, &signature, sizeof(signature)) == 0)
+    {
+        /* Unchanged since hashed, see StatSignatureOf() */
+        hashed = true;
+        memcpy(digest, fws->last.content.digest, sizeof(digest));
+    }
+    else if (exists && S_ISREG(sb.st_mode))
     {
         if (HashFileContent(fws->path, digest))
         {
@@ -354,6 +447,7 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
 
     fws->last.content.hashed = hashed;
     memcpy(fws->last.content.digest, digest, sizeof(digest));
+    fws->last.content.signature = signature;
     return FileWatcherRecordObservation(fws, exists, modified, "content modification");
 }
 

@@ -36,6 +36,15 @@
 #define REACTOR_FILE_OWNER_CHANGED "file_owner_changed"
 #define REACTOR_FILE_SIZE_EXCEEDS "file_size_exceeds"
 #define REACTOR_SIZE_THRESHOLD "size_threshold"
+#define REACTOR_USER_ADDED "user_added"
+#define REACTOR_USER_REMOVED "user_removed"
+
+/* How the event of a 'when' body is watched for, an ordered list of methods.
+ * Every method name of every edition is known here, so that policy validates
+ * the same way everywhere; a method this binary doesn't have is skipped. */
+#define REACTOR_WATCH_METHODS "watch_methods"
+#define REACTOR_WATCH_METHOD_POLL "poll"
+#define REACTOR_WATCH_METHODS_RANGE "poll|inotify|fanotify|ebpf|usn|rdcw"
 
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"

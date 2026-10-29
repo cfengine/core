@@ -14,3 +14,15 @@ allow cfengine_reactor_t systemd_userdbd_runtime_t:sock_file write;
 # these permissions are not be needed if changes from ENT-12954 to masterfiles policy move inventory from common to an agent bundle are in place.
 allow cfengine_serverd_t http_port_t:tcp_socket name_connect;
 allow cfengine_execd_t http_port_t:tcp_socket name_connect;
+
+#============= cf-reactor watch methods ==============
+# A denial only makes a watcher fall back to polling.
+# inotify and fanotify watch the watched file and its parent directory (or the
+# nearest existing ancestor), which can be anywhere
+allow cfengine_reactor_t file_type:dir watch;
+allow cfengine_reactor_t file_type:file watch;
+# Without CAP_SYS_ADMIN the kernel gives fanotify an unprivileged group, which
+# is all it needs (inode marks, own events still identified by PID)
+dontaudit cfengine_reactor_t self:capability sys_admin;
+# ebpf
+allow cfengine_reactor_t self:capability2 { bpf perfmon };

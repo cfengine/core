@@ -1,0 +1,39 @@
+#######################################################
+#
+# Test that changing watch_methods doesn't reset the state of a watcher
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file, methods)
+{
+  file_deleted => "$(file)";
+  watch_methods => { @(methods) };
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+    "methods_file" string => getenv("METHODS_FILE", 999);
+    "reload_marker" string => getenv("RELOAD_MARKER", 999);
+    "methods" slist => readstringlist("$(methods_file)", "", "\n", 10, 1000);
+
+    # Evaluated on start and on every policy reload, after the watchers were
+    # set aside: tells the test it can change the file, and keeps the watchers
+    # paused long enough for it to do so
+    "slow"
+      string => execresult("touch '$(reload_marker)' && sleep 3", "useshell");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)", @(methods)),
+      then => record_event("$(events_file)", "$(test) was deleted");
+}

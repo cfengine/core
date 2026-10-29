@@ -192,6 +192,10 @@ dnl and LIBS are appropriately set for the local pthreads situation.
 dnl ######################################################################
 AC_CHECK_FUNCS([pthread_cancel])
 
+dnl cf-reactor/stoppable_thread.c times its waits on the monotonic clock when
+dnl the condition variable's clock can be set (not on macOS).
+AC_CHECK_FUNCS([pthread_condattr_setclock])
+
 dnl ######################################################################
 dnl Whether to build extensions as builtin extensions or a separate
 dnl plugin. The default is plugin.
@@ -2032,6 +2036,7 @@ AC_CONFIG_FILES([Makefile
     tests/acceptance/25_cf-execd/Makefile
     tests/unit/Makefile
     tests/load/Makefile
+    tests/reactor/Makefile
     tests/static-check/Makefile
     tests/valgrind-check/Makefile
     tests/asan-check/Makefile])

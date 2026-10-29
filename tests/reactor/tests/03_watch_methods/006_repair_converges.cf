@@ -26,12 +26,14 @@ bundle reactor test
   events:
     "$(promise_name)"
       when => content_modified("$(test)"),
-      then => { record_event("$(events_file)", "$(test) was modified"), repair("$(test)") };
+      then => {
+        record_event("$(events_file)", "$(test) was modified"),
+        repair("$(test)"),
+      };
 }
 
 bundle agent repair(file)
 {
   files:
-    "$(file)"
-      content => "good";
+    "$(file)" content => "good";
 }

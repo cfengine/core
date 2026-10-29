@@ -14,6 +14,7 @@ body when deleted(file)
 {
   file_deleted => "$(file)";
   interval => 10;
+
   # The interval only spaces the checks of polling: a watch method wakes the
   # watcher up on every change
   watch_methods => { "poll" };

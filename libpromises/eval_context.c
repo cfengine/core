@@ -1158,7 +1158,7 @@ PackagePromiseContext *PackagePromiseConfigNew()
     package_promise_defaults->control_package_module = NULL;
     package_promise_defaults->control_package_inventory = NULL;
     package_promise_defaults->package_modules_bodies =
-            SeqNew(5, FreePackageManager);
+            SeqNew(5, PackageModuleBodyDestroy);
 
     return package_promise_defaults;
 }

@@ -86,6 +86,6 @@ int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *a
  */
 char *PackageModuleFormatOptions(Rlist *options);
 
-void FreePackageManager(PackageModuleBody *manager);
+void PackageModuleBodyDestroy(PackageModuleBody *manager);
 
 #endif /* CFENGINE_PACKAGE_MODULE_WRAPPER_H */

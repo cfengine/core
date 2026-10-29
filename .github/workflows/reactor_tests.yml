@@ -22,4 +22,4 @@ jobs:
         ln -s "$PWD/cf-reactor/cf-reactor" "$PWD/cf-promises/cf-promises" "$RUNNER_TEMP/bin/"
         cd tests/reactor
         chmod -R go-w .
-        CF_BINDIR="$RUNNER_TEMP/bin" sh run.sh
+        CF_BINDIR="$RUNNER_TEMP/bin" sh run.sh --unsafe

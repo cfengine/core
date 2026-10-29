@@ -42,6 +42,7 @@
 #include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE, REACTOR_FILE_DELETED, REACTOR_*_TYPES, BundleIsReactorEventsBundle()
 #include <syntax.h>              // CheckConstraintTypeMatch(), PromiseTypeSyntaxGet(), BodySyntaxGetConstraintSyntax()
 #include <file_watcher.h>
+#include <user_watcher.h>
 #include <conversion.h>
 
 /* Resolves the agent, common or reactor bundle (looked up in that order)
@@ -168,6 +169,10 @@ static const EventArg FILE_SIZE_EXCEEDS_ARGS[] =
 #define FileEventTypeNew(name, check) \
     EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, FileWatcherStateNew, FileWatcherStateDestroy, check)
 
+/* A user event, about the user with the name of its constraint */
+#define UserEventTypeNew(name, check) \
+    EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, UserWatcherStateNew, UserWatcherStateDestroy, check)
+
 static const EventType EVENT_TABLE[] =
 {
     FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
@@ -178,6 +183,8 @@ static const EventType EVENT_TABLE[] =
     FileEventTypeNew(REACTOR_FILE_OWNER_CHANGED, FileWatcherCheckFileOwnerChanged),
     EventTypeNew(REACTOR_FILE_SIZE_EXCEEDS, RVAL_TYPE_SCALAR, FILE_SIZE_EXCEEDS_ARGS,
                  FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds),
+    UserEventTypeNew(REACTOR_USER_ADDED, UserWatcherCheckUserAdded),
+    UserEventTypeNew(REACTOR_USER_REMOVED, UserWatcherCheckUserRemoved),
     EventTypeNewNull()
 };
 

@@ -251,7 +251,6 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
     }
 }
 
-static
 void FreePackageManager(PackageModuleBody *manager)
 {
     assert(manager != NULL);

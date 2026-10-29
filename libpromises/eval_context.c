@@ -51,6 +51,7 @@
 #include <map.h>
 #include <conversion.h>                               /* DataTypeIsIterable */
 #include <cleanup.h>
+#include <package_module_wrapper.h>
 
 /* If we need to put a scoped variable into a special scope, use the string
  * below to replace the original scope separator.

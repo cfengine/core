@@ -1,21 +1,81 @@
 # Helpers sourced by the tests. Expects CF_REACTOR and LOG to be exported by
-# run.sh.
+# run_test.sh.
+#
+# Only POSIX tools are used, as the tests are run on all the platforms (e.g.
+# no timeout(1), grep -m or date +%s).
+
+# Seconds to wait for something before giving up
+WAIT_TIMEOUT=60
 
 # number of log lines already consumed by wait_for_log
 log_offset=0
 
+# Run command $@ until it succeeds, for at most WAIT_TIMEOUT seconds, polling
+# every 0.1 second, or every second where sleep only takes whole seconds.
+# Fails if it never succeeded. Runs in a subshell without tracing, so that
+# set -x doesn't log every poll.
+wait_until() {
+    (
+        set +x
+        if sleep 0.1 2>/dev/null; then
+            interval=0.1 polls=$((WAIT_TIMEOUT * 10))
+        else
+            interval=1 polls=$WAIT_TIMEOUT
+        fi
+        until "$@"; do
+            [ "$polls" -gt 0 ] || exit 1
+            polls=$((polls - 1))
+            sleep "$interval"
+        done
+    )
+}
+
+# Print the current time in seconds since the Epoch. date +%s is not POSIX;
+# without it, srand() seeds with the time of day and returns the last seed.
+now() {
+    t=$(date +%s 2>/dev/null)
+    case "$t" in
+        ''|*[!0-9]*) awk 'BEGIN { srand(); print srand() }' ;;
+        *) echo "$t" ;;
+    esac
+}
+
+# Print the first line of the reactor log after line $1 that contains $2,
+# prefixed with its number counted from line $1. Fails if there is none.
+log_match() {
+    tail -n "+$(($1 + 1))" "$LOG" 2>/dev/null | grep -n -F -- "$2" | head -n 1 | grep .
+}
+
+# Fail unless the reactor log contains $1.
+log_contains() {
+    grep -q -F -- "$1" "$LOG" 2>/dev/null
+}
+
+# Print the number of lines of file $1, 0 if it doesn't exist.
+count_lines() {
+    if [ -f "$1" ]; then
+        # without the padding of some wc implementations
+        echo $(( $(wc -l < "$1") ))
+    else
+        echo 0
+    fi
+}
+
+# Fail unless file $1 has at least $2 lines.
+has_lines() {
+    [ "$(count_lines "$1")" -ge "$2" ]
+}
+
 # Wait until the reactor log contains $1 in a line after the last match, then
 # skip past that line, so that the next wait only sees newer output.
 wait_for_log() {
-    if ! match=$(timeout 60 sh -c '
-        until tail -n "+$(($2 + 1))" "$1" | grep -n -F -m 1 -- "$3"; do
-            sleep 0.1
-        done' _ "$LOG" "$log_offset" "$1")
+    if ! wait_until log_match "$log_offset" "$1" >/dev/null
     then
         echo "Timed out waiting for '$1' in reactor log:" >&2
         cat "$LOG" >&2
         return 1
     fi
+    match=$(log_match "$log_offset" "$1")
     log_offset=$((log_offset + ${match%%:*}))
 }
 
@@ -23,10 +83,7 @@ wait_for_log() {
 # The watcher thread may log before this line, so search the whole log and
 # leave the offset of wait_for_log as is.
 wait_for_watchers() {
-    if ! timeout 60 sh -c '
-        until grep -q -F -- "$2" "$1"; do
-            sleep 0.1
-        done' _ "$LOG" "verbose: cf-reactor event watcher has $1 watcher(s)"
+    if ! wait_until log_contains "verbose: cf-reactor event watcher has $1 watcher(s)"
     then
         echo "Timed out waiting for $1 watcher(s) in reactor log:" >&2
         cat "$LOG" >&2
@@ -36,17 +93,14 @@ wait_for_watchers() {
 
 # Wait until file $1 has at least $2 lines, then fail if it has more than $2.
 wait_for_lines() {
-    if ! timeout 60 sh -c '
-        until [ "$(cat "$1" 2>/dev/null | wc -l)" -ge "$2" ]; do
-            sleep 0.1
-        done' _ "$1" "$2"
+    if ! wait_until has_lines "$1" "$2"
     then
         echo "Timed out waiting for $2 line(s) in '$1', reactor log:" >&2
         cat "$LOG" >&2
         return 1
     fi
 
-    lines=$(wc -l < "$1")
+    lines=$(count_lines "$1")
     if [ "$lines" -ne "$2" ]
     then
         echo "Expected $2 line(s) in '$1', got $lines" >&2

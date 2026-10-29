@@ -58,6 +58,7 @@ stamp-h1
 /tests/acceptance/25_cf-execd/Makefile
 /tests/acceptance/Makefile
 /tests/load/Makefile
+/tests/reactor/Makefile
 /tests/unit/Makefile
 /tests/static-check/Makefile
 /tests/valgrind-check/Makefile

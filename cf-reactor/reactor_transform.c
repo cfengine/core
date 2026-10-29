@@ -132,11 +132,13 @@ static const Rlist *GetThenBundles(const Promise *pp)
 /*****************************************************************************/
 
 /* A constraint of the 'when' body passed to the watcher of an event, with the
- * type of value it accepts */
+ * type of value it accepts. An absent optional constraint isn't passed, so
+ * optional ones must come after the required ones. */
 typedef struct
 {
     const char *name;
     RvalType type;
+    bool optional;
 } EventArg;
 
 typedef struct
@@ -151,13 +153,13 @@ typedef struct
 
 static const EventArg NO_EXTRA_ARGS[] =
 {
-    { NULL, RVAL_TYPE_NOPROMISEE }
+    { NULL, RVAL_TYPE_NOPROMISEE, false }
 };
 
 static const EventArg FILE_SIZE_EXCEEDS_ARGS[] =
 {
-    { REACTOR_SIZE_THRESHOLD, RVAL_TYPE_SCALAR },
-    { NULL, RVAL_TYPE_NOPROMISEE }
+    { REACTOR_SIZE_THRESHOLD, RVAL_TYPE_SCALAR, false },
+    { NULL, RVAL_TYPE_NOPROMISEE, false }
 };
 
 #define EventTypeNew(name, type, args, new_state, destroy_state, check) \
@@ -280,9 +282,20 @@ static bool ResolveWhenBody(const EvalContext *ctx, const Promise *pp, WatcherOp
     }
 
     // If the event has additional args, add them to the list of args
+    NDEBUG_UNUSED bool seen_optional = false;
     for (const EventArg *extra_arg = event->extra_args; extra_arg->name != NULL; extra_arg++)
     {
+        /* The state constructors read args by position. So optional args
+         * must come last: an absent one then only shortens the list, instead
+         * of shifting the args after it. */
+        assert(!seen_optional || extra_arg->optional);
+        seen_optional = seen_optional || extra_arg->optional;
+
         const Constraint *con = PromiseGetConstraint(pp, extra_arg->name);
+        if (con == NULL && extra_arg->optional)
+        {
+            continue;
+        }
         if (con == NULL)
         {
             Log(LOG_LEVEL_ERR,

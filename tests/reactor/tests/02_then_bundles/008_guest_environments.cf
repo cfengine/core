@@ -24,7 +24,7 @@ bundle reactor run_guest_environments
     # no classes body here: the test looks at the log instead.
     "test"
       environment_type => "test",
-      environment_host => "$(sys.host)",
+      environment_host => canonify("$(sys.host)"),
       environment_state => "running";
 }
 

@@ -693,30 +693,105 @@ static FnCallResult FnCallGetACLs(
 
 /*********************************************************************/
 
+/**
+ * Check whether #rval has unresolved variables, expanding scalars without
+ * calling any functions. Function call arguments are checked recursively.
+ */
+static bool RvalHasUnresolvedVariables(const EvalContext *ctx, const char *ns, Rval rval)
+{
+    switch (rval.type)
+    {
+    case RVAL_TYPE_FNCALL:
+        for (const Rlist *rp = RvalFnCallValue(rval)->args; rp != NULL; rp = rp->next)
+        {
+            if (RvalHasUnresolvedVariables(ctx, ns, rp->val))
+            {
+                return true;
+            }
+        }
+        return false;
+    case RVAL_TYPE_SCALAR:
+    {
+        Rlist *expanded = NULL;
+        RlistAppendRval(&expanded, ExpandPrivateRval(ctx, ns, NULL, rval.item, rval.type));
+        const bool unresolved = RlistIsUnresolved(expanded);
+        RlistDestroy(expanded);
+        return unresolved;
+    }
+    default:
+        return false;
+    }
+}
+
+/**
+ * and() and or(): evaluate the arguments left to right and stop at the first
+ * one that decides the result, without evaluating the rest.
+ */
+static FnCallResult AndOr(EvalContext *ctx,
+                          const Policy *policy,
+                          const FnCall *fp,
+                          const Rlist *finalargs,
+                          bool is_and)
+{
+    assert(fp != NULL);
+
+    /* Like any function, skip for now if any argument has unresolved
+     * variables. Checked without calling any functions. */
+    const Bundle *caller_bundle = fp->caller ? PromiseGetBundle(fp->caller) : NULL;
+    const char *caller_ns = caller_bundle ? caller_bundle->ns : NULL;
+    for (const Rlist *arg = finalargs; arg != NULL; arg = arg->next)
+    {
+        if (RvalHasUnresolvedVariables(ctx, caller_ns, arg->val))
+        {
+            return FnFailure();
+        }
+    }
+
+    /* Then expand the arguments one at a time, stopping at the first one
+     * that decides the result. */
+    for (const Rlist *arg = finalargs; arg != NULL; arg = arg->next)
+    {
+        /* Expand just this argument, it can expand to several (e.g. a list). */
+        Rlist *single_arg = NULL;
+        RlistAppendRval(&single_arg, RvalCopy(arg->val));
+        FnCall *single_fp = FnCallNew(fp->name, single_arg);
+        single_fp->caller = fp->caller;
+        Rlist *expanded = NewExpArgs(ctx, policy, single_fp, NULL);
+        FnCallDestroy(single_fp);
+
+        /* A nested function call that failed stays unexpanded. */
+        if (RlistIsUnresolved(expanded))
+        {
+            RlistDestroy(expanded);
+            return FnFailure();
+        }
+
+        for (const Rlist *rp = expanded; rp != NULL; rp = rp->next)
+        {
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(fp->name, rp->val, CF_DATA_TYPE_STRING, "", 1);
+            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+            {
+                FatalError(ctx, "Function '%s', %s", fp->name, SyntaxTypeMatchToString(err));
+            }
+
+            if (IsDefinedClass(ctx, RlistScalarValue(rp)) != is_and)
+            {
+                RlistDestroy(expanded);
+                return FnReturnContext(!is_and);
+            }
+        }
+        RlistDestroy(expanded);
+    }
+
+    return FnReturnContext(is_and);
+}
+
 static FnCallResult FnCallAnd(EvalContext *ctx,
-                              ARG_UNUSED const Policy *policy,
-                              ARG_UNUSED const FnCall *fp,
+                              const Policy *policy,
+                              const FnCall *fp,
                               const Rlist *finalargs)
 {
-
-    for (const Rlist *arg = finalargs; arg; arg = arg->next)
-    {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(fp->name, arg->val, CF_DATA_TYPE_STRING, "", 1);
-        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
-        {
-            FatalError(ctx, "Function '%s', %s", fp->name, SyntaxTypeMatchToString(err));
-        }
-    }
-
-    for (const Rlist *arg = finalargs; arg; arg = arg->next)
-    {
-        if (!IsDefinedClass(ctx, RlistScalarValue(arg)))
-        {
-            return FnReturnContext(false);
-        }
-    }
-
-    return FnReturnContext(true);
+    return AndOr(ctx, policy, fp, finalargs, true);
 }
 
 /*******************************************************************/
@@ -5497,6 +5572,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                                    bool invert,
                                    long max)
 {
+    assert(fp != NULL);
     Regex *rx = NULL;
     if (do_regex)
     {
@@ -5553,8 +5629,11 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                 RlistAppendScalar(&returnlist, val);
                 match_count++;
 
+                /* One match decides the result of these. */
                 if (strcmp(fp->name, "some")     == 0 ||
-                    strcmp(fp->name, "regarray") == 0)
+                    strcmp(fp->name, "regarray") == 0 ||
+                    strcmp(fp->name, "reglist")  == 0 ||
+                    strcmp(fp->name, "none")     == 0)
                 {
                     free(val);
                     break;
@@ -7351,33 +7430,11 @@ static FnCallResult FnCallOn(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Polic
 /*********************************************************************/
 
 static FnCallResult FnCallOr(EvalContext *ctx,
-                             ARG_UNUSED const Policy *policy,
-                             ARG_UNUSED const FnCall *fp,
+                             const Policy *policy,
+                             const FnCall *fp,
                              const Rlist *finalargs)
 {
-    char id[CF_BUFSIZE];
-
-    snprintf(id, CF_BUFSIZE, "built-in FnCall or-arg");
-
-/* We need to check all the arguments, ArgTemplate does not check varadic functions */
-    for (const Rlist *arg = finalargs; arg; arg = arg->next)
-    {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, CF_DATA_TYPE_STRING, "", 1);
-        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
-        {
-            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
-        }
-    }
-
-    for (const Rlist *arg = finalargs; arg; arg = arg->next)
-    {
-        if (IsDefinedClass(ctx, RlistScalarValue(arg)))
-        {
-            return FnReturnContext(true);
-        }
-    }
-
-    return FnReturnContext(false);
+    return AndOr(ctx, policy, fp, finalargs, false);
 }
 
 /*********************************************************************/
@@ -11848,7 +11905,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("ago", CF_DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("and", CF_DATA_TYPE_CONTEXT, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(0, -1)),
+                  FNCALL_OPTION_VARARG|FNCALL_OPTION_DELAYED_EVALUATION, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(0, -1)),
     FnCallTypeNew("basename", CF_DATA_TYPE_STRING, BASENAME_ARGS, &FnCallBasename, "Retrieves the basename of a filename.",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(1, 2)),
     FnCallTypeNew("bundlesmatching", CF_DATA_TYPE_STRING_LIST, BUNDLESMATCHING_ARGS, &FnCallBundlesMatching, "Find all the bundles that match a regular expression and tags.",
@@ -12046,7 +12103,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("on", CF_DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("or", CF_DATA_TYPE_CONTEXT, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(0, -1)),
+                  FNCALL_OPTION_VARARG|FNCALL_OPTION_DELAYED_EVALUATION, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(0, -1)),
     FnCallTypeNew("packagesmatching", CF_DATA_TYPE_CONTAINER, PACKAGESMATCHING_ARGS, &FnCallPackagesMatching, "List the installed packages (\"name,version,arch,manager\") matching regex arg1=name,arg2=version,arg3=arch,arg4=method",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("packageupdatesmatching", CF_DATA_TYPE_CONTAINER, PACKAGESMATCHING_ARGS, &FnCallPackagesMatching, "List the available patches (\"name,version,arch,manager\") matching regex arg1=name,arg2=version,arg3=arch,arg4=method.  Enterprise only.",

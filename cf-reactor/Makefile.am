@@ -45,6 +45,7 @@ libcf_reactor_la_SOURCES = \
 	reactor_context.c reactor_context.h \
 	reactor_transform.c reactor_transform.h \
 	stoppable_thread.c stoppable_thread.h \
+	user_watcher.c user_watcher.h \
 	wakeup_channel.c wakeup_channel.h \
 	watcher.c watcher.h
 

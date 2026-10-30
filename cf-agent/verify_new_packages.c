@@ -100,7 +100,8 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, c
     }
 
     PackageModuleWrapper *package_module =
-        NewPackageModuleWrapper(a->new_packages.module_body);
+        NewPackageModuleWrapper(a->new_packages.module_body,
+                                PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC);
 
     if (package_module == NULL)
     {

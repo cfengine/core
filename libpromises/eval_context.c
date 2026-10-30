@@ -51,6 +51,7 @@
 #include <map.h>
 #include <conversion.h>                               /* DataTypeIsIterable */
 #include <cleanup.h>
+#include <package_module_wrapper.h>
 
 /* If we need to put a scoped variable into a special scope, use the string
  * below to replace the original scope separator.
@@ -1150,18 +1151,6 @@ static void StackFrameDestroy(StackFrame *frame)
 }
 
 static
-void FreePackageManager(PackageModuleBody *manager)
-{
-    assert(manager != NULL);
-
-    free(manager->name);
-    free(manager->interpreter);
-    free(manager->module_path);
-    RlistDestroy(manager->options);
-    free(manager);
-}
-
-static
 PackagePromiseContext *PackagePromiseConfigNew()
 {
     PackagePromiseContext *package_promise_defaults =
@@ -1169,7 +1158,7 @@ PackagePromiseContext *PackagePromiseConfigNew()
     package_promise_defaults->control_package_module = NULL;
     package_promise_defaults->control_package_inventory = NULL;
     package_promise_defaults->package_modules_bodies =
-            SeqNew(5, FreePackageManager);
+            SeqNew(5, PackageModuleBodyDestroy);
 
     return package_promise_defaults;
 }

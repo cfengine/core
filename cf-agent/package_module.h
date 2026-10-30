@@ -26,10 +26,10 @@
 #define PACKAGE_MODULE_H
 
 #include <cf3.defs.h>
+#include <package_module_wrapper.h>
 
 //TODO: use promise expireafter instead
 #define PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC 4 * 3600 /* 4 hours timeout */
-#define PACKAGE_PROMISE_TERMINATION_CHECK_SEC 1
 
 #define GLOBAL_PACKAGE_PROMISE_LOCK_NAME "new_packages_promise_lock"
 
@@ -56,17 +56,6 @@ typedef struct
 
 typedef struct
 {
-    char *name;
-    char *path;
-    char *script_path;
-    char *script_path_quoted;
-    char *script_exec_opts;
-    PackageModuleBody *package_module;
-    int supported_api_version;
-} PackageModuleWrapper;
-
-typedef struct
-{
     CfLock g_lock;
     EvalContext *lock_ctx;
 } PackagePromiseGlobalLock;
@@ -87,9 +76,6 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
                                         const PackageModuleWrapper *wrapper);
 
 void UpdatePackagesCache(EvalContext *ctx, bool force_update);
-
-PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module);
-void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper);
 
 PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx);
 void YieldGlobalPackagePromiseLock(PackagePromiseGlobalLock lock);

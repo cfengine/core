@@ -39,7 +39,10 @@ bundle agent check
 {
   vars:
     "observed_uid" string => filestat($(G.testfile), uid);
-    "desired_uid" int => getuid("pr_us_1");
+
+    "desired_uid"
+      int => getuid("pr_us_1"),
+      if => userexists("pr_us_1");
 
   reports:
     "$(this.promise_filename) Pass"

@@ -62,7 +62,10 @@ bundle agent check
 {
   vars:
     "expected" string => ".*user:root:rwx.*";
-    "acls" slist => getacls("$(global.testfile)", "access");
+
+    "acls"
+      slist => getacls("$(global.testfile)", "access"),
+      if => fileexists("$(global.testfile)");
 
   classes:
     "ok" expression => some("$(expected)", "acls");

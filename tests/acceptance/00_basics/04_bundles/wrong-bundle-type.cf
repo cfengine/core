@@ -20,6 +20,10 @@ bundle agent test
         "${sys.cf_agent} -Kf $(this.promise_dirname)/wrong-bundle-type.sub.x.cf",
         "noshell"
       );
+
+    # Indent the output in the DEBUG report, so that errors printed by the
+    # sub-agent are not mistaken for errors of this test by testall
+    "subout_indented" string => regex_replace($(subout), "^", "  | ", "gm");
 }
 
 bundle agent check
@@ -29,7 +33,7 @@ bundle agent check
 
   reports:
     DEBUG::
-      "$(test.subout)";
+      "$(test.subout_indented)";
 
     ok::
       "$(this.promise_filename) Pass";

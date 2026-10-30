@@ -2,6 +2,9 @@
 #
 # Test countlinesmatching() with some kind of failure expected
 #
+# This is an .error.pass.cf test, because countlinesmatching() is called
+# on an inaccessible file on purpose and logs an error.
+#
 #######################################################
 body common control
 {

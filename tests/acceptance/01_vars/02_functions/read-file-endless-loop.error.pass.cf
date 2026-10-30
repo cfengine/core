@@ -1,5 +1,9 @@
 # Test that regline, getfields and countlinesmatching do not loop endlessly if
 # supplied with a directory (Redmine #2453)
+#
+# This is an .error.pass.cf test, because regline(), getfields() and
+# countlinesmatching() are given the directory '/' on purpose and log
+# errors.
 body common control
 {
   inputs => { "../../default.sub.cf" };

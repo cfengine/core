@@ -29,8 +29,8 @@
 #include <watcher.h>            /* WatcherCheckResult */
 
 
-void *FileWatcherStateNew(const Rlist *args);
-void *FileWatcherSizeStateNew(const Rlist *args);
+void *FileWatcherStateNew(const EvalContext *ctx, const Rlist *args);
+void *FileWatcherSizeStateNew(const EvalContext *ctx, const Rlist *args);
 void FileWatcherStateDestroy(void *state);
 
 WatcherCheckResult FileWatcherCheckFileDeleted(void *state);

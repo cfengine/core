@@ -28,7 +28,7 @@ static void *NewFileDeletedState(const char *path)
 {
     Rlist *args = NULL;
     RlistAppendScalar(&args, path);
-    void *state = FileWatcherStateNew(args);
+    void *state = FileWatcherStateNew(NULL, args);
     RlistDestroy(args);
     return state;
 }

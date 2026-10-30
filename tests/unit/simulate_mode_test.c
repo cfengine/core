@@ -147,6 +147,40 @@ static void test_manifest_install_cancels_removal(void)
     unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
 }
 
+/* Two recorded installations of the same package without a version must be
+ * reported once, not abort on comparing the empty versions. */
+static void test_diff_repeated_unversioned_install(void)
+{
+    write_pkgs_ops("i,foo,,\r\n"
+                   "i,foo,,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    const char *msg = "Package 'foo' would be installed";
+    const char *first = strstr(output, msg);
+    assert_true(first != NULL);
+    assert_true(strstr(first + strlen(msg), "would be installed") == NULL);
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* A versioned installation record is more specific than an unversioned one
+ * of the same package, so it is the one to report. */
+static void test_diff_unversioned_then_versioned_install(void)
+{
+    write_pkgs_ops("i,foo,,\r\n"
+                   "i,foo,1.2.3,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(strstr(output, "Package 'foo [1.2.3]' would be installed") != NULL);
+    assert_true(strstr(output, "Package 'foo' would be installed") == NULL);
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -161,6 +195,8 @@ int main()
         unit_test(test_diff_removal_with_version),
         unit_test(test_diff_removal_with_other_version_keeps_install),
         unit_test(test_manifest_install_cancels_removal),
+        unit_test(test_diff_repeated_unversioned_install),
+        unit_test(test_diff_unversioned_then_versioned_install),
     };
 
     int ret = run_tests(tests);

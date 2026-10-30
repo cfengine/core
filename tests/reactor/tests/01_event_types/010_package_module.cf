@@ -1,0 +1,55 @@
+#######################################################
+#
+# Test the package_module attribute of package events
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+
+  # no default package_module
+}
+
+# Lists the packages in the file given as option
+body package_module reactor_test
+{
+  default_options => { "$(test.installed_file)" };
+}
+
+body when installed(name)
+{
+  package_installed => "$(name)";
+}
+
+body when installed_with(name, module)
+{
+  package_installed => "$(name)";
+  package_module => "$(module)";
+}
+
+bundle reactor test
+{
+  vars:
+    "package" string => getenv("TEST_PACKAGE", 999);
+    "installed_file" string => getenv("INSTALLED_FILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    # no package_module, and no default one
+    "$(promise_name)_no_default"
+      when => installed("$(package)"),
+      then => record_event("$(events_file)", "no default installed");
+
+    # a package module body that doesn't exist
+    "$(promise_name)_unknown"
+      when => installed_with("$(package)", "no_such_module"),
+      then => record_event("$(events_file)", "unknown installed");
+
+    # last, so that its log lines come after the errors of the others
+    "$(promise_name)_module"
+      when => installed_with("$(package)", "reactor_test"),
+      then => record_event("$(events_file)", "installed");
+}

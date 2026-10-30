@@ -1338,7 +1338,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
                 strlcpy(vbuff, changes_sourcefile, CF_BUFSIZE);
                 ChopLastNode(vbuff);
                 AddSlash(vbuff);
-                strncat(vbuff, chrooted_linkbuf, CF_BUFSIZE - 1);
+                strlcat(vbuff, chrooted_linkbuf, sizeof(vbuff));
                 strlcpy(chrooted_linkbuf, vbuff, CF_BUFSIZE - 1);
             }
             else
@@ -1346,7 +1346,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
                 strlcpy(vbuff, sourcefile, CF_BUFSIZE);
                 ChopLastNode(vbuff);
                 AddSlash(vbuff);
-                strncat(vbuff, linkbuf, CF_BUFSIZE - 1);
+                strlcat(vbuff, linkbuf, sizeof(vbuff));
                 strlcpy(linkbuf, vbuff, CF_BUFSIZE - 1);
             }
         }

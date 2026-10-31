@@ -53,6 +53,9 @@ static const ConstraintSyntax when_constraints[] =
     ConstraintSyntaxNewInt(REACTOR_SIZE_THRESHOLD, CF_VALRANGE, "Size in bytes above which '" REACTOR_FILE_SIZE_EXCEEDS "' fires", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString(REACTOR_USER_ADDED, CF_ANYSTRING, "User to react for on addition", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString(REACTOR_USER_REMOVED, CF_ANYSTRING, "User to react for on removal", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString(REACTOR_PACKAGE_INSTALLED, CF_ANYSTRING, "Package to react for on installation", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString(REACTOR_PACKAGE_UNINSTALLED, CF_ANYSTRING, "Package to react for on uninstallation", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString(REACTOR_PACKAGE_MODULE, ".*", "Package module to list the installed packages with, instead of the default one", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("interval", REACTOR_INTERVAL_RANGE, "Seconds between two checks for the event", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

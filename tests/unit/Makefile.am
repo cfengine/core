@@ -159,6 +159,7 @@ check_PROGRAMS = \
 	client_code_test \
 	watcher_test \
 	file_watcher_test \
+	package_watcher_test \
 	user_watcher_test \
 	stoppable_thread_test \
 	wakeup_channel_test
@@ -241,6 +242,10 @@ watcher_test_SOURCES = watcher_test.c \
 
 file_watcher_test_SOURCES = file_watcher_test.c \
 	../../cf-reactor/file_watcher.c
+
+# package_watcher.c is included by the test, to test its static functions
+package_watcher_test_SOURCES = package_watcher_test.c \
+	../../cf-reactor/stoppable_thread.c
 
 user_watcher_test_SOURCES = user_watcher_test.c
 

@@ -1,0 +1,46 @@
+#######################################################
+#
+# Test package_installed and package_uninstalled events
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+  package_module => "reactor_test";
+}
+
+# Lists the packages in the file given as option
+body package_module reactor_test
+{
+  default_options => { "$(test.installed_file)" };
+}
+
+body when installed(name)
+{
+  package_installed => "$(name)";
+}
+
+body when uninstalled(name)
+{
+  package_uninstalled => "$(name)";
+}
+
+bundle reactor test
+{
+  vars:
+    "package" string => getenv("TEST_PACKAGE", 999);
+    "installed_file" string => getenv("INSTALLED_FILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)_installed"
+      when => installed("$(package)"),
+      then => record_event("$(events_file)", "installed");
+
+    "$(promise_name)_uninstalled"
+      when => uninstalled("$(package)"),
+      then => record_event("$(events_file)", "uninstalled");
+}

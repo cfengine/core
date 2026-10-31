@@ -6302,7 +6302,8 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     char piece[CF_BUFSIZE];
                     memset(piece, 0, CF_BUFSIZE);
 
-                    const char bad_modifiers[] = "hLqjzt";
+                    /* '*' and '$' make printf fetch arguments we never pass */
+                    const char bad_modifiers[] = "hLqjzt*$";
                     const size_t length = strlen(bad_modifiers);
                     for (size_t b = 0; b < length; b++)
                     {
@@ -6315,6 +6316,18 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                             SeqDestroy(s);
                             return FnFailure();
                         }
+                    }
+
+                    /* "%ls" would read the char * argument as wchar_t * */
+                    if (strchr(format_piece, 'l') != NULL &&
+                        (strrchr(format_piece, 's') != NULL ||
+                         strrchr(format_piece, 'S') != NULL))
+                    {
+                        Log(LOG_LEVEL_ERR, "format() does not allow modifier character 'l' in format specifier '%s'.",
+                              format_piece);
+                        BufferDestroy(buf);
+                        SeqDestroy(s);
+                        return FnFailure();
                     }
 
                     if (strrchr(format_piece, 'd') != NULL || strrchr(format_piece, 'o') != NULL || strrchr(format_piece, 'x') != NULL)

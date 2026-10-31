@@ -29,6 +29,7 @@
 #include <compiler.h>
 #include <enterprise_extension.h>
 #include <set.h>
+#include <reactor_watch_backend.h>
 
 bool BootstrapAllowed(void);
 
@@ -84,6 +85,9 @@ ENTERPRISE_FUNC_3ARG_DECLARE(bool, ReactorNovaInitialize, int*, fds, size_t, max
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReactorNovaHandleTimeout, time_t *, next_tick);
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, ReactorNovaHandleEvents, fd_set *, readfds, int *, fds, time_t *, next_tick);
 ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, ReactorNovaFinalize);
+/* NULL-terminated array of the extra cf-reactor watch methods, see
+ * reactor_watch_backend.h, or NULL */
+ENTERPRISE_FUNC_0ARG_DECLARE(const ReactorWatchBackend *const *, ReactorEnterpriseWatchBackends);
 
 /* manual.c */
 

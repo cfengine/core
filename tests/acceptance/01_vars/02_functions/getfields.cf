@@ -41,7 +41,9 @@ body delete init_delete
 bundle agent test
 {
   vars:
-    "num_matching" int => getfields("t.*", "$(G.testfile)", ":", "fields");
+    "num_matching"
+      int => getfields("t.*", "$(G.testfile)", ":", "fields"),
+      if => fileexists("$(G.testfile)");
 }
 
 #######################################################

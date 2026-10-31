@@ -48,7 +48,10 @@ body delete init_delete
 bundle agent test
 {
   vars:
-    "cnt" int => readstringarray("ary", "$(G.testfile)", "^#.*", ":+", 10, 14);
+    "cnt"
+      int => readstringarray("ary", "$(G.testfile)", "^#.*", ":+", 10, 14),
+      if => fileexists("$(G.testfile)");
+
     "num" int => "3";
 }
 

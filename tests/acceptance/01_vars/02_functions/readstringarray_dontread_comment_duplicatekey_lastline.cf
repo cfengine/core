@@ -49,7 +49,8 @@ bundle agent test
 {
   vars:
     "cnt"
-      int => readstringarray("ary", "$(G.testfile)", "NoComment", ":", 6, 1000);
+      int => readstringarray("ary", "$(G.testfile)", "NoComment", ":", 6, 1000),
+      if => fileexists("$(G.testfile)");
 
     "num" int => "6";
 }

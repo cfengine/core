@@ -215,6 +215,8 @@ usage() {
     echo "If no test is given, all standard tests are run:"
     echo "  Tests with names of form <file>.cf are expected to run successfully"
     echo "  Tests with names of form <file>.x.cf are expected to exit with error"
+    echo "  Tests with names of form <file>.error.cf are expected to log error(s) and exit with 0"
+    echo "  Tests with names of form <file>.error.pass.cf are expected to log error(s), pass and exit with 0"
     echo "Set ${COLOR_SUCCESS}CFENGINE_COLOR=1${COLOR_NORMAL} to get ANSI color markers where appropriate."
     echo
     echo "If arguments are given, those are executed as tests"
@@ -256,7 +258,7 @@ usage() {
     echo "               defaults to $DEFLIBTOOL."
     echo " --include Include the file or directory given in the workdir before the test"
     echo "           starts. This option may be given several times."
-    echo " --tests=common,network,serial,timed,slow,errorexit,errorlog,libxml2,libcurl"
+    echo " --tests=common,network,serial,timed,slow,errorexit,errorlog,errorpass,libxml2,libcurl"
     echo "           This is the default value, you can also add from the following:"
     echo "           unsafe,staging"
     echo "           NOTE: 'staging' tests are not expected to pass"
@@ -285,9 +287,9 @@ workdir() {
 }
 
 # Example:    fgrepvar 'word'  VARNAME
-# Silent fgrep for variables: search for "word" in $VARNAME
+# Silent grep -F for variables: search for "word" in $VARNAME
 fgrepvar() {
-    eval echo \$$2  |  fgrep "$1"  >  /dev/null
+    eval echo \$$2  |  grep -F "$1"  >  /dev/null
 }
 
 # Same but instead of word search for a regex
@@ -323,9 +325,11 @@ runtest() {
 
     case "$TEST" in
         *.x.cf)       TEST_TYPE=errorexit &&
-                      EXTRATEXT='(should exit with non-zero, but not crash)' ;;
+                      EXTRATEXT='(should exit with non-zero, but not crash. Printing pass or fail is irrelevant)' ;;
         *.error.cf)   TEST_TYPE=errorlog &&
-                      EXTRATEXT='(should log error(s), but exit with 0)' ;;
+                      EXTRATEXT='(should log error(s), but exit with 0. Printing pass or fail is irrelevant)' ;;
+        *.error.pass.cf)  TEST_TYPE=errorpass &&
+                          EXTRATEXT='(should log error(s), print pass message and, exit with 0)' ;;
         */staging/*)  TEST_TYPE=staging   ;;
         */unsafe/*)   TEST_TYPE=unsafe    ;;
         */network/*)  TEST_TYPE=network   ;;
@@ -343,6 +347,10 @@ runtest() {
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}'errorexit' tests are disabled${COLOR_NORMAL}"
+    elif [ $ERRORPASS_TESTS = 0  -a  $TEST_TYPE = errorpass ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}'errorpass' tests are disabled${COLOR_NORMAL}"
     elif [ $ERRORLOG_TESTS = 0  -a  $TEST_TYPE = errorlog ]
     then
         SKIP=1
@@ -524,22 +532,22 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
         echo "Return code is $RETVAL." >> "$WORKDIR/$LOG"
 
         # Try to collect test metadata if any
-        if egrep "R: test description: " $OUTFILE > /dev/null
+        if grep -E "R: test description: " $OUTFILE > /dev/null
         then
-            TEST_DESCRIPTION="$(egrep "R: test description" $OUTFILE | sed -e "s,.*test description: \([A-Za-z0-9_]*\),\1,")"
+            TEST_DESCRIPTION="$(grep -E "R: test description" $OUTFILE | sed -e "s,.*test description: \([A-Za-z0-9_]*\),\1,")"
         fi
-        if egrep -e "R: test story_id: " $OUTFILE > /dev/null
+        if grep -E -e "R: test story_id: " $OUTFILE > /dev/null
         then
-            TEST_STORY="$(egrep "R: test story_id" $OUTFILE | sed -e "s,.*test story_id: \([0-9][0-9]*\),\1,")"
+            TEST_STORY="$(grep -E "R: test story_id" $OUTFILE | sed -e "s,.*test story_id: \([0-9][0-9]*\),\1,")"
         fi
-        if egrep -e "R: test covers: " $OUTFILE > /dev/null
+        if grep -E -e "R: test covers: " $OUTFILE > /dev/null
         then
-            TEST_COVERS="$(egrep "R: test covers" $OUTFILE | sed -e "s,.*test covers: \([A-Za-z0-9_]*\),\1,")"
+            TEST_COVERS="$(grep -E "R: test covers" $OUTFILE | sed -e "s,.*test covers: \([A-Za-z0-9_]*\),\1,")"
         fi
 
         if [ $TEST_TYPE = errorexit ]
         then
-            if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ] && egrep "error:|aborted on defined class" $OUTFILE > /dev/null
+            if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ] && grep -E "error:|aborted on defined class" $OUTFILE > /dev/null
             then
                 RESULT=Pass
                 RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
@@ -557,7 +565,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             then
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL (NON-ZERO EXIT CODE!)${COLOR_NORMAL}"
-            elif fgrep 'error: ' "$OUTFILE" > /dev/null
+            elif grep -F 'error: ' "$OUTFILE" > /dev/null
             then
                 RESULT=Pass
                 RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
@@ -565,7 +573,8 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL (No errors printed)${COLOR_NORMAL}"
             fi
-        else # TEST_TYPE is not errorlog or errorexit
+        else # TEST_TYPE is not errorlog or errorexit (errorpass is handled here
+             # too, so that soft fails and skips work for it)
             # We need to be careful when matching test outcomes. Because of convergence
             # passes, a test may output FAIL before it outputs Pass; in this case the
             # latter trumps the former. Also be careful when matching an [XS]FAIL; the
@@ -575,21 +584,21 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             # Some states are output by dcs.sub.cf, therefore check for both TEST
             # prefix and dcs.sub.cf prefix.
             ESCAPED_TEST="$(echo "($TEST|dcs.sub.cf)" | sed -e 's/\./\\./g')"
-            if egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null && ! egrep "R: .*$ESCAPED_TEST Wait/" $OUTFILE > /dev/null
+            if grep -E "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null && ! grep -E "R: .*$ESCAPED_TEST Wait/" $OUTFILE > /dev/null
             then
                 # Check for passed outcome, which should not happen.
-                if egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep "R: .*$ESCAPED_TEST Pass" > /dev/null
+                if grep -E "R: .*$ESCAPED_TEST " $OUTFILE | grep -E "R: .*$ESCAPED_TEST Pass" > /dev/null
                 then
                     RESULT=FAIL
                     RESULT_MSG="${COLOR_FAILURE}FAIL (The test Passed, but failure was expected)${COLOR_NORMAL}"
-                elif egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null
+                elif grep -E "R: .*$ESCAPED_TEST " $OUTFILE | grep -E -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null
                 then
                     # Other test case outcomes than fail. Should not happen.
                     RESULT=FAIL
                     RESULT_MSG="${COLOR_FAILURE}FAIL (Failure was expected, but the test had an unexpected test outcome, check test output, Pass/FAIL need to match exactly)${COLOR_NORMAL}"
                 else
-                    TICKET="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/\(.*\),\1,")"
-                    RESULT="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
+                    TICKET="$(grep -E "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/\(.*\),\1,")"
+                    RESULT="$(grep -E "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
                     if [ "$RESULT" = "XFAIL" ]
                     then
                         RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, $TICKET)${COLOR_NORMAL}"
@@ -600,38 +609,56 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             elif [ $RETVAL -ne 0 ]
             then
                 RESULT=FAIL
-            elif egrep "R: .*$ESCAPED_TEST FAIL/no_ticket_number" $OUTFILE > /dev/null
+            elif grep -E "R: .*$ESCAPED_TEST FAIL/no_ticket_number" $OUTFILE > /dev/null
             then
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no issue number is provided)${COLOR_NORMAL}"
-            elif egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE > /dev/null
+            elif grep -E "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE > /dev/null
             then
                 if [ -z "$NEXT_TIMEOUT_VAR" ]
                 then
                     RESULT=FAIL
                     RESULT_MSG="${COLOR_FAILURE}FAIL (Test tried to wait but is not in \"timed\" directory)${COLOR_NORMAL}"
                 else
-                    WAIT_TIME=$(egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -e 's,.*Wait/\([0-9][0-9]*\).*,\1,')
+                    WAIT_TIME=$(grep -E "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -e 's,.*Wait/\([0-9][0-9]*\).*,\1,')
                     eval $NEXT_TIMEOUT_VAR=$(($TEST_END_TIME+$WAIT_TIME))
                     RESULT=Wait
                     RESULT_MSG="Awaiting ($WAIT_TIME seconds)..."
                 fi
-            elif egrep "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
+            elif grep -E "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
             then
-                RESULT=Pass
-                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-            elif egrep "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null
+                # Regular tests must not log errors, tests which are expected
+                # to log errors should be named *.error.cf or *.error.pass.cf
+                if [ $TEST_TYPE = errorpass ]
+                then
+                    if grep -F 'error: ' "$OUTFILE" > /dev/null
+                    then
+                        RESULT=Pass
+                        RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+                    else
+                        RESULT=FAIL
+                        RESULT_MSG="${COLOR_FAILURE}FAIL (No error message!)${COLOR_NORMAL}"
+                    fi
+                elif grep -E '^ *error: ' $OUTFILE > /dev/null
+                then
+                    RESULT=FAIL
+                    RESULT_MSG="${COLOR_FAILURE}FAIL (Error printed)${COLOR_NORMAL}"
+                else
+                    RESULT=Pass
+                    RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+                fi
+            elif grep -E "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null
             then
                 RESULT=Skip
                 RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
-            elif egrep "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE > /dev/null
+            elif grep -E "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE > /dev/null
             then
                 RESULT=Skip
                 RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
-            elif egrep "R: .*$ESCAPED_TEST FLAKEY" $OUTFILE > /dev/null
+            elif grep -E "R: .*$ESCAPED_TEST FLAKEY" $OUTFILE > /dev/null
             then
                 RESULT=FLAKEY
-                TICKET="$(egrep "R: .*$ESCAPED_TEST FLAKEY" $OUTFILE | sed -e "s,.*FLAKEY/\(.*\),\1,")"
+                TICKET="$(grep -E "R: .*$ESCAPED_TEST FLAKEY" $OUTFILE | sed -e "s,.*FLAKEY/\(.*\),\1,")"
                 RESULT_MSG="${COLOR_WARNING}Flakey fail ($TICKET)${COLOR_NORMAL}"
 
             else
@@ -814,6 +841,7 @@ do
             SLOW_TESTS=0
             ERROREXIT_TESTS=0
             ERRORLOG_TESTS=0
+            ERRORPASS_TESTS=0
             SERIAL_TESTS=0
             NETWORK_TESTS=0
             LIBXML2_TESTS=0
@@ -830,6 +858,7 @@ do
                     slow)        SLOW_TESTS=1;;
                     errorexit)   ERROREXIT_TESTS=1;;
                     errorlog)    ERRORLOG_TESTS=1;;
+                    errorpass)   ERRORPASS_TESTS=1;;
                     serial)      SERIAL_TESTS=1;;
                     network)     NETWORK_TESTS=1;;
                     libxml2)     LIBXML2_TESTS=1;;
@@ -1075,7 +1104,7 @@ fi
 
 for addtest in $ALL_TESTS
 do
-    if echo "$addtest" | fgrep "/timed/" > /dev/null
+    if echo "$addtest" | grep -F "/timed/" > /dev/null
     then
         if [ "$TIMED_TESTS" = 1 ]
         then
@@ -1133,12 +1162,12 @@ print_header() {
 
 print_footer() {
     # Recalculate results since sub invocations may not have been recorded.
-    PASSED_TESTS=`egrep '^Pass ' $SUMMARY | wc -l | tr -d ' '`
-    FAILED_TESTS=`egrep '^(FAIL|XFAIL) ' $SUMMARY | wc -l | tr -d ' '`
-    SUPPRESSED_FAILURES=`egrep '^XFAIL ' $SUMMARY | wc -l | tr -d ' '`
-    SOFT_FAILURES=`egrep '^SFAIL ' $SUMMARY | wc -l | tr -d ' '`
-    FLAKEY_FAILURES=`egrep '^FLAKEY ' $SUMMARY | wc -l | tr -d ' '`
-    SKIPPED_TESTS=`egrep '^Skip ' $SUMMARY | wc -l | tr -d ' '`
+    PASSED_TESTS=`grep -E '^Pass ' $SUMMARY | wc -l | tr -d ' '`
+    FAILED_TESTS=`grep -E '^(FAIL|XFAIL) ' $SUMMARY | wc -l | tr -d ' '`
+    SUPPRESSED_FAILURES=`grep -E '^XFAIL ' $SUMMARY | wc -l | tr -d ' '`
+    SOFT_FAILURES=`grep -E '^SFAIL ' $SUMMARY | wc -l | tr -d ' '`
+    FLAKEY_FAILURES=`grep -E '^FLAKEY ' $SUMMARY | wc -l | tr -d ' '`
+    SKIPPED_TESTS=`grep -E '^Skip ' $SUMMARY | wc -l | tr -d ' '`
 
     ( echo
       echo ======================================================================

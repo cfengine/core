@@ -15,8 +15,13 @@ bundle agent init
 bundle agent test
 {
   vars:
-    "value1" string => readfile("$(G.testfile)", 10000);
-    "value2" string => readfile("$(G.testfile)", 0);
+    "value1"
+      string => readfile("$(G.testfile)", 10000),
+      if => fileexists("$(G.testfile)");
+
+    "value2"
+      string => readfile("$(G.testfile)", 0),
+      if => fileexists("$(G.testfile)");
 }
 
 bundle agent check

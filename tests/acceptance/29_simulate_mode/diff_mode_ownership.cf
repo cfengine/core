@@ -36,7 +36,9 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "actual" string => readfile("$(this.promise_filename).actual", inf);
+    "actual"
+      string => readfile("$(this.promise_filename).actual", inf),
+      if => fileexists("$(this.promise_filename).actual");
 
   classes:
     "has_owner_change"

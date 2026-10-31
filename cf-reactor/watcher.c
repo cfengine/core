@@ -307,7 +307,7 @@ void WatcherPromiseHash(const Promise *pp, char *hash, size_t hash_size)
     assert(pp != NULL);
     assert(hash != NULL);
 
-    const size_t length = SeqLength(pp->conlist);
+    const size_t length = (pp->conlist == NULL) ? 0 : SeqLength(pp->conlist);
     Seq *conlist = SeqNew(length, NULL);
     for (size_t i = 0; i < length; i++)
     {

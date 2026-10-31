@@ -5,6 +5,8 @@
 #include <policy.h>             /* Promise */
 #include <rlist.h>              /* RlistAppendScalar() */
 #include <string_lib.h>         /* StringEqual() */
+#include <file_lib.h>           /* FileRead() */
+#include <reactor_watch_backend.h>  /* REACTOR_WATCHERS_REPORT_FILE */
 
 #include <stdio.h>              /* snprintf() */
 #include <stdlib.h>             /* mkdtemp() */
@@ -13,13 +15,17 @@
 #include <sys/stat.h>           /* mkdir() */
 
 /* The registry only hashes the expanded promise it is given (its promiser
- * here, as it has no constraints, comment or parent) and hands a copy of it
- * back to the WatcherEventFn, so minimal promises are enough. Their org_pp
- * tells apart the identical promises of different policies. */
+ * and bundle here, as it has no constraints or comment) and hands a copy of
+ * it back to the WatcherEventFn, so minimal promises are enough. Their org_pp
+ * tells apart the identical promises of different policies. The bundle is
+ * there for the watchers report. */
+static Bundle test_bundle = { .name = "test", .ns = "default" };
+static BundleSection test_section = { .parent_bundle = &test_bundle };
 static const Promise unexpanded_promise;
 static const Promise expanded_promise = {
     .promiser = "test-event",
     .org_pp = &unexpanded_promise,
+    .parent_section = &test_section,
 };
 
 /* Returns the options of a file_deleted watcher, valid until the next call
@@ -162,8 +168,10 @@ static void test_watcher_register_iterations(void)
 
     /* The iterations of a promise (same promise, other promisers) are
      * different watchers */
-    const Promise iteration_a = { .promiser = "/a", .org_pp = &unexpanded_promise };
-    const Promise iteration_b = { .promiser = "/b", .org_pp = &unexpanded_promise };
+    const Promise iteration_a = { .promiser = "/a", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
+    const Promise iteration_b = { .promiser = "/b", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
     WatcherRegister(&iteration_a, FileDeletedOptions("/nonexistent/a", 5));
     WatcherRegister(&iteration_b, FileDeletedOptions("/nonexistent/b", 5));
 
@@ -186,6 +194,7 @@ static void test_watcher_register_identical_ignored(void)
     const Promise other_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &other_unexpanded_promise,
+        .parent_section = &test_section,
     };
     assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1)));
     assert_true(WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1)));
@@ -374,6 +383,7 @@ static void test_event_watcher_state_kept_across_pause(void)
     const Promise new_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &new_unexpanded_promise,
+        .parent_section = &test_section,
     };
     WatcherRegister(&new_expanded_promise, FileDeletedOptions(path, 1));
     EventWatcherResume();
@@ -413,10 +423,12 @@ static void test_event_watcher_state_kept_identical_ignored(void)
     const Promise new_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &new_unexpanded_promise,
+        .parent_section = &test_section,
     };
     const Promise other_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &other_unexpanded_promise,
+        .parent_section = &test_section,
     };
     WatcherRegister(&new_expanded_promise, FileDeletedOptions(path, 1));
     WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1));
@@ -453,6 +465,7 @@ static void test_event_watcher_state_not_kept_for_other_promise(void)
     const Promise other_expanded_promise = {
         .promiser = "other-event",
         .org_pp = &unexpanded_promise,
+        .parent_section = &test_section,
     };
     WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1));
     EventWatcherResume();
@@ -475,8 +488,10 @@ static void test_event_watcher_several_events(void)
     CreateTempFile(dir_b, path_b, sizeof(path_b));
 
     WatcherRegistryInitialize();
-    const Promise iteration_a = { .promiser = "a", .org_pp = &unexpanded_promise };
-    const Promise iteration_b = { .promiser = "b", .org_pp = &unexpanded_promise };
+    const Promise iteration_a = { .promiser = "a", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
+    const Promise iteration_b = { .promiser = "b", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
     WatcherRegister(&iteration_a, FileDeletedOptions(path_a, 1));
     WatcherRegister(&iteration_b, FileDeletedOptions(path_b, 1));
 
@@ -576,15 +591,20 @@ static void test_watcher_register_check_failure(void)
     const LogLevel old_level = LogGetGlobalLevel();
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
-    /* Without a reference, the watcher is not registered (its state is
-     * destroyed by the registry, checked by valgrind/ASan) */
+    /* Without a reference, the watcher is still registered: its first
+     * successful check becomes the reference */
     WatcherRegistryInitialize();
-    assert_false(WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1)));
+    assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1)));
 
-    /* So the watcher thread doesn't check it, and doesn't report its failure */
+    /* Its failing checks are reported once, as a failure, not as an event */
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
-    assert_false(WaitForQueuedEvent(fd, 20));
+    assert_true(WaitForQueuedEvent(fd, 50));
+    ResetRecordedEvents();
+    HandleEvents(fd);
+    assert_int_equal(handled_event_count, 1);
+    assert_int_equal(last_event_check, WATCHER_CHECK_ERROR);
+    assert_false(WaitForQueuedEvent(fd, 30));
 
     EventWatcherFinalize();
 
@@ -636,6 +656,104 @@ static void test_watcher_check_failure_retried_before_interval(void)
     assert_int_equal(rmdir(dir), 0);
 }
 
+/* Fires from the interval alone, which is shorter than the longest sleep of
+ * the watcher thread, so it sleeps until the watcher is due, not just up to
+ * that longest sleep */
+static void test_event_watcher_fires_at_interval(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    WatcherRegistryInitialize();
+    assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions(path, 2)));
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+
+    /* The first check, right away, takes the reference */
+    sleep(1);
+    ResetRecordedEvents();
+    assert_int_equal(unlink(path), 0);
+
+    assert_true(WaitForQueuedEvent(fd, 50));
+    HandleEvents(fd);
+    assert_int_equal(handled_event_count, 1);
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir), 0);
+}
+
+static bool ReportMtime(const char *report_path, struct timespec *mtime)
+{
+    struct stat sb;
+    if (stat(report_path, &sb) != 0)
+    {
+        return false;
+    }
+    *mtime = sb.st_mtim;
+    return true;
+}
+
+/* The report is only rewritten when it changes, and removed when cf-reactor
+ * finishes */
+static void test_watchers_report_written_when_changed_removed_on_finalize(void)
+{
+    char workdir[] = "/tmp/watcher_test.XXXXXX";
+    assert_true(mkdtemp(workdir) != NULL);
+    char state_dir[64];
+    snprintf(state_dir, sizeof(state_dir), "%s/state", workdir);
+    assert_int_equal(mkdir(state_dir, 0700), 0);
+    char report_path[128];
+    snprintf(report_path, sizeof(report_path), "%s/%s", state_dir, REACTOR_WATCHERS_REPORT_FILE);
+    assert_int_equal(setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", workdir, 1), 0);
+
+    WatcherRegistryInitialize();
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+
+    assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event", 300)));
+    EventWatcherWakeUp();
+    struct timespec first;
+    assert_true(ReportMtime(report_path, &first));
+
+    /* Same watchers, as after a policy re-read that changed nothing */
+    usleep(50000);
+    EventWatcherWakeUp();
+    struct timespec second;
+    assert_true(ReportMtime(report_path, &second));
+    assert_true(first.tv_sec == second.tv_sec && first.tv_nsec == second.tv_nsec);
+
+    /* A watcher of a bundle of another namespace, which the report tells apart */
+    static Bundle other_bundle = { .name = "test", .ns = "other" };
+    static BundleSection other_section = { .parent_bundle = &other_bundle };
+    static const Promise other_unexpanded_promise;
+    const Promise other_promise = {
+        .promiser = "other-event",
+        .org_pp = &other_unexpanded_promise,
+        .parent_section = &other_section,
+    };
+    assert_true(WatcherRegister(&other_promise, FileDeletedOptions("/nonexistent/other-event", 300)));
+    usleep(50000);
+    EventWatcherWakeUp();
+    struct timespec third;
+    assert_true(ReportMtime(report_path, &third));
+    assert_false(first.tv_sec == third.tv_sec && first.tv_nsec == third.tv_nsec);
+
+    Writer *content = FileRead(report_path, SIZE_MAX, NULL);
+    assert_true(content != NULL);
+    assert_true(strstr(StringWriterData(content), "\"bundle\":\"test\"") != NULL ||
+                strstr(StringWriterData(content), "\"bundle\": \"test\"") != NULL);
+    assert_true(strstr(StringWriterData(content), "other:test") != NULL);
+    WriterClose(content);
+
+    EventWatcherFinalize();
+    assert_int_not_equal(access(report_path, F_OK), 0);
+
+    unsetenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+    assert_int_equal(rmdir(state_dir), 0);
+    assert_int_equal(rmdir(workdir), 0);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -657,6 +775,8 @@ int main()
         unit_test(test_event_watcher_check_failure_reported_once),
         unit_test(test_watcher_register_check_failure),
         unit_test(test_watcher_check_failure_retried_before_interval),
+        unit_test(test_event_watcher_fires_at_interval),
+        unit_test(test_watchers_report_written_when_changed_removed_on_finalize),
     };
 
     return run_tests(tests);

@@ -26,12 +26,14 @@
 #include <watcher.h>
 #include <logging.h>
 #include <alloc.h>
-#include <file_lib.h>           /* safe_fopen() */
+#include <file_lib.h>           /* safe_open() */
 #include <hash.h>               /* HashDigestFromId() */
 #include <conversion.h>         /* IntFromString() */
 #include <prototypes3.h>        /* cf_strtimestamp_local() */
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <string.h>             /* strerror() */
 #include <openssl/evp.h>
 
 /* Minimum time between two logs of a persisting failure to check the file,
@@ -92,6 +94,33 @@ typedef struct
     } last;
 } FileWatcherState;
 
+/**
+ * Copy of path in a form stat() accepts. On Windows, msvcrt's stat() fails
+ * with ENOENT for a path with a trailing separator, or with the \\?\ (or
+ * //?/) prefix, so a watcher with such a path would never see its file.
+ */
+static char *WatchPathCopy(const char *path)
+{
+    assert(path != NULL);
+
+    char *copy = xstrdup(path);
+#ifdef __MINGW32__
+    if ((copy[0] == '\\' || copy[0] == '/') && (copy[1] == '\\' || copy[1] == '/') &&
+        copy[2] == '?' && (copy[3] == '\\' || copy[3] == '/'))
+    {
+        memmove(copy, copy + 4, strlen(copy + 4) + 1);
+    }
+
+    /* Keeps the separator of a drive's root, e.g. C:/ */
+    size_t length = strlen(copy);
+    while (length > 1 && (copy[length - 1] == '\\' || copy[length - 1] == '/') &&
+           !(length == 3 && copy[1] == ':'))
+    {
+        copy[--length] = '\0';
+    }
+#endif
+    return copy;
+}
 
 void *FileWatcherStateNew(const Rlist *args)
 {
@@ -99,7 +128,7 @@ void *FileWatcherStateNew(const Rlist *args)
     const char *path = RlistScalarValue(args);
 
     FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
-    fws->path = xstrdup(path);
+    fws->path = WatchPathCopy(path);
 
     return fws;
 }
@@ -111,7 +140,7 @@ void *FileWatcherSizeStateNew(const Rlist *args)
     const long size_threshold = IntFromString(RlistScalarValue(args->next));
 
     FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
-    fws->path = xstrdup(path);
+    fws->path = WatchPathCopy(path);
     fws->last.file_size.threshold = size_threshold;
 
     return fws;
@@ -140,8 +169,10 @@ static void LogCheckError(FileWatcherState *fws, const char *op, int err)
     if (fws->last_error_logged == 0 ||
         now - fws->last_error_logged >= CHECK_ERROR_LOG_INTERVAL_SECS)
     {
+        /* strerror(), as err is an errno value: GetErrorStrFromCode()
+         * takes a Windows error code on Windows */
         Log(LOG_LEVEL_ERR, "Unable to %s '%s' while checking for file events: %s",
-            op, fws->path, GetErrorStrFromCode(err));
+            op, fws->path, strerror(err));
         fws->last_error_logged = now;
     }
 }
@@ -165,6 +196,19 @@ static bool FileLstat(FileWatcherState *fws, bool *exists, struct stat *sb)
         fws->last_error_logged = 0;
         return true;
     }
+
+#ifdef __MINGW32__
+    /* msvcrt's stat() also fails with ENOENT while the file's directory is
+     * open without sharing (FindFirstFile() gets a sharing violation), when
+     * the file is still there: then whether it changed is unknown */
+    WIN32_FILE_ATTRIBUTE_DATA attributes;
+    if (errno == ENOENT &&
+        GetFileAttributesExA(fws->path, GetFileExInfoStandard, &attributes))
+    {
+        LogCheckError(fws, "lstat", EBUSY);
+        return false;
+    }
+#endif
 
     if (errno == ENOENT || errno == ENOTDIR)
     {
@@ -322,15 +366,72 @@ static StatSignature StatSignatureOf(const struct stat *sb)
     return signature;
 }
 
+/* Opens the regular file at path for reading. Fails with EINVAL if it isn't
+ * one after all: the caller lstat()ed it, but it may have been swapped for a
+ * FIFO since, and opening that for reading would block forever. */
+static int OpenRegularFile(const char *path)
+{
+    assert(path != NULL);
+
+    int flags = O_RDONLY;
+#ifdef O_NONBLOCK
+    flags |= O_NONBLOCK;
+#endif
+#ifdef O_NOFOLLOW
+    flags |= O_NOFOLLOW;
+#endif
+#ifdef O_BINARY
+    flags |= O_BINARY;
+#endif
+    const int fd = safe_open(path, flags);
+    if (fd < 0)
+    {
+        return -1;
+    }
+
+    struct stat sb;
+    if (fstat(fd, &sb) != 0)
+    {
+        const int err = errno;
+        close(fd);
+        errno = err;
+        return -1;
+    }
+    if (!S_ISREG(sb.st_mode))
+    {
+        close(fd);
+        errno = EINVAL;
+        return -1;
+    }
+
+#ifndef __MINGW32__
+    /* Regular files never block, so this is only to leave the fd as expected */
+    const int fd_flags = fcntl(fd, F_GETFL);
+    if (fd_flags != -1)
+    {
+        fcntl(fd, F_SETFL, fd_flags & ~O_NONBLOCK);
+    }
+#endif
+    return fd;
+}
+
 /* Hashes the content of the file into digest. Returns false and sets errno
  * on failure. */
 static bool HashFileContent(const char *path, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     assert(path != NULL);
 
-    FILE *file = safe_fopen(path, "rb");
+    const int fd = OpenRegularFile(path);
+    if (fd < 0)
+    {
+        return false;
+    }
+    FILE *file = fdopen(fd, "rb");
     if (file == NULL)
     {
+        const int err = errno;
+        close(fd);
+        errno = err;
         return false;
     }
 

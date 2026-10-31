@@ -10,6 +10,7 @@
 #include <stdlib.h>             /* mkdtemp() */
 #include <unistd.h>             /* close(), unlink(), rmdir(), symlink(), sleep() */
 #include <fcntl.h>              /* open() */
+#include <sys/stat.h>           /* mkdir() */
 
 /* The registry only hashes the expanded promise it is given (its promiser
  * here, as it has no constraints, comment or parent) and hands a copy of it
@@ -591,6 +592,50 @@ static void test_watcher_register_check_failure(void)
     TearDownSymlinkLoop(dir, loop);
 }
 
+static void test_watcher_check_failure_retried_before_interval(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char loop[PATH_MAX];
+    char path[PATH_MAX];
+    SetUpSymlinkLoop(dir, loop, sizeof(loop), path, sizeof(path));
+
+    const LogLevel old_level = LogGetGlobalLevel();
+    LogSetGlobalLevel(LOG_LEVEL_CRIT);
+
+    /* Registered while its check fails, with an interval longer than the
+     * test */
+    WatcherRegistryInitialize();
+    assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions(path, 300)));
+
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+    assert_true(WaitForQueuedEvent(fd, 50));
+    ResetRecordedEvents();
+    HandleEvents(fd);
+    assert_int_equal(last_event_check, WATCHER_CHECK_ERROR);
+
+    /* Once the file can be checked, the reference is taken well before the
+     * interval, so a deletion checked for on a wakeup fires */
+    assert_int_equal(unlink(loop), 0);
+    assert_int_equal(mkdir(loop, 0700), 0);
+    int file_fd = open(path, O_CREAT | O_WRONLY, 0600);
+    assert_true(file_fd >= 0);
+    close(file_fd);
+    sleep(3);
+    assert_int_equal(unlink(path), 0);
+    WatcherMarkAllDirty();
+    assert_true(WaitForQueuedEvent(fd, 50));
+    HandleEvents(fd);
+    assert_int_equal(handled_event_count, 2);
+    assert_int_equal(last_event_check, WATCHER_CHECK_EVENT);
+
+    EventWatcherFinalize();
+
+    LogSetGlobalLevel(old_level);
+    assert_int_equal(rmdir(loop), 0);
+    assert_int_equal(rmdir(dir), 0);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -611,6 +656,7 @@ int main()
         unit_test(test_event_watcher_several_events),
         unit_test(test_event_watcher_check_failure_reported_once),
         unit_test(test_watcher_register_check_failure),
+        unit_test(test_watcher_check_failure_retried_before_interval),
     };
 
     return run_tests(tests);

@@ -54,6 +54,11 @@
  * checking in between would see states polling never sees. */
 #define WATCH_SETTLE_MSECS 200
 
+/* A watcher whose check failed (e.g. its file locked on Windows) is retried
+ * after this long, not after its interval: until a check succeeds it has no
+ * reference, so a change before that would become the reference, not fire. */
+#define CHECK_ERROR_RETRY_SECS 1
+
 /* Limit on how often a watcher runs its 'then' bundles: watch methods wake a
  * watcher on every change, so anyone able to touch a watched file could make
  * the bundles run continuously. Beyond MAX_TRIGGERS_PER_WINDOW runs in
@@ -381,15 +386,11 @@ bool WatcherRegister(const Promise *pp, WatcherOptions *opt)
     }
     else
     {
-        /* Without holding watchers_mutex, as the check may block (e.g. lstat() on an
+        /* Without holding watchers_mutex, as the check may block (e.g. on an
          * unresponsive NFS mount). Not registered yet, so the watcher thread
-         * can't check it concurrently. */
-        if (opt->check_callback(state) == WATCHER_CHECK_ERROR)
-        {
-            /* No reference for the next checks, so not registered */
-            opt->destroy_state(state);
-            return false;
-        }
+         * can't check it concurrently. If it fails, the watcher's first
+         * successful check becomes the reference instead. */
+        opt->check_callback(state);
     }
 
     /* Before the watcher is in the registry: a wakeup from the method in
@@ -542,7 +543,9 @@ static bool WatcherCheckIfDue(Watcher *w, time_t now, bool woken)
     bool queued = false;
     w->check_deferred = false;
     WatcherCheckResult check = w->check_callback(w->state);
-    w->next_due = now + w->poll_interval_secs;
+    w->next_due = now + ((check == WATCHER_CHECK_ERROR) ?
+                         MIN(w->poll_interval_secs, CHECK_ERROR_RETRY_SECS) :
+                         w->poll_interval_secs);
 
     if (check == WATCHER_CHECK_EVENT)
     {

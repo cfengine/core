@@ -163,6 +163,10 @@ typedef struct
     /* An observed event not run yet because of the trigger limit */
     bool event_held;
 
+    /* The watch method whose wakeup led to the check that observed the held
+     * event, NULL if it was the interval, for the log */
+    const char *event_woken_by;
+
     /* A check skipped while an event was held, done once it can run, see
      * WatcherCheckIfDue() */
     bool check_deferred;
@@ -174,6 +178,7 @@ typedef struct
 {
     Watcher *watcher;
     WatcherCheckResult check; // see WatcherEventFn
+    const char *woken_by;     // see Watcher.event_woken_by
 } WatcherEvent;
 
 static void WatcherDestroy(void *item);
@@ -466,6 +471,7 @@ static void QueueEvent(Watcher *w, WatcherCheckResult check)
     WatcherEvent *event = xmalloc(sizeof(WatcherEvent));
     event->watcher = w;
     event->check = check;
+    event->woken_by = (check == WATCHER_CHECK_EVENT) ? w->event_woken_by : NULL;
     ThreadedQueuePush(event_queue, event);
 }
 
@@ -549,6 +555,10 @@ static bool WatcherCheckIfDue(Watcher *w, time_t now, bool woken)
 
     if (check == WATCHER_CHECK_EVENT)
     {
+        if (!w->event_held)
+        {
+            w->event_woken_by = woken ? w->method : NULL;
+        }
         w->event_held = true;
     }
     /* Only report a failing watcher once, not on every check,
@@ -730,7 +740,16 @@ static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired", w->promise->promiser);
+            if (event->woken_by != NULL)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired, woken by its watch method '%s'",
+                    w->promise->promiser, event->woken_by);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired, at its interval",
+                    w->promise->promiser);
+            }
         }
         on_event(ctx, w->promise, event->check);
         if (event->check == WATCHER_CHECK_EVENT)

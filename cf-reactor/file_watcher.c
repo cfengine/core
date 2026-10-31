@@ -40,6 +40,16 @@
 
 #define CONTENT_HASH_METHOD HASH_METHOD_SHA256
 
+/* What changes when a file's content may have changed, see StatSignatureOf() */
+typedef struct
+{
+    dev_t dev;
+    ino_t ino;
+    off_t size;
+    struct timespec mtime;
+    struct timespec ctime;
+} StatSignature;
+
 typedef struct
 {
     char *path;
@@ -60,6 +70,7 @@ typedef struct
         {
             bool hashed;      /* Whether it was a regular file, that was hashed */
             unsigned char digest[EVP_MAX_MD_SIZE + 1];
+            StatSignature signature; /* of the file when it was hashed */
         } content;
 
         /* FileWatcherCheckFilePermissionsChanged() */
@@ -280,6 +291,37 @@ WatcherCheckResult FileWatcherCheckFileModified(void *state)
 
 // =========== code for the file_content_modified event ===========
 
+static struct timespec StatCtime(const struct stat *sb)
+{
+    assert(sb != NULL);
+
+#if defined(HAVE_STRUCT_STAT_ST_MTIM)
+    return sb->st_ctim;
+#elif defined(HAVE_STRUCT_STAT_ST_MTIMESPEC)
+    return sb->st_ctimespec;
+#else
+    return (struct timespec) { .tv_sec = sb->st_ctime, .tv_nsec = 0 };
+#endif
+}
+
+/* Content can't change without one of these changing too: writing updates
+ * mtime and ctime, replacing the file changes the inode, and setting mtime
+ * back still updates ctime. So the file is only hashed again when they
+ * differ, which keeps frequent checks of many files cheap. */
+static StatSignature StatSignatureOf(const struct stat *sb)
+{
+    assert(sb != NULL);
+
+    StatSignature signature;
+    memset(&signature, 0, sizeof(signature)); /* no padding garbage for memcmp() */
+    signature.dev = sb->st_dev;
+    signature.ino = sb->st_ino;
+    signature.size = sb->st_size;
+    signature.mtime = StatMtime(sb);
+    signature.ctime = StatCtime(sb);
+    return signature;
+}
+
 /* Hashes the content of the file into digest. Returns false and sets errno
  * on failure. */
 static bool HashFileContent(const char *path, unsigned char digest[EVP_MAX_MD_SIZE + 1])
@@ -335,7 +377,15 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
 
     bool hashed = false;
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    if (exists && S_ISREG(sb.st_mode))
+    const StatSignature signature = exists ? StatSignatureOf(&sb) : (StatSignature) { 0 };
+    if (exists && S_ISREG(sb.st_mode) && fws->last.content.hashed &&
+        memcmp(&fws->last.content.signature, &signature, sizeof(signature)) == 0)
+    {
+        /* Unchanged since hashed, see StatSignatureOf() */
+        hashed = true;
+        memcpy(digest, fws->last.content.digest, sizeof(digest));
+    }
+    else if (exists && S_ISREG(sb.st_mode))
     {
         if (HashFileContent(fws->path, digest))
         {
@@ -354,6 +404,7 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
 
     fws->last.content.hashed = hashed;
     memcpy(fws->last.content.digest, digest, sizeof(digest));
+    fws->last.content.signature = signature;
     return FileWatcherRecordObservation(fws, exists, modified, "content modification");
 }
 

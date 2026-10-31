@@ -14,6 +14,7 @@ body when deleted(file)
 {
   file_deleted => "$(file)";
   interval => 1;
+
   # A watch method wakes the watcher up whatever the clock says: only
   # polling shows whether the next check is postponed
   watch_methods => { "poll" };

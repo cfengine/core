@@ -37,6 +37,9 @@
  */
 typedef struct StoppableThread_ StoppableThread;
 
+/** Seconds on a monotonic clock (wall clock where there is none) */
+time_t MonotonicClockNow(void);
+
 typedef void (*StoppableThreadFn)(StoppableThread *thread, void *arg);
 
 /**

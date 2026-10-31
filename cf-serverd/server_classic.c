@@ -406,7 +406,6 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
-    int access = false;
     char client_regex[CF_BUFSIZE];
     Item *ip, *matches = NULL;
 
@@ -422,6 +421,9 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         /* Does the class match the regex that the agent requested? */
         if (StringMatchFull(client_regex, ip->name))
         {
+            /* Each class must be granted by its own access rule. */
+            int access = false;
+
             for (ap = SERVER_ACCESS.varadmit; ap != NULL; ap = ap->next)
             {
                 /* Does the class match any of the regex in ACLs? */

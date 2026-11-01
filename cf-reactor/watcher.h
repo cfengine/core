@@ -27,6 +27,7 @@
 
 #include <cf3.defs.h>   /* Bundle */
 #include <hash.h>       /* CF_HOSTKEY_STRING_SIZE */
+#include <reactor_watch_backend.h>
 
 typedef enum
 {
@@ -43,6 +44,14 @@ typedef void *(*WatcherStateNewFn)(const EvalContext *ctx, const Rlist *args);
 typedef WatcherCheckResult (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);
 
+/* Called on the watcher thread, before the first check after the watcher's
+ * 'then' bundles ran. The state they left may never have been checked: a
+ * wakeup source may not report the bundles' own changes, and a change made
+ * right after the run may be checked first. If that change restored the state
+ * the last check saw (the same bad line written again), comparing with it
+ * misses the change, so the next check should report any sign of one. */
+typedef void (*WatcherBundlesRanFn)(void *state);
+
 /**
  * @brief What a watcher checks for, and how, depending on the type of event.
  */
@@ -50,8 +59,11 @@ typedef struct
 {
   WatcherCheckFn check_callback; /* whether the event happened, updating state */
   WatcherStateDestroyFn destroy_state;
+  WatcherBundlesRanFn bundles_ran; /* NULL if the checks can't tell */
   void *state;                   /* owned by the registry once registered */
   time_t interval;               /* seconds between two checks, > 0 */
+  ReactorWatchTarget target;     /* what the event is about, for the wakeup sources */
+  const Rlist *methods;          /* 'wakeup_sources', NULL for the default */
 } WatcherOptions;
 
 /**
@@ -92,7 +104,8 @@ void WatcherRegistryFinalize(void);
  * its state instead of opt->state, so that the events happening while paused
  * are detected. Otherwise opt->state is checked once right away, as the
  * reference for the next checks, so that only what happens from now on
- * fires. If that check fails, the watcher is not registered.
+ * fires. If that check fails, the watcher's first successful check becomes
+ * the reference instead.
  *
  * @param pp the expanded events promise. The watcher keeps a copy of it
  *           (see PromiseCopy()), passed back to the WatcherEventFn on event.
@@ -102,8 +115,13 @@ void WatcherRegistryFinalize(void);
  *            owned by the registry, which destroys it right away if not
  *            used, so it must not be used by the caller afterwards.
  *            opt->interval must be strictly greater than 0.
- * @return false if the check of opt->state failed (WATCHER_CHECK_ERROR), in
- *         which case the watcher is not registered, true otherwise.
+ *
+ * The watcher is also watched with the first available method of
+ * opt->methods (see WatchBackendsAdd()), which wakes it up to be checked
+ * before its interval elapses.
+ *
+ * @return false if none of opt->methods is available and they don't include
+ *         "poll", in which case the watcher is not registered, true otherwise.
  */
 bool WatcherRegister(const Promise *pp, WatcherOptions *opt);
 bool EventWatcherInitialize(int *fd);
@@ -139,5 +157,15 @@ void EventWatcherResume(void);
  */
 void EventWatcherWakeUp(void);
 void EventWatcherFinalize(void);
+
+/**
+ * @brief Check the watcher with this id as soon as possible, regardless of
+ *        its interval. Thread-safe, an id that isn't registered is ignored.
+ *        See ReactorWatchHost.
+ */
+void WatcherMarkDirty(uint64_t watcher_id);
+
+/** @brief Check all the watchers as soon as possible. Thread-safe. */
+void WatcherMarkAllDirty(void);
 
 #endif

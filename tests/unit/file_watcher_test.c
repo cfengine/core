@@ -1,6 +1,6 @@
 #include <test.h>
 
-#include <file_watcher.h>       /* FileWatcherStateNew(), FileWatcherCheckFileDeleted() */
+#include <file_watcher.c>       /* Included for HashFileContent() */
 #include <rlist.h>              /* RlistAppendScalar() */
 #include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
 
@@ -203,6 +203,68 @@ static void test_check_file_deleted_logs_error_once(void)
     TearDownSymlinkLoop(dir, loop);
 }
 
+/* Replaces the file at path with one holding content, as a new inode, so its
+ * stat signature differs whatever the time resolution. The replaced file is
+ * kept as path.<n>, so that its inode isn't reused. Returns n + 1. */
+static int ReplaceFile(const char *path, const char *content, int n)
+{
+    char old[PATH_MAX];
+    xsnprintf(old, sizeof(old), "%s.%d", path, n);
+    assert_int_equal(link(path, old), 0);
+
+    char tmp[PATH_MAX];
+    xsnprintf(tmp, sizeof(tmp), "%s.tmp", path);
+    FILE *file = fopen(tmp, "w");
+    assert_true(file != NULL);
+    assert_true(fputs(content, file) >= 0);
+    assert_int_equal(fclose(file), 0);
+    assert_int_equal(rename(tmp, path), 0);
+    return n + 1;
+}
+
+/** Content changed by the bundles and back before the next check: an event
+ * only once told the bundles ran, and only for that check */
+static void test_check_content_restored_after_bundles_ran(void)
+{
+    char dir[] = "/tmp/file_watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+    void *state = NewFileDeletedState(path);   /* same state for all file events */
+    assert_true(state != NULL);
+
+    int n = 0;
+    n = ReplaceFile(path, "bad\n", n);
+    FileWatcherCheckFileContentModified(state); /* the reference */
+
+    /* Without the bundles running, the same content isn't a change */
+    n = ReplaceFile(path, "good\n", n);
+    n = ReplaceFile(path, "bad\n", n);
+    assert_int_equal(FileWatcherCheckFileContentModified(state), WATCHER_CHECK_NO_EVENT);
+
+    /* The bundles repaired it, then it was written back before this check */
+    n = ReplaceFile(path, "good\n", n);
+    FileWatcherBundlesRan(state);
+    n = ReplaceFile(path, "bad\n", n);
+    assert_int_equal(FileWatcherCheckFileContentModified(state), WATCHER_CHECK_EVENT);
+
+    /* Only the first check after the run */
+    assert_int_equal(FileWatcherCheckFileContentModified(state), WATCHER_CHECK_NO_EVENT);
+
+    /* Bundles that left the file alone */
+    FileWatcherBundlesRan(state);
+    assert_int_equal(FileWatcherCheckFileContentModified(state), WATCHER_CHECK_NO_EVENT);
+
+    FileWatcherStateDestroy(state);
+    for (int i = 0; i < n; i++)
+    {
+        char old[PATH_MAX];
+        xsnprintf(old, sizeof(old), "%s.%d", path, i);
+        unlink(old);
+    }
+    unlink(path);
+    assert_int_equal(rmdir(dir), 0);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -213,6 +275,7 @@ int main()
         unit_test(test_check_file_deleted_dangling_symlink),
         unit_test(test_check_file_deleted_error),
         unit_test(test_check_file_deleted_logs_error_once),
+        unit_test(test_check_content_restored_after_bundles_ran),
     };
 
     return run_tests(tests);

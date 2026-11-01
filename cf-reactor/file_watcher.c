@@ -63,6 +63,10 @@ typedef struct
     /* What the last successful check observed */
     bool last_exists;
 
+    /* The watcher's bundles ran since the last successful check, see
+     * FileWatcherBundlesRan() */
+    bool bundles_ran;
+
     /* What the last successful check observed, depending on the event type */
     union
     {
@@ -223,6 +227,7 @@ static WatcherCheckResult FileWatcherRecordObservation(FileWatcherState *fws, bo
 
     fws->last_checked = now;
     fws->last_exists = exists;
+    fws->bundles_ran = false;
     return happened ? WATCHER_CHECK_EVENT : WATCHER_CHECK_NO_EVENT;
 }
 
@@ -413,9 +418,13 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
         }
     }
 
-    /* Only content changes of a regular file present at both checks */
+    /* Only content changes of a regular file present at both checks. Once the
+     * bundles ran, also a write that restored the content, see
+     * FileWatcherBundlesRan(). */
     const bool modified = fws->last.content.hashed && hashed &&
-        (memcmp(fws->last.content.digest, digest, sizeof(digest)) != 0);
+        ((memcmp(fws->last.content.digest, digest, sizeof(digest)) != 0) ||
+         (fws->bundles_ran &&
+          memcmp(&fws->last.content.signature, &signature, sizeof(signature)) != 0));
 
     fws->last.content.hashed = hashed;
     memcpy(fws->last.content.digest, digest, sizeof(digest));
@@ -522,4 +531,17 @@ WatcherCheckResult FileWatcherCheckFileSizeExceeds(void *state)
 
     fws->last.file_size.size = size;
     return FileWatcherRecordObservation(fws, exists, !exceeded && exceeds, "size exceeding threshold");
+}
+
+// =========== after the bundles of a watcher ran ===========
+
+/** The bundles may have changed the file, and something else changed it back
+ * before this check. Only used by file_content_modified, whose stat signature
+ * (see StatSignatureOf()) shows the file was written even if its content is
+ * the same as at the last check. */
+void FileWatcherBundlesRan(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+    fws->bundles_ran = true;
 }

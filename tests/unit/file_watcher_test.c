@@ -203,6 +203,39 @@ static void test_check_file_deleted_logs_error_once(void)
     TearDownSymlinkLoop(dir, loop);
 }
 
+/** A file swapped for a FIFO after being lstat()ed must fail to be hashed,
+ * not block on opening it for reading */
+static void test_hash_file_content_fifo_fails_fast(void)
+{
+    char dir[] = "/tmp/file_watcher_test.XXXXXX";
+    assert_true(mkdtemp(dir) != NULL);
+    char path[PATH_MAX];
+    xsnprintf(path, sizeof(path), "%s/fifo", dir);
+    assert_int_equal(mkfifo(path, 0600), 0);
+
+    /* Would hang the test if it blocked, so the alarm turns that into a failure */
+    alarm(10);
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    assert_false(HashFileContent(path, digest));
+    alarm(0);
+
+    unlink(path);
+    assert_int_equal(rmdir(dir), 0);
+}
+
+static void test_hash_file_content_regular(void)
+{
+    char dir[] = "/tmp/file_watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    assert_true(HashFileContent(path, digest));
+
+    unlink(path);
+    assert_int_equal(rmdir(dir), 0);
+}
+
 /* Replaces the file at path with one holding content, as a new inode, so its
  * stat signature differs whatever the time resolution. The replaced file is
  * kept as path.<n>, so that its inode isn't reused. Returns n + 1. */
@@ -275,6 +308,8 @@ int main()
         unit_test(test_check_file_deleted_dangling_symlink),
         unit_test(test_check_file_deleted_error),
         unit_test(test_check_file_deleted_logs_error_once),
+        unit_test(test_hash_file_content_fifo_fails_fast),
+        unit_test(test_hash_file_content_regular),
         unit_test(test_check_content_restored_after_bundles_ran),
     };
 

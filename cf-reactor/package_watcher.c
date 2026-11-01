@@ -300,6 +300,9 @@ static void ListingThreadMain(StoppableThread *thread, void *arg)
     while (!StoppableThreadShouldStop(thread))
     {
         const time_t start = time(NULL);
+        /* Scheduled on the monotonic clock, so that a step back of the wall
+         * clock doesn't stop the listings until it catches up again */
+        const time_t start_monotonic = MonotonicClockNow();
         if (wrapper == NULL)
         {
             wrapper =
@@ -330,10 +333,10 @@ static void ListingThreadMain(StoppableThread *thread, void *arg)
 
         /* Counted from the start, so that a slow listing doesn't delay the
          * next one. Sleeps in a loop, since a sleep can end early. */
-        const time_t next = start + wait_secs;
+        const time_t next = start_monotonic + wait_secs;
         time_t now;
         while (!StoppableThreadShouldStop(thread)
-               && ((now = time(NULL)) < next))
+               && ((now = MonotonicClockNow()) < next))
         {
             StoppableThreadSleep(thread, next - now);
         }

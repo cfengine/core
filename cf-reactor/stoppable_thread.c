@@ -25,8 +25,21 @@
 #include <stoppable_thread.h>
 #include <logging.h>
 #include <alloc.h>
-#include <mutex.h>              /* ThreadLock(), ThreadUnlock(), ThreadWait() */
+#include <mutex.h>              /* ThreadLock(), ThreadUnlock(), THREAD_BLOCK_INDEFINITELY */
 #include <pthread.h>
+#include <time.h>               /* clock_gettime() */
+
+/* The clock the timed waits on cond are measured against. The monotonic clock
+ * isn't affected by steps of the wall clock (NTP, an administrator, a resumed
+ * VM), so stepping it back doesn't stretch a sleep by the size of the step.
+ * mingw is excluded, as winpthreads accepts the attribute but may not honor
+ * it, which would make every timed wait return immediately. */
+#if defined(HAVE_PTHREAD_CONDATTR_SETCLOCK) && defined(CLOCK_MONOTONIC) && !defined(__MINGW32__)
+# define STOPPABLE_THREAD_CLOCK CLOCK_MONOTONIC
+# define STOPPABLE_THREAD_CLOCK_IS_MONOTONIC 1
+#else
+# define STOPPABLE_THREAD_CLOCK CLOCK_REALTIME
+#endif
 
 struct StoppableThread_
 {
@@ -73,7 +86,14 @@ StoppableThread *StoppableThreadStart(StoppableThreadFn fn, void *arg)
     thread->fn = fn;
     thread->arg = arg;
     pthread_mutex_init(&thread->lock, NULL);
-    pthread_cond_init(&thread->cond, NULL);
+
+    pthread_condattr_t cond_attr;
+    pthread_condattr_init(&cond_attr);
+#ifdef STOPPABLE_THREAD_CLOCK_IS_MONOTONIC
+    pthread_condattr_setclock(&cond_attr, STOPPABLE_THREAD_CLOCK);
+#endif
+    pthread_cond_init(&thread->cond, &cond_attr);
+    pthread_condattr_destroy(&cond_attr);
 
     int ret = pthread_create(&thread->thread, NULL, StoppableThreadMain, thread);
     if (ret != 0)
@@ -96,6 +116,46 @@ bool StoppableThreadShouldStop(StoppableThread *thread)
     return ret;
 }
 
+/**
+ * Seconds on a clock that only moves forward, for scheduling and deadlines, so
+ * that stepping the wall clock back doesn't postpone everything. Also the
+ * clock the cond of a StoppableThread waits on. Falls back to the wall clock
+ * where there is no monotonic clock, or if reading it fails.
+ */
+time_t MonotonicClockNow(void)
+{
+    struct timespec ts = { 0 };
+    if (clock_gettime(STOPPABLE_THREAD_CLOCK, &ts) != 0)
+    {
+        return time(NULL);
+    }
+    return ts.tv_sec;
+}
+
+/**
+ * Like ThreadWait() on thread->cond, but with the deadline on the clock cond
+ * was created with (ThreadWait() uses the wall clock). Needs thread->lock held.
+ *
+ * @param timeout seconds, or THREAD_BLOCK_INDEFINITELY
+ */
+static void StoppableThreadCondWait(StoppableThread *thread, int timeout)
+{
+    assert(thread != NULL);
+
+    if (timeout == THREAD_BLOCK_INDEFINITELY)
+    {
+        pthread_cond_wait(&thread->cond, &thread->lock);
+        return;
+    }
+
+    struct timespec deadline;
+    clock_gettime(STOPPABLE_THREAD_CLOCK, &deadline);
+    deadline.tv_sec += timeout;
+    /* Timing out is the normal end of a sleep, and spurious wakeups are
+     * handled by the callers re-checking their state */
+    pthread_cond_timedwait(&thread->cond, &thread->lock, &deadline);
+}
+
 /* timeout is in seconds, or THREAD_BLOCK_INDEFINITELY */
 static void StoppableThreadWaitForWakeup(StoppableThread *thread, int timeout)
 {
@@ -104,7 +164,7 @@ static void StoppableThreadWaitForWakeup(StoppableThread *thread, int timeout)
     ThreadLock(&thread->lock);
     if (!thread->stop_requested && !thread->wake_requested)
     {
-        ThreadWait(&thread->cond, &thread->lock, timeout);
+        StoppableThreadCondWait(thread, timeout);
     }
     /* The routine re-checks its state after any sleep, which covers the
      * wakeup, whether it arrived before or during the sleep */
@@ -146,11 +206,11 @@ bool StoppableThreadStop(StoppableThread *thread, int timeout_secs)
     thread->stop_requested = true;
     pthread_cond_broadcast(&thread->cond);
 
-    const time_t deadline = time(NULL) + timeout_secs;
+    const time_t deadline = MonotonicClockNow() + timeout_secs;
     time_t now;
-    while (!thread->exited && (now = time(NULL)) < deadline)
+    while (!thread->exited && (now = MonotonicClockNow()) < deadline)
     {
-        ThreadWait(&thread->cond, &thread->lock, (int) (deadline - now));
+        StoppableThreadCondWait(thread, (int) (deadline - now));
     }
     const bool exited = thread->exited;
     ThreadUnlock(&thread->lock);

@@ -48,6 +48,7 @@ libcf_reactor_la_SOURCES = \
 	user_watcher.c user_watcher.h \
 	wakeup_channel.c wakeup_channel.h \
 	watch_backends.c watch_backends.h \
+	watch_location.c watch_location.h \
 	watcher.c watcher.h \
 	watcher_report.c watcher_report.h
 

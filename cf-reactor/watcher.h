@@ -91,12 +91,20 @@ void WatcherRegistryFinalize(void);
  * ignored, so that the 'then' bundle isn't run twice for the same event.
  *
  * If a watcher of the previous policy (see EventWatcherPause()) was
- * registered for an identical expanded promise, the new watcher takes over
- * its state instead of opt->state, so that the events happening while paused
- * are detected. Otherwise opt->state is checked once right away, as the
- * reference for the next checks, so that only what happens from now on
- * fires. If that check fails, the watcher's first successful check becomes
- * the reference instead.
+ * registered for an identical expanded promise, the new watcher shares its
+ * state instead of using opt->state, so that the events happening while
+ * paused are detected, with any event it observed but didn't run yet, and its
+ * limit on how often the 'then' bundles run. This doesn't wait for a check of
+ * that state still running (it may block): the new watcher's checks follow
+ * it. Unless the watched file moved to or from a remote file system (see
+ * WatchTargetIsRemote()), as the state is then about another file system:
+ * the new watcher starts afresh. Otherwise opt->state is checked once right
+ * away, as the reference for the next checks, so that only what happens from
+ * now on fires. If that check fails, the watcher's first successful check
+ * becomes the reference instead. So it does for a watcher of a file on a
+ * remote file system, which isn't checked here, as that could block for as
+ * long as its server doesn't respond: its checks run on a thread of their
+ * own.
  *
  * @param pp the expanded events promise. The watcher keeps a copy of it
  *           (see PromiseCopy()), passed back to the WatcherEventFn on event.
@@ -139,8 +147,8 @@ void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event);
 void EventWatcherResume(void);
 
 /**
- * @brief Wake the watcher thread up to check the registered watchers
- * immediately. Without watchers, the watcher thread sleeps until woken up, so
+ * @brief Wake the watcher threads up to check the registered watchers
+ * immediately. Without watchers, a watcher thread sleeps until woken up, so
  * this must be called after registering watchers outside of an
  * EventWatcherPause()/EventWatcherResume() pair (which wakes it up itself),
  * i.e. after the watchers of the initial policy. Logs the number of

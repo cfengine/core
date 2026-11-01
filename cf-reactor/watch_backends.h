@@ -51,12 +51,15 @@ void WatchBackendsFinalize(void);
  * anyway: it means polling alone is acceptable.
  *
  * @param watcher_id the id passed back to ReactorWatchHost.mark_dirty()
+ * @param remote whether target is on a remote file system, see
+ *               WatchTargetIsRemote(): only methods with watches_remote are
+ *               tried then
  * @param methods method names in order of preference, NULL for the default
  * @return the name of the method used (static), or NULL if none of methods
  *         is available and they don't include "poll"
  */
 const char *WatchBackendsAdd(uint64_t watcher_id, const ReactorWatchTarget *target,
-                             const Rlist *methods, const char *promiser);
+                             bool remote, const Rlist *methods, const char *promiser);
 
 /** @brief Stop watching for watcher_id with method, as returned by WatchBackendsAdd(). */
 void WatchBackendsRemove(uint64_t watcher_id, const char *method);

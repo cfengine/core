@@ -238,6 +238,7 @@ watcher_test_SOURCES = watcher_test.c \
 	../../cf-reactor/watcher.c \
 	../../cf-reactor/watcher_report.c \
 	../../cf-reactor/watch_backends.c \
+	../../cf-reactor/watch_location.c \
 	../../cf-reactor/file_watcher.c \
 	../../cf-reactor/stoppable_thread.c \
 	../../cf-reactor/wakeup_channel.c

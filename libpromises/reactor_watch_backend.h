@@ -38,11 +38,16 @@
 #include <platform.h>
 
 /* JSON array written to the state directory by cf-reactor when its watchers
- * change, and removed when it stops. One object per watcher: "promiser",
- * "bundle" (qualified with the namespace unless it is the default one),
- * "wakeup_source" (the one it resolved to) and "interval" in seconds. Read by
+ * change, and removed when it stops. One object per watcher, sorted by bundle
+ * then promiser: "promiser", "bundle" (qualified with the namespace unless it
+ * is the default one), "wakeup_source" (the one it resolved to) and
+ * "interval" in seconds, see the REACTOR_WATCHERS_KEY_ macros. Read by
  * Enterprise reporting. */
 #define REACTOR_WATCHERS_REPORT_FILE "cf_reactor_watchers.json"
+#define REACTOR_WATCHERS_KEY_PROMISER "promiser"
+#define REACTOR_WATCHERS_KEY_BUNDLE "bundle"
+#define REACTOR_WATCHERS_KEY_WAKEUP_SOURCE "wakeup_source"
+#define REACTOR_WATCHERS_KEY_INTERVAL "interval"
 
 typedef enum
 {
@@ -75,8 +80,10 @@ typedef enum
 
 /* A method to watch for events with. Each one runs its own thread (or uses
  * the OS's own callbacks) to read its notifications, and calls the host's
- * mark_dirty() for the watchers they concern. add() and remove() are called
- * from cf-reactor's main thread. */
+ * mark_dirty() for the watchers they concern. start(), stop(), add() and
+ * remove() are only ever called from cf-reactor's main thread, never
+ * concurrently with each other, and add() and remove() only between start()
+ * and stop(). */
 typedef struct
 {
     const char *name;                                       /* as in 'wakeup_sources' */
@@ -86,6 +93,12 @@ typedef struct
      * the watcher's next wakeup source is tried */
     bool (*add)(uint64_t watcher_id, const ReactorWatchTarget *target);
     void (*remove)(uint64_t watcher_id);
+    /* Whether it is given files on a remote file system (see
+     * WatchTargetIsRemote()). Its add() and remove() must then never touch
+     * that file system, as they are called from the main thread, which an
+     * unresponsive server would block. Otherwise such files are left to the
+     * watcher's next wakeup source, usually polling. */
+    bool watches_remote;
 } ReactorWatchBackend;
 
 #endif

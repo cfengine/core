@@ -40,11 +40,16 @@
 #include <mod_reactor.h>        // REACTOR_WAKEUP_SOURCES
 #include <watch_backends.h>     // WatchBackendsAdd(), WatchBackendsRemove()
 #include <json.h>
+#include <sequence.h>             // SeqSort()
 #include <watcher_report.h>    // WatchersReportWrite()
+#include <watch_location.h>    // WatchTargetIsRemote(), WatchLocationForgetMountTable()
 
-/* Longest the watcher thread sleeps before its watchers are due, as a safety
- * net against a lost wakeup or a clock step. With no watchers it sleeps until
- * woken up. */
+/* Longest a lane sleeps before its watchers are due, as a safety net against
+ * a lost wakeup or a clock step. With no watchers it sleeps until woken up.
+ * The intervals are on MonotonicClockNow()'s clock, CLOCK_MONOTONIC where
+ * available, which on Linux stops while the system is suspended: after a
+ * resume, a watcher is due up to its interval later than by the wall clock
+ * (the wakeup sources still wake it up as soon as something changes). */
 #define MAX_WATCHER_THREAD_SLEEP_SECS 30
 
 #define WATCHER_THREAD_EXIT_TIMEOUT_SECS 5
@@ -142,39 +147,53 @@ static bool ThrottleMayRun(Throttle *t, const char *promiser, time_t now)
     return true;
 }
 
+typedef struct WatcherLane_ WatcherLane;
+
+/* What the identical watchers (same promise hash) of successive policies
+ * share, so that re-reading the policy keeps what the watcher observed. See
+ * the invariants above watchers_mutex. */
 typedef struct
 {
+    char *hash;                 // promise hash, see WatcherPromiseHash()
+    WatcherLane *lane;          // the lane checking it, never changes
     WatcherCheckFn check_callback;
     WatcherStateDestroyFn destroy_state;
     WatcherBundlesRanFn bundles_ran_callback; // NULL if none
     void *state;
-    Promise *promise; // copy of the expanded events promise, see PromiseCopy()
-    char *promise_hash; // hash of `promise`, see WatcherPromiseHash()
-    time_t poll_interval_secs;
-    time_t next_due; // on MonotonicClockNow()'s clock
-    WatcherCheckResult last_check; // only touched by the watcher thread
+    time_t interval;            // seconds between two checks
+    unsigned int refs;          // watchers using it, plus one while its lane checks it
+    time_t next_due;            // on MonotonicClockNow()'s clock
+    WatcherCheckResult last_check;
 
-    uint64_t id;          // passed to the wakeup sources, see WatcherMarkDirty()
-    const char *method;   // wakeup source used, static, see WatchBackendsAdd()
-
-    /* Whether an event was queued and its bundles haven't finished running.
-     * Events observed meanwhile are held, see EventHandled(). */
+    /* An event was queued and its bundles haven't finished running. Events
+     * observed meanwhile are held, see EventHandled(). */
     bool event_pending;
 
-    /* Its bundles ran since it was last checked, see WatcherBundlesRanFn */
+    /* Its bundles ran since its lane last checked it, see WatcherBundlesRanFn */
     bool bundles_ran;
 
-    /* An observed event not run yet because of the trigger limit */
+    /* An observed event not queued yet: one is pending, the trigger limit
+     * delays it, or no registered watcher uses the slot (paused, or the
+     * re-read policy dropped the watcher while its check ran) */
     bool event_held;
 
     /* The wakeup source whose wakeup led to the check that observed the held
      * event, NULL if it was the interval, for the log */
     const char *event_woken_by;
 
-    /* A check skipped while an event was held, done once it can run, see
-     * WatcherCheckIfDue() */
-    bool check_deferred;
+    /* To check as soon as it is of use, whether due or not: a check was
+     * skipped while an event was held, or its wakeups were dropped while
+     * paused. See WatcherWantsCheck(). */
+    bool recheck;
     Throttle throttle;
+} StateSlot;
+
+typedef struct
+{
+    StateSlot *slot;      // holds a reference to it
+    Promise *promise;     // copy of the expanded events promise, see PromiseCopy()
+    uint64_t id;          // passed to the wakeup sources, see LaneOfId()
+    const char *method;   // wakeup source used, static, see WatchBackendsAdd()
 } Watcher;
 
 /* Item of the event queue */
@@ -182,14 +201,37 @@ typedef struct
 {
     Watcher *watcher;
     WatcherCheckResult check; // see WatcherEventFn
-    const char *woken_by;     // see Watcher.event_woken_by
+    const char *woken_by;     // copy of StateSlot.event_woken_by
 } WatcherEvent;
 
 static void WatcherDestroy(void *item);
 
-/* Guards `watchers`, `old_watchers` and `paused`: the watcher thread iterates
- * `watchers` while the main thread re-registers them (WatcherRegister(),
- * EventWatcherPause()). */
+/* Guards `watchers`, `old_watchers`, `paused` and the state slots, except
+ * the `state` of a pinned slot. The invariants:
+ *
+ * - Only the main thread creates and frees watchers (WatcherRegister(),
+ *   EventWatcherPause(), EventWatcherResume(), finalizing), so only it calls
+ *   the wakeup sources' add() and remove(). `watchers` maps the promise hash
+ *   to the registered watcher, `old_watchers` holds those set aside.
+ * - A watcher holds a reference to a state slot. An identical watcher of the
+ *   re-read policy takes a reference to the same slot, whatever the slot is
+ *   doing, so the state, a held event and the trigger limit carry over. Not
+ *   if it is on the other lane (the mount table changed, so the path is on
+ *   another file system): it gets a fresh slot, as the old state describes
+ *   the other file system, and it mustn't wait for a check stuck on it. So
+ *   every watcher of a slot is on the slot's lane.
+ * - Only its lane checks a slot. It takes a reference to it under the lock
+ *   (pins it), runs the check without the lock, as checks may block (an
+ *   unresponsive NFS server, a big file to hash), then applies the result
+ *   and drops the reference under the lock. While pinned, the `state`
+ *   belongs to the check alone.
+ * - A slot is freed by whoever drops its last reference: the main thread
+ *   freeing a watcher, or the lane after its check. Never while pinned.
+ * - Events are queued for the registered watcher of the slot
+ *   (MapGet(watchers, hash)), and never while paused. Otherwise the slot
+ *   holds the event, for a watcher registered later to queue.
+ * - Lock order: watchers_mutex, then the wakeup sources' locks, then
+ *   dirty_mutex, then the lanes' StoppableThread locks. */
 static pthread_mutex_t watchers_mutex = PTHREAD_MUTEX_INITIALIZER;
 static Map *watchers = NULL;
 static Map *old_watchers = NULL;
@@ -197,23 +239,22 @@ static bool paused = false;         /* see EventWatcherPause() */
 
 static WakeupChannel wakeup_channel = { .fds = { -1, -1 } };
 
-/* Events (WatcherEvent) queued by the watcher thread for the main thread.
- * The watchers aren't owned by the events: they are queued while holding
+/* Events (WatcherEvent) queued by the lanes for the main thread. The
+ * watchers aren't owned by the events: they are queued while holding
  * watchers_mutex, and EventWatcherPause() empties the queue before setting
  * the watchers aside, so the watchers of queued events are always registered. */
 static ThreadedQueue *event_queue = NULL;
-static StoppableThread *watcher_thread = NULL;
 
-/* Set of watcher ids: open addressing, linear probing, 0 is an empty slot
- * (ids start at 1). Add and lookup are O(1), so a burst of marks is linear. */
+/* Set of watcher ids: open addressing, linear probing, 0 is an empty cell
+ * (ids are never 0). Add and lookup are O(1), so a burst of marks is linear. */
 typedef struct
 {
-    uint64_t *slots;
+    uint64_t *cells;
     size_t capacity;    // 0 or a power of two
     size_t count;
 } IdSet;
 
-static size_t IdSetSlot(uint64_t id, size_t capacity)
+static size_t IdSetHome(uint64_t id, size_t capacity)
 {
     return (size_t) ((id * UINT64_C(0x9E3779B97F4A7C15)) >> 32) & (capacity - 1);
 }
@@ -226,10 +267,10 @@ static bool IdSetContains(const IdSet *set, uint64_t id)
     {
         return false;
     }
-    for (size_t i = IdSetSlot(id, set->capacity); set->slots[i] != 0;
+    for (size_t i = IdSetHome(id, set->capacity); set->cells[i] != 0;
          i = (i + 1) & (set->capacity - 1))
     {
-        if (set->slots[i] == id)
+        if (set->cells[i] == id)
         {
             return true;
         }
@@ -250,28 +291,36 @@ static void IdSetAdd(IdSet *set, uint64_t id)
     {
         const IdSet old = *set;
         set->capacity = (old.capacity == 0) ? 16 : old.capacity * 2;
-        set->slots = xcalloc(set->capacity, sizeof(uint64_t));
+        set->cells = xcalloc(set->capacity, sizeof(uint64_t));
         for (size_t i = 0; i < old.capacity; i++)
         {
-            if (old.slots[i] != 0)
+            if (old.cells[i] != 0)
             {
-                size_t j = IdSetSlot(old.slots[i], set->capacity);
-                while (set->slots[j] != 0)
+                size_t j = IdSetHome(old.cells[i], set->capacity);
+                while (set->cells[j] != 0)
                 {
                     j = (j + 1) & (set->capacity - 1);
                 }
-                set->slots[j] = old.slots[i];
+                set->cells[j] = old.cells[i];
             }
         }
-        free(old.slots);
+        free(old.cells);
     }
-    size_t i = IdSetSlot(id, set->capacity);
-    while (set->slots[i] != 0)
+    size_t i = IdSetHome(id, set->capacity);
+    while (set->cells[i] != 0)
     {
         i = (i + 1) & (set->capacity - 1);
     }
-    set->slots[i] = id;
+    set->cells[i] = id;
     set->count++;
+}
+
+static void IdSetDestroy(IdSet *set)
+{
+    assert(set != NULL);
+
+    free(set->cells);
+    *set = (IdSet) { 0 };
 }
 
 /** Keeps the capacity, to not reallocate on every burst */
@@ -281,21 +330,63 @@ static void IdSetClear(IdSet *set)
 
     if (set->count > 0)
     {
-        memset(set->slots, 0, set->capacity * sizeof(uint64_t));
+        memset(set->cells, 0, set->capacity * sizeof(uint64_t));
         set->count = 0;
     }
 }
 
-/* Ids of the watchers to check right away, marked by the wakeup sources (see
- * WatcherMarkDirty()). Only ever taken after watchers_mutex, never before:
- * the wakeup sources mark watchers while holding their own lock, which is
- * taken after watchers_mutex when (un)registering. */
-static pthread_mutex_t dirty_mutex = PTHREAD_MUTEX_INITIALIZER;
-static IdSet dirty_ids;
-static bool all_dirty = false;
+/* A slot pinned for a check in a pass of its lane */
+typedef struct
+{
+    StateSlot *slot;
+    bool bundles_ran;           // copy of StateSlot.bundles_ran, taken when pinned
+    WatcherCheckResult check;
+} PinnedCheck;
 
-/* Ids of the watchers, never reused */
-static uint64_t last_watcher_id = 0;
+/* A thread checking its own watchers, see WatcherLaneMain() */
+struct WatcherLane_
+{
+    const char *name;           // for the log
+    StoppableThread *thread;    // NULL while not running
+
+    /* Left behind by EventWatcherFinalize(), stuck in a check, see LaneStop() */
+    StoppableThread *stuck_thread;
+
+    /* Ids of its watchers to check right away, marked by the wakeup sources,
+     * see WatcherMarkDirty() */
+    IdSet dirty_ids;
+    bool all_dirty;
+
+    /* Only used by its thread, not on its stack so they stay reachable if it
+     * is left behind (and cancelled), see LaneStop() */
+    IdSet taken_ids;
+    PinnedCheck *pinned;
+    size_t pinned_capacity;
+};
+
+/* Guards the lanes' `thread`, `dirty_ids` and `all_dirty`. Only ever taken
+ * after watchers_mutex, never before: the wakeup sources mark watchers while
+ * holding their own lock, which is taken after watchers_mutex when
+ * (un)registering. The main thread alone starts and stops the lanes, so it
+ * may read `thread` without it. */
+static pthread_mutex_t dirty_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/* The watchers whose checks may block on a remote file system have their
+ * own lane, started with the first of them, so that an unresponsive server
+ * doesn't hold the checks of the local ones up. */
+static WatcherLane local_lane = { .name = "local" };
+static WatcherLane remote_lane = { .name = "remote" };
+
+/* Watcher ids are (n << 1) | 1 on the remote lane, (n << 1) on the local
+ * one, with n never reused (and never 0), so a mark is routed to its lane
+ * without a lookup */
+static uint64_t last_watcher_number = 0;
+#define WATCHER_ID_REMOTE_BIT UINT64_C(1)
+
+static WatcherLane *LaneOfId(uint64_t id)
+{
+    return ((id & WATCHER_ID_REMOTE_BIT) != 0) ? &remote_lane : &local_lane;
+}
 
 static const ReactorWatchHost WATCH_HOST =
 {
@@ -340,6 +431,7 @@ void WatcherRegistryInitialize(void)
     assert(watchers == NULL);
 
     watchers = MapNew(StringHash_untyped, StringEqual_untyped, NULL, WatcherDestroy);
+    paused = false; /* if finalized while paused */
 }
 
 void WatcherRegistryFinalize(void)
@@ -350,7 +442,129 @@ void WatcherRegistryFinalize(void)
     old_watchers = NULL;
 }
 
-// Expects interval to be strictly greater than 0, otherwise the watcher thread will busy spin
+static void WatcherLaneMain(StoppableThread *thread, void *arg);
+
+/** Wakes the lane up to check its watchers, holding dirty_mutex */
+static void LaneWakeLocked(WatcherLane *lane)
+{
+    assert(lane != NULL);
+
+    if (lane->thread != NULL)
+    {
+        StoppableThreadWake(lane->thread);
+    }
+}
+
+/** Wakes the lane up to check its watchers. Thread-safe. */
+static void LaneWake(WatcherLane *lane)
+{
+    /* Under the lock, as EventWatcherFinalize() may be stopping the thread */
+    ThreadLock(&dirty_mutex);
+    LaneWakeLocked(lane);
+    ThreadUnlock(&dirty_mutex);
+}
+
+/** Starts the lane's thread unless running. Called by the main thread. */
+static bool LaneStart(WatcherLane *lane)
+{
+    assert(lane != NULL);
+
+    if (lane->thread != NULL)
+    {
+        return true;
+    }
+    StoppableThread *thread = StoppableThreadStart(WatcherLaneMain, lane);
+    if (thread == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to start the cf-reactor watcher thread of the %s watchers",
+            lane->name);
+        return false;
+    }
+    ThreadLock(&dirty_mutex);
+    lane->thread = thread;
+    ThreadUnlock(&dirty_mutex);
+    Log(LOG_LEVEL_VERBOSE, "Started the cf-reactor watcher thread of the %s watchers", lane->name);
+    return true;
+}
+
+/** Stops the lane's thread, if running. Returns false if it didn't exit in
+ * time, and may still use the registry. Called by the main thread. */
+static bool LaneStop(WatcherLane *lane)
+{
+    assert(lane != NULL);
+
+    ThreadLock(&dirty_mutex);
+    StoppableThread *thread = lane->thread;
+    lane->thread = NULL;
+    ThreadUnlock(&dirty_mutex);
+
+    if (thread == NULL)
+    {
+        return true;
+    }
+    if (!StoppableThreadStop(thread, WATCHER_THREAD_EXIT_TIMEOUT_SECS))
+    {
+        Log(LOG_LEVEL_ERR,
+            "The cf-reactor watcher thread of the %s watchers is stuck in a check, leaving it behind",
+            lane->name);
+        /* Its handle is leaked on purpose, see StoppableThreadStop(): kept
+         * reachable, so a leak checker doesn't report it */
+        lane->stuck_thread = thread;
+        return false;
+    }
+    return true;
+}
+
+static StateSlot *SlotNew(const char *hash, WatcherLane *lane, const WatcherOptions *opt)
+{
+    assert(hash != NULL);
+    assert(lane != NULL);
+    assert(opt != NULL);
+
+    StateSlot *slot = xcalloc(1, sizeof(StateSlot));
+    slot->hash = xstrdup(hash);
+    slot->lane = lane;
+    slot->check_callback = opt->check_callback;
+    slot->destroy_state = opt->destroy_state;
+    slot->bundles_ran_callback = opt->bundles_ran;
+    slot->state = opt->state;
+    slot->interval = opt->interval;
+    slot->refs = 1;
+    slot->next_due = 0; /* due immediately on its lane's first pass */
+    slot->last_check = WATCHER_CHECK_NO_EVENT;
+    ThrottleInit(&slot->throttle, MonotonicClockNow());
+    return slot;
+}
+
+/** Drops a reference to the slot, freeing it with its state if it was the
+ * last. Holding watchers_mutex (or with no lanes). */
+static void SlotRelease(StateSlot *slot)
+{
+    assert(slot != NULL);
+    assert(slot->refs > 0);
+
+    slot->refs--;
+    if (slot->refs == 0)
+    {
+        slot->destroy_state(slot->state);
+        free(slot->hash);
+        free(slot);
+    }
+}
+
+/** The lane of a new watcher: the remote one if `remote`, started with the
+ * first remote watcher once the lanes run (else by EventWatcherInitialize()),
+ * falling back to the local one. Called by the main thread. */
+static WatcherLane *LaneForNewWatcher(bool remote)
+{
+    if (remote && (local_lane.thread == NULL || LaneStart(&remote_lane)))
+    {
+        return &remote_lane;
+    }
+    return &local_lane;
+}
+
+// Expects interval to be strictly greater than 0, otherwise its lane will busy spin
 bool WatcherRegister(const Promise *pp, WatcherOptions *opt)
 {
     assert(pp != NULL);
@@ -364,111 +578,118 @@ bool WatcherRegister(const Promise *pp, WatcherOptions *opt)
     char promise_hash[CF_HOSTKEY_STRING_SIZE];
     WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
 
-    ThreadLock(&watchers_mutex);
+    /* Only the main thread changes the maps, so they don't change until the
+     * watcher is inserted below */
+    /* From the path and the mount table alone, as anything touching the file
+     * system of the path could block on it. For a duplicate, the lane is the
+     * one already started for its identical watcher. */
+    const bool remote = WatchTargetIsRemote(&opt->target);
+    WatcherLane *lane = LaneForNewWatcher(remote);
 
-    if (MapHasKey(watchers, promise_hash))
+    /* The slot of an identical watcher of the previous policy, whatever it
+     * is doing, see the invariants above watchers_mutex */
+    StateSlot *slot = NULL;
+    ThreadLock(&watchers_mutex);
+    const bool duplicate = MapHasKey(watchers, promise_hash);
+    const Watcher *prev = (old_watchers == NULL) ? NULL : MapGet(old_watchers, promise_hash);
+    if (!duplicate && prev != NULL && prev->slot->lane == lane)
     {
-        // ignore duplicates
-        ThreadUnlock(&watchers_mutex);
+        slot = prev->slot;
+        slot->refs++;
+        /* Its wakeups were dropped while paused */
+        slot->recheck = true;
+    }
+    ThreadUnlock(&watchers_mutex);
+
+    if (duplicate)
+    {
         opt->destroy_state(opt->state);
         return true;
     }
 
-    const uint64_t id = ++last_watcher_id;
+    const uint64_t id = (++last_watcher_number << 1) |
+        ((lane == &remote_lane) ? WATCHER_ID_REMOTE_BIT : 0);
 
-    // Take over the state of an identical watcher
-    Watcher *prev = (old_watchers != NULL) ? MapGet(old_watchers, promise_hash) : NULL;
-    const bool taken_over = (prev != NULL);
-    void *state = opt->state;
-    if (taken_over)
+    if (slot != NULL)
     {
-        state = prev->state;
-        prev->state = NULL; /* so not destroyed with prev */
-    }
-
-    ThreadUnlock(&watchers_mutex);
-
-    if (taken_over)
-    {
-        Log(LOG_LEVEL_DEBUG, "Reactor watcher '%s' takes over the state of an identical watcher", pp->promiser);
+        Log(LOG_LEVEL_DEBUG, "Reactor watcher '%s' keeps the state of the identical watcher it replaces",
+            pp->promiser);
         opt->destroy_state(opt->state);
     }
     else
     {
-        /* Without holding watchers_mutex, as the check may block (e.g. on an
-         * unresponsive NFS mount). Not registered yet, so the watcher thread
-         * can't check it concurrently. If it fails, the watcher's first
-         * successful check becomes the reference instead. */
-        opt->check_callback(state);
+        if (!remote)
+        {
+            /* Without holding watchers_mutex, as the check may block (e.g. on
+             * a big file to hash). Not registered yet, so its lane can't check
+             * it concurrently. If it fails, the watcher's first successful
+             * check becomes the reference instead. That is how a remote
+             * watcher gets its reference, on its lane: here, an unresponsive
+             * server would block the policy (re-)read. A change before that
+             * first check is missed. */
+            opt->check_callback(opt->state);
+        }
+        slot = SlotNew(promise_hash, lane, opt);
     }
 
     /* Before the watcher is in the registry: a wakeup from the method in
      * between is for an unknown id, and ignored, but the watcher is checked on
-     * the watcher thread's first pass anyway. */
-    const char *method = WatchBackendsAdd(id, &opt->target, opt->methods, pp->promiser);
+     * its lane's first pass anyway. */
+    const char *method = WatchBackendsAdd(id, &opt->target, remote, opt->methods, pp->promiser);
     if (method == NULL)
     {
         Log(LOG_LEVEL_ERR,
             "Reactor events promise '%s': none of its wakeup sources is available on this host",
             pp->promiser);
-        if (!taken_over)
-        {
-            opt->destroy_state(state);
-        }
-        else
-        {
-            /* Hand the state back, for a later registration to take it over */
-            ThreadLock(&watchers_mutex);
-            if (old_watchers != NULL && prev == MapGet(old_watchers, promise_hash))
-            {
-                prev->state = state;
-            }
-            else
-            {
-                opt->destroy_state(state);
-            }
-            ThreadUnlock(&watchers_mutex);
-        }
+        ThreadLock(&watchers_mutex);
+        SlotRelease(slot);
+        ThreadUnlock(&watchers_mutex);
         return false;
     }
-    Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' uses wakeup source '%s'", pp->promiser, method);
+    Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' uses wakeup source '%s'%s", pp->promiser, method,
+        (lane == &remote_lane) ? ", on a remote file system" : "");
 
     Watcher *w = xcalloc(1, sizeof(Watcher));
+    w->slot = slot;
     w->id = id;
     w->method = method;
-    w->promise_hash = xstrdup(promise_hash);
-    ThrottleInit(&w->throttle, MonotonicClockNow());
     w->promise = PromiseCopy(pp);
-    w->poll_interval_secs = opt->interval;
-    w->next_due = 0; /* due immediately on the watcher thread's first pass */
-    w->last_check = WATCHER_CHECK_NO_EVENT;
-    w->check_callback = opt->check_callback;
-    w->destroy_state = opt->destroy_state;
-    w->bundles_ran_callback = opt->bundles_ran;
-    w->state = state;
 
     ThreadLock(&watchers_mutex);
-    MapInsert(watchers, w->promise_hash, w);
+    MapInsert(watchers, slot->hash, w);
     ThreadUnlock(&watchers_mutex);
 
     return true;
 }
 
+/* Destroy function of the registry's maps. Called by the main thread,
+ * holding watchers_mutex (or with no lanes). */
 static void WatcherDestroy(void *item)
 {
     Watcher *w = item;
+    assert(w != NULL);
+
     WatchBackendsRemove(w->id, w->method);
-    // w->state is NULL when it was borrowed by a new watcher
-    if (w->destroy_state != NULL && w->state != NULL)
-    {
-        w->destroy_state(w->state);
-    }
     PromiseDestroy(w->promise);
-    free(w->promise_hash);
+    SlotRelease(w->slot);
     free(w);
 }
 
-/** Called by the watcher thread, holding watchers_mutex */
+/** The registered watcher using the slot, NULL if none or paused. Holding
+ * watchers_mutex. */
+static Watcher *SlotRegisteredWatcher(const StateSlot *slot)
+{
+    assert(slot != NULL);
+
+    if (paused)
+    {
+        return NULL;
+    }
+    Watcher *w = MapGet(watchers, slot->hash);
+    return (w != NULL && w->slot == slot) ? w : NULL;
+}
+
+/** Called by a lane, holding watchers_mutex */
 static void QueueEvent(Watcher *w, WatcherCheckResult check)
 {
     assert(w != NULL);
@@ -476,16 +697,18 @@ static void QueueEvent(Watcher *w, WatcherCheckResult check)
     WatcherEvent *event = xmalloc(sizeof(WatcherEvent));
     event->watcher = w;
     event->check = check;
-    event->woken_by = (check == WATCHER_CHECK_EVENT) ? w->event_woken_by : NULL;
+    event->woken_by = (check == WATCHER_CHECK_EVENT) ? w->slot->event_woken_by : NULL;
     ThreadedQueuePush(event_queue, event);
 }
 
-/** Waits for the burst of changes that marked watchers to settle, see
- * WATCH_SETTLE_MSECS. Returns the time after the wait. */
-static time_t SettleIfMarked(time_t now)
+/** Waits for the burst of changes that marked watchers of the lane to settle,
+ * see WATCH_SETTLE_MSECS. Returns the time after the wait. */
+static time_t SettleIfMarked(const WatcherLane *lane, time_t now)
 {
+    assert(lane != NULL);
+
     ThreadLock(&dirty_mutex);
-    const bool marked = (dirty_ids.count > 0 || all_dirty);
+    const bool marked = (lane->dirty_ids.count > 0 || lane->all_dirty);
     ThreadUnlock(&dirty_mutex);
     if (!marked)
     {
@@ -497,130 +720,175 @@ static time_t SettleIfMarked(time_t now)
     return MonotonicClockNow();
 }
 
-/** Takes the dirty marks into `taken`, see WatcherMarkDirty(), replacing the
- * ids taken last time. Returns whether all watchers are marked. */
-static bool TakeDirtyMarks(IdSet *taken)
+/** Takes the dirty marks of the lane into `taken`, see WatcherMarkDirty(),
+ * replacing the ids taken last time. Returns whether all its watchers are
+ * marked. */
+static bool TakeDirtyMarks(WatcherLane *lane, IdSet *taken)
 {
+    assert(lane != NULL);
     assert(taken != NULL);
 
     ThreadLock(&dirty_mutex);
     const IdSet previous = *taken;
-    *taken = dirty_ids;
-    dirty_ids = previous;
-    IdSetClear(&dirty_ids);
-    const bool check_all = all_dirty;
-    all_dirty = false;
+    *taken = lane->dirty_ids;
+    lane->dirty_ids = previous;
+    IdSetClear(&lane->dirty_ids);
+    const bool check_all = lane->all_dirty;
+    lane->all_dirty = false;
     ThreadUnlock(&dirty_mutex);
     return check_all;
 }
 
-/** Whether a check of the watcher is of use now, see WatcherCheckIfDue().
+/** Whether a check of the slot is of use now, see WatcherWantsCheck().
  * While an event is held, checking again can't change what runs next, and a
  * check may be costly (file_content_modified hashes the file). */
-static bool WatcherCanCheck(const Watcher *w, time_t now)
+static bool SlotCanCheck(const StateSlot *slot, time_t now)
 {
-    assert(w != NULL);
+    assert(slot != NULL);
 
-    return !w->event_held ||
-        (!w->event_pending && ThrottleDelayLeft(&w->throttle, now) == 0);
+    return !slot->event_held ||
+        (!slot->event_pending && ThrottleDelayLeft(&slot->throttle, now) == 0);
 }
 
-/** Checks the watcher if it is due (or woken up by its wakeup source) and the
- * check is of use, see below. Returns whether an error event was queued.
- * Called by the watcher thread, holding watchers_mutex. */
-static bool WatcherCheckIfDue(Watcher *w, time_t now, bool woken)
+/** Whether to check the slot in this pass: it is due (or its watcher was woken
+ * up by its wakeup source) and the check is of use, see below. Called by its
+ * lane, holding watchers_mutex. */
+static bool WatcherWantsCheck(StateSlot *slot, time_t now, bool woken)
 {
-    assert(w != NULL);
+    assert(slot != NULL);
 
-    // check_callback cannot be null if it is correctly assigned during policy evaluation
-    assert(w->check_callback != NULL);
-
-    const bool due = (now >= w->next_due || woken);
+    const bool due = (now >= slot->next_due || woken);
 
     /* Skip the check while an event is held and check once when it can run,
      * so a busy file is checked about as often as the bundles run. */
-    const bool can_run = WatcherCanCheck(w, now);
+    const bool can_run = SlotCanCheck(slot, now);
     if (due && !can_run)
     {
-        w->check_deferred = true;
-        w->next_due = now + w->poll_interval_secs;
+        slot->recheck = true;
+        slot->next_due = now + slot->interval;
         return false;
     }
-    if (!(can_run && (due || w->check_deferred)))
-    {
-        return false;
-    }
+    return can_run && (due || slot->recheck);
+}
 
-    bool queued = false;
-    w->check_deferred = false;
-    if (w->bundles_ran && w->bundles_ran_callback != NULL)
-    {
-        w->bundles_ran_callback(w->state);
-    }
-    w->bundles_ran = false;
-    WatcherCheckResult check = w->check_callback(w->state);
-    w->next_due = now + ((check == WATCHER_CHECK_ERROR) ?
-                         MIN(w->poll_interval_secs, CHECK_ERROR_RETRY_SECS) :
-                         w->poll_interval_secs);
+/** Applies the result of a check of the slot, which ran without holding
+ * watchers_mutex. An event is held, to be queued for the slot's registered
+ * watcher `w` (see WatcherQueueHeldEvent()), and an error queued for it right
+ * away, unless `w` is NULL: then it is reported by a later check. Returns
+ * whether an error was queued. Called by its lane, holding watchers_mutex. */
+static bool SlotApplyCheck(StateSlot *slot, Watcher *w, WatcherCheckResult check, time_t now)
+{
+    assert(slot != NULL);
+
+    slot->next_due = now + ((check == WATCHER_CHECK_ERROR) ?
+                            MIN(slot->interval, CHECK_ERROR_RETRY_SECS) :
+                            slot->interval);
 
     if (check == WATCHER_CHECK_EVENT)
     {
-        if (!w->event_held)
-        {
-            w->event_woken_by = woken ? w->method : NULL;
-        }
-        w->event_held = true;
+        slot->event_held = true;
     }
     /* Only report a failing watcher once, not on every check,
      * until it recovers */
-    else if (check == WATCHER_CHECK_ERROR && w->last_check != WATCHER_CHECK_ERROR)
+    else if (check == WATCHER_CHECK_ERROR && slot->last_check != WATCHER_CHECK_ERROR)
     {
+        if (w == NULL)
+        {
+            return false;
+        }
         QueueEvent(w, WATCHER_CHECK_ERROR);
-        queued = true;
+        slot->last_check = check;
+        return true;
     }
-    w->last_check = check;
-    return queued;
+    slot->last_check = check;
+    return false;
 }
 
-/** Queues the event held by the watcher if the trigger limit allows. Returns
- * whether it did. Called by the watcher thread, holding watchers_mutex. */
+/** Queues the event held by the slot of the registered watcher if the trigger
+ * limit allows. Returns whether it did. Called by its lane, holding
+ * watchers_mutex. */
 static bool WatcherQueueHeldEvent(Watcher *w, time_t now)
 {
     assert(w != NULL);
 
-    if (w->event_held && !w->event_pending &&
-        ThrottleMayRun(&w->throttle, w->promise->promiser, now))
+    StateSlot *slot = w->slot;
+    if (slot->event_held && !slot->event_pending &&
+        ThrottleMayRun(&slot->throttle, w->promise->promiser, now))
     {
-        w->event_held = false;
-        w->event_pending = true;
+        slot->event_held = false;
+        slot->event_pending = true;
         QueueEvent(w, WATCHER_CHECK_EVENT);
         return true;
     }
     return false;
 }
 
-/** How long until the watcher needs the watcher thread again. A watcher
- * waiting for its event to be handled is woken by EventHandled(). */
-static time_t WatcherSecsUntilDue(const Watcher *w, time_t now)
+/** How long until the slot needs its lane again. A slot waiting for its
+ * event to be handled is woken by EventHandled(). */
+static time_t SlotSecsUntilDue(const StateSlot *slot, time_t now)
 {
-    assert(w != NULL);
+    assert(slot != NULL);
 
-    if (w->check_deferred && WatcherCanCheck(w, now))
+    if (slot->recheck && SlotCanCheck(slot, now))
     {
         return 0;
     }
 
-    time_t until_due = (w->next_due > now) ? (w->next_due - now) : 0;
-    const time_t delay_left = ThrottleDelayLeft(&w->throttle, now);
-    if (w->event_held && delay_left > 0)
+    time_t until_due = (slot->next_due > now) ? (slot->next_due - now) : 0;
+    const time_t delay_left = ThrottleDelayLeft(&slot->throttle, now);
+    if (slot->event_held && delay_left > 0)
     {
         until_due = MIN(until_due, delay_left);
     }
     return until_due;
 }
 
-static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
+/** Pins the slots of the lane's watchers to check in this pass, see
+ * WatcherWantsCheck(), into lane->pinned. Returns how many. Holding
+ * watchers_mutex. */
+static size_t LanePinChecks(WatcherLane *lane, bool check_all, time_t now)
 {
+    assert(lane != NULL);
+
+    size_t count = 0;
+    MapIterator it = MapIteratorInit(watchers);
+    MapKeyValue *item;
+    while ((item = MapIteratorNext(&it)) != NULL)
+    {
+        Watcher *w = item->value;
+        StateSlot *slot = w->slot;
+        const bool woken = (check_all || IdSetContains(&lane->taken_ids, w->id));
+        if (slot->lane != lane || !WatcherWantsCheck(slot, now, woken))
+        {
+            continue;
+        }
+        if (count == lane->pinned_capacity)
+        {
+            lane->pinned_capacity = (lane->pinned_capacity == 0) ? 16 : lane->pinned_capacity * 2;
+            lane->pinned = xrealloc(lane->pinned, lane->pinned_capacity * sizeof(PinnedCheck));
+        }
+        slot->recheck = false;
+        slot->refs++;
+        lane->pinned[count].slot = slot;
+        lane->pinned[count].bundles_ran = slot->bundles_ran;
+        slot->bundles_ran = false;
+        /* A held event keeps the wakeup that led to it */
+        if (!slot->event_held)
+        {
+            slot->event_woken_by = woken ? w->method : NULL;
+        }
+        count++;
+    }
+    return count;
+}
+
+/** The loop of a lane: checks the lane's watchers when due or marked, and
+ * queues their events. Every lane runs it, each on its own watchers only. */
+static void WatcherLaneMain(StoppableThread *thread, void *arg)
+{
+    WatcherLane *lane = arg;
+    assert(lane != NULL);
+
     /* Keep termination signals landing on the main thread (which owns the
      * daemon's HandleSignalsForDaemon()-based shutdown), never on this one.
      * No-op on Windows -- see signal_lib.h. */
@@ -628,33 +896,59 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
     MaskTerminationSignalsInThread();
 #endif
 
-    IdSet dirty = { 0 };
-
     while (!IsPendingTermination() && !StoppableThreadShouldStop(thread))
     {
         time_t sleep_for = MAX_WATCHER_THREAD_SLEEP_SECS;
         bool any_event = false;
+        size_t lane_watchers = 0;
 
-        const time_t now = SettleIfMarked(MonotonicClockNow());
+        const time_t now = SettleIfMarked(lane, MonotonicClockNow());
+
+        ThreadLock(&watchers_mutex);
+        /* Marks taken while paused are dropped, see `recheck` */
+        const bool check_all = TakeDirtyMarks(lane, &lane->taken_ids);
+        const size_t pinned_count = paused ? 0 : LanePinChecks(lane, check_all, now);
+        ThreadUnlock(&watchers_mutex);
+
+        /* Check them, without the lock: the checks may block */
+        for (size_t i = 0; i < pinned_count; i++)
+        {
+            StateSlot *slot = lane->pinned[i].slot;
+            if (lane->pinned[i].bundles_ran && slot->bundles_ran_callback != NULL)
+            {
+                slot->bundles_ran_callback(slot->state);
+            }
+            lane->pinned[i].check = slot->check_callback(slot->state);
+        }
 
         ThreadLock(&watchers_mutex);
 
-        const bool check_all = TakeDirtyMarks(&dirty);
+        /* Apply the results and unpin. The watchers may have been replaced
+         * meanwhile, by a policy re-read. */
+        for (size_t i = 0; i < pinned_count; i++)
+        {
+            StateSlot *slot = lane->pinned[i].slot;
+            any_event |= SlotApplyCheck(slot, SlotRegisteredWatcher(slot), lane->pinned[i].check,
+                                        now);
+            SlotRelease(slot);
+        }
 
-        /* Nothing to check until EventWatcherWakeUp() or EventWatcherResume()
-         * wakes the thread up (EventWatcherPause() empties `watchers`) */
-        const bool idle = (MapSize(watchers) == 0);
-
+        /* Queue the held events */
         MapIterator it = MapIteratorInit(watchers);
         MapKeyValue *item;
-        while (!paused && (item = MapIteratorNext(&it)) != NULL)
+        while ((item = MapIteratorNext(&it)) != NULL)
         {
             Watcher *w = item->value;
-            const bool woken = (check_all || IdSetContains(&dirty, w->id));
-
-            any_event |= WatcherCheckIfDue(w, now, woken);
-            any_event |= WatcherQueueHeldEvent(w, now);
-            sleep_for = MIN(sleep_for, WatcherSecsUntilDue(w, now));
+            if (w->slot->lane != lane)
+            {
+                continue;
+            }
+            lane_watchers++;
+            if (!paused)
+            {
+                any_event |= WatcherQueueHeldEvent(w, now);
+                sleep_for = MIN(sleep_for, SlotSecsUntilDue(w->slot, now));
+            }
         }
 
         ThreadUnlock(&watchers_mutex);
@@ -665,8 +959,10 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
         }
 
         /* Wakeup sources, new watchers and shutdown wake the thread up, and
-         * the time of everything else is in sleep_for */
-        if (idle)
+         * the time of everything else is in sleep_for. Without watchers,
+         * nothing to check until EventWatcherWakeUp() or EventWatcherResume()
+         * (EventWatcherPause() empties `watchers`). */
+        if (lane_watchers == 0)
         {
             StoppableThreadSleepUntilWoken(thread);
         }
@@ -675,7 +971,27 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
             StoppableThreadSleep(thread, sleep_for);
         }
     }
-    free(dirty.slots);
+    free(lane->pinned);
+    lane->pinned = NULL;
+    lane->pinned_capacity = 0;
+    IdSetDestroy(&lane->taken_ids);
+}
+
+/** Whether a registered watcher is on the remote lane. Called by the main
+ * thread before the lanes run. */
+static bool AnyRemoteWatcher(void)
+{
+    MapIterator it = MapIteratorInit(watchers);
+    MapKeyValue *item;
+    while ((item = MapIteratorNext(&it)) != NULL)
+    {
+        const Watcher *w = item->value;
+        if (w->slot->lane == &remote_lane)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool EventWatcherInitialize(int *fd)
@@ -692,10 +1008,10 @@ bool EventWatcherInitialize(int *fd)
     event_queue = ThreadedQueueNew(16, free);
     WatchBackendsInitialize(&WATCH_HOST);
 
-    watcher_thread = StoppableThreadStart(WatcherThreadMain, NULL);
-    if (watcher_thread == NULL)
+    /* The remote lane too if remote watchers were registered before */
+    if (!LaneStart(&local_lane) || (AnyRemoteWatcher() && !LaneStart(&remote_lane)))
     {
-        Log(LOG_LEVEL_ERR, "Unable to start cf-reactor watcher thread");
+        LaneStop(&local_lane);
         WatchBackendsFinalize();
         ThreadedQueueDestroy(event_queue);
         event_queue = NULL;
@@ -723,21 +1039,19 @@ static void EventHandled(Watcher *w)
     assert(w != NULL);
 
     ThreadLock(&watchers_mutex);
-    w->event_pending = false;
-    w->bundles_ran = true;
-    w->check_deferred = true;
+    w->slot->event_pending = false;
+    w->slot->bundles_ran = true;
+    w->slot->recheck = true;
     ThreadUnlock(&watchers_mutex);
 
-    if (watcher_thread != NULL)
-    {
-        StoppableThreadWake(watcher_thread);
-    }
+    LaneWake(w->slot->lane);
 }
 
-/* Watchers are only destroyed by the main thread (EventWatcherResume()),
- * which is also the one handling events, and never while events are queued,
- * so the watchers of queued events can be used without holding
- * watchers_mutex. Their promise is never modified by the watcher thread. */
+/* Watchers are only removed by the main thread (EventWatcherPause(),
+ * EventWatcherResume()), which is also the one handling events, and never
+ * while events are queued, so the watchers of queued events can be used
+ * without holding watchers_mutex. Their promise is never modified by the
+ * lanes. */
 static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
 {
     assert(on_event != NULL);
@@ -794,7 +1108,7 @@ void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event)
 {
     assert(on_event != NULL);
 
-    /* A pass of the watcher thread holds watchers_mutex, so once `paused` is
+    /* A pass of a lane holds watchers_mutex, so once `paused` is
      * set no further events are queued */
     ThreadLock(&watchers_mutex);
     paused = true;
@@ -807,14 +1121,14 @@ void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event)
 
     ThreadLock(&watchers_mutex);
 
-    /* Paused, so the watcher thread can't have queued any event since */
+    /* Paused, so the lanes can't have queued any event since */
     if (event_queue != NULL && !ThreadedQueueIsEmpty(event_queue))
     {
         ProgrammingError("Events of reactor watchers still queued after handling them while pausing");
     }
 
     /* Set the watchers aside before the policy is re-read, for the watchers
-     * registered from it to take over the state of the identical ones, see
+     * registered from it to share the state slots of the identical ones, see
      * WatcherRegister(). If paused twice in a row, the watchers of the last
      * policy are the ones registered since the first pause. */
     MapDestroy(old_watchers);
@@ -827,7 +1141,8 @@ void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event)
 void EventWatcherResume(void)
 {
     ThreadLock(&watchers_mutex);
-    /* The watchers of the previous policy not taken over */
+    /* The watchers of the previous policy, their slots go with the last of
+     * their references */
     MapDestroy(old_watchers);
     old_watchers = NULL;
     paused = false;
@@ -836,10 +1151,26 @@ void EventWatcherResume(void)
     EventWatcherWakeUp();
 }
 
-/** Writes the report of the method each watcher uses, for Enterprise reporting */
+static int CompareReportEntries(const void *a, const void *b, ARG_UNUSED void *user_data)
+{
+    const JsonElement *entry_a = a;
+    const JsonElement *entry_b = b;
+    const int by_bundle = StringSafeCompare(JsonObjectGetAsString(entry_a, REACTOR_WATCHERS_KEY_BUNDLE),
+                                 JsonObjectGetAsString(entry_b, REACTOR_WATCHERS_KEY_BUNDLE));
+    if (by_bundle != 0)
+    {
+        return by_bundle;
+    }
+    return StringSafeCompare(JsonObjectGetAsString(entry_a, REACTOR_WATCHERS_KEY_PROMISER),
+                  JsonObjectGetAsString(entry_b, REACTOR_WATCHERS_KEY_PROMISER));
+}
+
+/** Writes the report of the method each watcher uses, for Enterprise
+ * reporting, sorted by bundle then promiser, so that the same watchers give
+ * the same report (see WatchersReportWrite()) whatever the map's order */
 static void WriteWatchersReport(void)
 {
-    JsonElement *report = JsonArrayCreate(8);
+    Seq *entries = SeqNew(16, NULL);
 
     ThreadLock(&watchers_mutex);
     MapIterator it = MapIteratorInit(watchers);
@@ -848,24 +1179,34 @@ static void WriteWatchersReport(void)
     {
         const Watcher *w = item->value;
         JsonElement *entry = JsonObjectCreate(4);
-        JsonObjectAppendString(entry, "promiser", w->promise->promiser);
+        JsonObjectAppendString(entry, REACTOR_WATCHERS_KEY_PROMISER, w->promise->promiser);
         const Bundle *bundle = PromiseGetBundle(w->promise);
         if (StringEqual(bundle->ns, NamespaceDefault()))
         {
-            JsonObjectAppendString(entry, "bundle", bundle->name);
+            JsonObjectAppendString(entry, REACTOR_WATCHERS_KEY_BUNDLE, bundle->name);
         }
         else
         {
             /* So same-named bundles of different namespaces don't collide */
             char *qualified = StringFormat("%s:%s", bundle->ns, bundle->name);
-            JsonObjectAppendString(entry, "bundle", qualified);
+            JsonObjectAppendString(entry, REACTOR_WATCHERS_KEY_BUNDLE, qualified);
             free(qualified);
         }
-        JsonObjectAppendString(entry, "method", w->method);
-        JsonObjectAppendInteger64(entry, "interval", (int64_t) w->poll_interval_secs);
-        JsonArrayAppendObject(report, entry);
+        JsonObjectAppendString(entry, REACTOR_WATCHERS_KEY_WAKEUP_SOURCE, w->method);
+        JsonObjectAppendInteger64(entry, REACTOR_WATCHERS_KEY_INTERVAL,
+                                  (int64_t) w->slot->interval);
+        SeqAppend(entries, entry);
     }
     ThreadUnlock(&watchers_mutex);
+
+    SeqSort(entries, CompareReportEntries, NULL);
+    const size_t count = SeqLength(entries);
+    JsonElement *report = JsonArrayCreate(count);
+    for (size_t i = 0; i < count; i++)
+    {
+        JsonArrayAppendObject(report, SeqAt(entries, i));
+    }
+    SeqDestroy(entries);
 
     WatchersReportWrite(report);
     JsonDestroy(report);
@@ -880,10 +1221,11 @@ void EventWatcherWakeUp(void)
     WriteWatchersReport();
     Log(LOG_LEVEL_VERBOSE, "cf-reactor event watcher has %zu watcher(s)", count);
 
-    if (watcher_thread != NULL)
-    {
-        StoppableThreadWake(watcher_thread);
-    }
+    /* Until the next re-read */
+    WatchLocationForgetMountTable();
+
+    LaneWake(&local_lane);
+    LaneWake(&remote_lane);
 }
 
 void EventWatcherFinalize(void)
@@ -891,18 +1233,28 @@ void EventWatcherFinalize(void)
     /* Clean shutdown: the watchers are gone, so is their report */
     WatchersReportRemove();
 
-    /* Before stopping the watcher thread, which they wake up */
+    /* Both, even if the first is stuck. The local lane first: the remote one
+     * is the likely one to be stuck, on a server that doesn't respond. */
+    const bool local_joined = LaneStop(&local_lane);
+    const bool remote_joined = LaneStop(&remote_lane);
+
+    /* Once the lanes are stopped, so nothing wakes them up any more. A lane
+     * left behind doesn't call the methods (only the main thread does). */
     WatchBackendsFinalize();
 
-    bool joined = StoppableThreadStop(watcher_thread, WATCHER_THREAD_EXIT_TIMEOUT_SECS);
-    watcher_thread = NULL;
-    if (!joined)
+    WatchLocationForgetMountTable();
+
+    if (!local_joined || !remote_joined)
     {
-        /* The thread may still be running and using the event queue, the
-         * wakeup channel and the watcher registry, so leak them rather than
-         * risk a use-after-free. We're shutting down anyway. */
+        /* A lane may still be running and using the event queue, the wakeup
+         * channel, the watcher registry and the states, so leak them rather
+         * than risk a use-after-free. We're shutting down anyway. */
         return;
     }
+    IdSetDestroy(&local_lane.dirty_ids);
+    local_lane.all_dirty = false;
+    IdSetDestroy(&remote_lane.dirty_ids);
+    remote_lane.all_dirty = false;
 
     ThreadedQueueDestroy(event_queue);
     event_queue = NULL;
@@ -913,24 +1265,23 @@ void EventWatcherFinalize(void)
 
 void WatcherMarkDirty(uint64_t watcher_id)
 {
+    /* Only wakes the lane of the watcher up, so a busy local file doesn't
+     * make the remote lane settle and pass for nothing */
+    WatcherLane *lane = LaneOfId(watcher_id);
     ThreadLock(&dirty_mutex);
-    IdSetAdd(&dirty_ids, watcher_id);
+    IdSetAdd(&lane->dirty_ids, watcher_id);
+    LaneWakeLocked(lane);
     ThreadUnlock(&dirty_mutex);
-
-    if (watcher_thread != NULL)
-    {
-        StoppableThreadWake(watcher_thread);
-    }
 }
 
 void WatcherMarkAllDirty(void)
 {
+    WatcherLane *const lanes[] = { &local_lane, &remote_lane };
     ThreadLock(&dirty_mutex);
-    all_dirty = true;
-    ThreadUnlock(&dirty_mutex);
-
-    if (watcher_thread != NULL)
+    for (size_t i = 0; i < sizeof(lanes) / sizeof(lanes[0]); i++)
     {
-        StoppableThreadWake(watcher_thread);
+        lanes[i]->all_dirty = true;
+        LaneWakeLocked(lanes[i]);
     }
+    ThreadUnlock(&dirty_mutex);
 }

@@ -164,8 +164,8 @@ static bool BackendEnsureStarted(BackendEntry *entry)
  * telling at verbose level, it's why the watcher may end up with none.
  */
 static const char *TryMethod(const char *name, uint64_t watcher_id,
-                             const ReactorWatchTarget *target, const char *promiser,
-                             bool requested)
+                             const ReactorWatchTarget *target, bool remote,
+                             const char *promiser, bool requested)
 {
     assert(name != NULL);
     assert(target != NULL);
@@ -180,6 +180,13 @@ static const char *TryMethod(const char *name, uint64_t watcher_id,
     {
         Log(requested ? LOG_LEVEL_VERBOSE : LOG_LEVEL_DEBUG,
             "Reactor watcher '%s': wakeup source '%s' isn't part of this build, trying the next one",
+            promiser, name);
+        return NULL;
+    }
+    if (remote && !entry->backend->watches_remote)
+    {
+        Log(requested ? LOG_LEVEL_VERBOSE : LOG_LEVEL_DEBUG,
+            "Reactor watcher '%s': wakeup source '%s' doesn't watch files on a remote file system, trying the next one",
             promiser, name);
         return NULL;
     }
@@ -198,7 +205,7 @@ static const char *TryMethod(const char *name, uint64_t watcher_id,
 }
 
 const char *WatchBackendsAdd(uint64_t watcher_id, const ReactorWatchTarget *target,
-                             const Rlist *methods, const char *promiser)
+                             bool remote, const Rlist *methods, const char *promiser)
 {
     assert(target != NULL);
     assert(promiser != NULL);
@@ -216,7 +223,7 @@ const char *WatchBackendsAdd(uint64_t watcher_id, const ReactorWatchTarget *targ
             {
                 const char *name = SeqAt(names, i);
                 poll_allowed = poll_allowed || StringEqual(name, REACTOR_WAKEUP_SOURCE_POLL);
-                used = TryMethod(name, watcher_id, target, promiser, true);
+                used = TryMethod(name, watcher_id, target, remote, promiser, true);
             }
             SeqDestroy(names);
             return (used != NULL || !poll_allowed) ? used : REACTOR_WAKEUP_SOURCE_POLL;
@@ -226,8 +233,8 @@ const char *WatchBackendsAdd(uint64_t watcher_id, const ReactorWatchTarget *targ
          * (closest to the kernel first), then polling */
         for (size_t i = 0; i < num_backends; i++)
         {
-            const char *used = TryMethod(backends[i].backend->name, watcher_id, target, promiser,
-                                         false);
+            const char *used = TryMethod(backends[i].backend->name, watcher_id, target, remote,
+                                         promiser, false);
             if (used != NULL)
             {
                 return used;
@@ -238,7 +245,7 @@ const char *WatchBackendsAdd(uint64_t watcher_id, const ReactorWatchTarget *targ
 
     for (const Rlist *rp = methods; rp != NULL; rp = rp->next)
     {
-        const char *used = TryMethod(RlistScalarValue(rp), watcher_id, target, promiser, true);
+        const char *used = TryMethod(RlistScalarValue(rp), watcher_id, target, remote, promiser, true);
         if (used != NULL)
         {
             return used;

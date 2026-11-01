@@ -1,6 +1,6 @@
 #include <test.h>
 
-#include <file_watcher.h>       /* FileWatcherStateNew(), FileWatcherCheckFileDeleted() */
+#include <file_watcher.c>       /* Included for HashFileContent() */
 #include <rlist.h>              /* RlistAppendScalar() */
 #include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
 

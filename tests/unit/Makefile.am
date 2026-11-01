@@ -235,12 +235,14 @@ regex_test_SOURCES = regex_test.c ../../libpromises/match_scope.c
 
 watcher_test_SOURCES = watcher_test.c \
 	../../cf-reactor/watcher.c \
+	../../cf-reactor/watcher_report.c \
+	../../cf-reactor/watch_backends.c \
 	../../cf-reactor/file_watcher.c \
 	../../cf-reactor/stoppable_thread.c \
 	../../cf-reactor/wakeup_channel.c
 
-file_watcher_test_SOURCES = file_watcher_test.c \
-	../../cf-reactor/file_watcher.c
+# The test includes file_watcher.c, to reach its static helpers
+file_watcher_test_SOURCES = file_watcher_test.c
 
 user_watcher_test_SOURCES = user_watcher_test.c
 

@@ -1,0 +1,37 @@
+#######################################################
+#
+# Test that a bundle repairing the watched file converges
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when content_modified(file)
+{
+  file_content_modified => "$(file)";
+  interval => 1;
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => content_modified("$(test)"),
+      then => { record_event("$(events_file)", "$(test) was modified"), repair("$(test)") };
+}
+
+bundle agent repair(file)
+{
+  files:
+    "$(file)"
+      content => "good";
+}

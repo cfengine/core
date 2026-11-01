@@ -5,6 +5,8 @@
 #include <policy.h>             /* Promise */
 #include <rlist.h>              /* RlistAppendScalar() */
 #include <string_lib.h>         /* StringEqual() */
+#include <file_lib.h>           /* FileRead() */
+#include <reactor_watch_backend.h>  /* REACTOR_WATCHERS_REPORT_FILE */
 
 #include <stdio.h>              /* snprintf() */
 #include <stdlib.h>             /* mkdtemp() */
@@ -12,13 +14,17 @@
 #include <fcntl.h>              /* open() */
 
 /* The registry only hashes the expanded promise it is given (its promiser
- * here, as it has no constraints, comment or parent) and hands a copy of it
- * back to the WatcherEventFn, so minimal promises are enough. Their org_pp
- * tells apart the identical promises of different policies. */
+ * and bundle here, as it has no constraints or comment) and hands a copy of
+ * it back to the WatcherEventFn, so minimal promises are enough. Their org_pp
+ * tells apart the identical promises of different policies. The bundle is
+ * there for the watchers report. */
+static Bundle test_bundle = { .name = "test", .ns = "default" };
+static BundleSection test_section = { .parent_bundle = &test_bundle };
 static const Promise unexpanded_promise;
 static const Promise expanded_promise = {
     .promiser = "test-event",
     .org_pp = &unexpanded_promise,
+    .parent_section = &test_section,
 };
 
 /* Returns the options of a file_deleted watcher, valid until the next call
@@ -161,8 +167,10 @@ static void test_watcher_register_iterations(void)
 
     /* The iterations of a promise (same promise, other promisers) are
      * different watchers */
-    const Promise iteration_a = { .promiser = "/a", .org_pp = &unexpanded_promise };
-    const Promise iteration_b = { .promiser = "/b", .org_pp = &unexpanded_promise };
+    const Promise iteration_a = { .promiser = "/a", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
+    const Promise iteration_b = { .promiser = "/b", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
     WatcherRegister(&iteration_a, FileDeletedOptions("/nonexistent/a", 5));
     WatcherRegister(&iteration_b, FileDeletedOptions("/nonexistent/b", 5));
 
@@ -185,6 +193,7 @@ static void test_watcher_register_identical_ignored(void)
     const Promise other_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &other_unexpanded_promise,
+        .parent_section = &test_section,
     };
     assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1)));
     assert_true(WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1)));
@@ -373,6 +382,7 @@ static void test_event_watcher_state_kept_across_pause(void)
     const Promise new_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &new_unexpanded_promise,
+        .parent_section = &test_section,
     };
     WatcherRegister(&new_expanded_promise, FileDeletedOptions(path, 1));
     EventWatcherResume();
@@ -412,10 +422,12 @@ static void test_event_watcher_state_kept_identical_ignored(void)
     const Promise new_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &new_unexpanded_promise,
+        .parent_section = &test_section,
     };
     const Promise other_expanded_promise = {
         .promiser = "test-event",
         .org_pp = &other_unexpanded_promise,
+        .parent_section = &test_section,
     };
     WatcherRegister(&new_expanded_promise, FileDeletedOptions(path, 1));
     WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1));
@@ -452,6 +464,7 @@ static void test_event_watcher_state_not_kept_for_other_promise(void)
     const Promise other_expanded_promise = {
         .promiser = "other-event",
         .org_pp = &unexpanded_promise,
+        .parent_section = &test_section,
     };
     WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1));
     EventWatcherResume();
@@ -474,8 +487,10 @@ static void test_event_watcher_several_events(void)
     CreateTempFile(dir_b, path_b, sizeof(path_b));
 
     WatcherRegistryInitialize();
-    const Promise iteration_a = { .promiser = "a", .org_pp = &unexpanded_promise };
-    const Promise iteration_b = { .promiser = "b", .org_pp = &unexpanded_promise };
+    const Promise iteration_a = { .promiser = "a", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
+    const Promise iteration_b = { .promiser = "b", .org_pp = &unexpanded_promise,
+                                  .parent_section = &test_section };
     WatcherRegister(&iteration_a, FileDeletedOptions(path_a, 1));
     WatcherRegister(&iteration_b, FileDeletedOptions(path_b, 1));
 

@@ -43,6 +43,7 @@
 #include <syntax.h>              // CheckConstraintTypeMatch(), PromiseTypeSyntaxGet(), BodySyntaxGetConstraintSyntax()
 #include <file_watcher.h>
 #include <user_watcher.h>
+#include <package_watcher.h>
 #include <conversion.h>
 
 /* Resolves the agent, common or reactor bundle (looked up in that order)
@@ -163,6 +164,12 @@ static const EventArg FILE_SIZE_EXCEEDS_ARGS[] =
     { NULL, RVAL_TYPE_NOPROMISEE, false }
 };
 
+static const EventArg PACKAGE_ARGS[] =
+{
+    { REACTOR_PACKAGE_MODULE, RVAL_TYPE_SCALAR, true },
+    { NULL, RVAL_TYPE_NOPROMISEE, false }
+};
+
 #define EventTypeNew(name, type, args, new_state, destroy_state, check) \
     { name, type, args, new_state, destroy_state, check }
 #define EventTypeNewNull() EventTypeNew(NULL, RVAL_TYPE_NOPROMISEE, NULL, NULL, NULL, NULL)
@@ -187,6 +194,10 @@ static const EventType EVENT_TABLE[] =
                  FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds),
     UserEventTypeNew(REACTOR_USER_ADDED, UserWatcherCheckUserAdded),
     UserEventTypeNew(REACTOR_USER_REMOVED, UserWatcherCheckUserRemoved),
+    EventTypeNew(REACTOR_PACKAGE_INSTALLED, RVAL_TYPE_SCALAR, PACKAGE_ARGS,
+                 PackageWatcherStateNew, PackageWatcherStateDestroy, PackageWatcherCheckPackageInstalled),
+    EventTypeNew(REACTOR_PACKAGE_UNINSTALLED, RVAL_TYPE_SCALAR, PACKAGE_ARGS,
+                 PackageWatcherStateNew, PackageWatcherStateDestroy, PackageWatcherCheckPackageUninstalled),
     EventTypeNewNull()
 };
 

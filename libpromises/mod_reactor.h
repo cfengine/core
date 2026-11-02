@@ -38,6 +38,9 @@
 #define REACTOR_SIZE_THRESHOLD "size_threshold"
 #define REACTOR_USER_ADDED "user_added"
 #define REACTOR_USER_REMOVED "user_removed"
+#define REACTOR_PACKAGE_INSTALLED "package_installed"
+#define REACTOR_PACKAGE_UNINSTALLED "package_uninstalled"
+#define REACTOR_PACKAGE_MODULE "package_module"
 
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"

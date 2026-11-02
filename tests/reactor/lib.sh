@@ -138,6 +138,45 @@ check_events_unordered() {
     fi
 }
 
+# Create package module $1 in $WORKDIR. It lists the packages in the file
+# given as its option (default_options), see set_installed_packages.
+create_package_module() {
+    mkdir -p "$WORKDIR/modules/packages"
+    cat > "$WORKDIR/modules/packages/$1" <<'MODULE'
+#!/bin/sh
+case "$1" in
+    supports-api-version)
+        echo 1
+        ;;
+    list-installed)
+        while read -r line; do
+            case "$line" in
+                options=*) file=${line#options=} ;;
+            esac
+        done
+        if [ -f "$file" ]; then
+            cat "$file"
+        fi
+        ;;
+    *)
+        exit 1
+        ;;
+esac
+MODULE
+    chmod 700 "$WORKDIR/modules/packages/$1"
+}
+
+# Set the packages listed from file $1 to the remaining arguments. Replaces
+# the file atomically, since the package module may read it meanwhile.
+set_installed_packages() {
+    file=$1
+    shift
+    for name in "$@"; do
+        printf 'Name=%s\nVersion=1.0\nArchitecture=generic\n' "$name"
+    done > "$file.tmp"
+    mv "$file.tmp" "$file"
+}
+
 # Start cf-reactor in the background with policy file $1, logging to $LOG.
 # It is stopped when the test exits.
 start_reactor() {

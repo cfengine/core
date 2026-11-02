@@ -25,12 +25,6 @@ fi
 
 t=$1
 
-# Explicitly use POSIX tools if needed (Solaris)
-if [ -f /usr/xpg4/bin/grep ]; then
-    PATH=/usr/xpg4/bin:$PATH
-    export PATH
-fi
-
 case "$t" in
     */unsafe/*)
         if [ "$UNSAFE_TESTS" != 1 ]; then

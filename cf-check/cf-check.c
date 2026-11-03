@@ -130,7 +130,7 @@ int main(int argc, const char *const *argv)
 
     int c = 0;
     int start_index = 1;
-    const char *optstr = "+hMg:dvI"; // + means stop for non opt arg. :)
+    const char *optstr = "+hMVg:dvI"; // + means stop for non opt arg. :)
     while ((c = getopt_long(argc, (char *const *) argv, optstr, OPTIONS, &start_index))
            != -1)
     {

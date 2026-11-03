@@ -1,8 +1,8 @@
 # Helpers sourced by the tests. Expects CF_REACTOR and LOG to be exported by
 # run_test.sh.
 #
-# Only POSIX tools are used, as the tests are run on all the platforms (e.g.
-# no timeout(1), grep -m or date +%s).
+# Only portable tools are used, as the tests are run on all the platforms (e.g.
+# no timeout(1) or grep -m).
 
 # Seconds to wait for something before giving up
 WAIT_TIMEOUT=60
@@ -11,33 +11,23 @@ WAIT_TIMEOUT=60
 log_offset=0
 
 # Run command $@ until it succeeds, for at most WAIT_TIMEOUT seconds, polling
-# every 0.1 second, or every second where sleep only takes whole seconds.
-# Fails if it never succeeded. Runs in a subshell without tracing, so that
-# set -x doesn't log every poll.
+# every 0.1 second. Fails if it never succeeded. Runs in a subshell without
+# tracing, so that set -x doesn't log every poll.
 wait_until() {
     (
         set +x
-        if sleep 0.1 2>/dev/null; then
-            interval=0.1 polls=$((WAIT_TIMEOUT * 10))
-        else
-            interval=1 polls=$WAIT_TIMEOUT
-        fi
+        polls=$((WAIT_TIMEOUT * 10))
         until "$@"; do
             [ "$polls" -gt 0 ] || exit 1
             polls=$((polls - 1))
-            sleep "$interval"
+            sleep 0.1
         done
     )
 }
 
-# Print the current time in seconds since the Epoch. date +%s is not POSIX;
-# without it, srand() seeds with the time of day and returns the last seed.
+# Print the current time in seconds since the Epoch.
 now() {
-    t=$(date +%s 2>/dev/null)
-    case "$t" in
-        ''|*[!0-9]*) awk 'BEGIN { srand(); print srand() }' ;;
-        *) echo "$t" ;;
-    esac
+    date +%s
 }
 
 # Print the first line of the reactor log after line $1 that contains $2,

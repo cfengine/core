@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-For information about versions which are supported and recieving security patches see https://docs.cfengine.com
+For information about versions which are supported and receiving security patches see https://docs.cfengine.com
 
 ## Reporting a vulnerability
 

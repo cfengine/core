@@ -5190,7 +5190,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                 }
 
                 char data[CF_BUFSIZE];
-                int datasize = lgetxattr(path, current, data, sizeof(data));
+                int datasize = lgetxattr(path, current, data, sizeof(data) - 1);
                 if (datasize < 0)
                 {
                     if (errno == ENOTSUP)
@@ -5205,6 +5205,8 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                 }
                 else
                 {
+                  data[datasize] = '\0';
+
                   if (!StringIsPrintable(data))
                   {
                       Log(LOG_LEVEL_INFO, "Skipping extended attribute of '%s', it has non-printable data: '%s=%s'",

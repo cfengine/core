@@ -34,6 +34,10 @@
 #include <errno.h>
 #include <openssl/evp.h>
 
+#ifdef __MINGW32__
+#include <cf-windows-functions.h> /* NovaWin_GetFileOwnerSid() */
+#endif
+
 /* Minimum time between two logs of a persisting failure to check the file,
  * since the file is checked on every poll */
 #define CHECK_ERROR_LOG_INTERVAL_SECS 60
@@ -68,8 +72,15 @@ typedef struct
         /* FileWatcherCheckFileOwnerChanged() */
         struct
         {
+#ifdef __MINGW32__
+            /* st_uid/st_gid are always 0 on Windows, so the owner SID is
+             * compared instead. Zero-padded, so it can be compared with
+             * memcmp(). */
+            unsigned char sid[SECURITY_MAX_SID_SIZE];
+#else
             uid_t uid;
             gid_t gid;
+#endif
         } owner;
 
         /* FileWatcherCheckFileSizeExceeds() */
@@ -395,6 +406,30 @@ WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state)
         return WATCHER_CHECK_ERROR;
     }
 
+#ifdef __MINGW32__
+    unsigned char sid[SECURITY_MAX_SID_SIZE] = { 0 };
+    if (exists)
+    {
+        const DWORD status = NovaWin_GetFileOwnerSid(fws->path, (SID *) sid,
+                                                      sizeof(sid));
+        if (status == ERROR_FILE_NOT_FOUND || status == ERROR_PATH_NOT_FOUND)
+        {
+            exists = false; /* Deleted since lstat() */
+            memset(sid, 0, sizeof(sid));
+        }
+        else if (status != ERROR_SUCCESS)
+        {
+            LogCheckError(fws, "get the owner of", GetErrorStrFromCode(status));
+            return WATCHER_CHECK_ERROR;
+        }
+    }
+
+    /* Only changes of a file present at both checks */
+    const bool changed = fws->last_exists && exists &&
+        (memcmp(fws->last.owner.sid, sid, sizeof(sid)) != 0);
+
+    memcpy(fws->last.owner.sid, sid, sizeof(sid));
+#else
     const uid_t uid = exists ? sb.st_uid : 0;
     const gid_t gid = exists ? sb.st_gid : 0;
 
@@ -404,6 +439,8 @@ WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state)
 
     fws->last.owner.uid = uid;
     fws->last.owner.gid = gid;
+#endif
+
     return FileWatcherRecordObservation(fws, exists, changed, "owner change");
 }
 

@@ -129,19 +129,23 @@ void FileWatcherStateDestroy(void *state)
 
 // =========== code shared by the file event types ===========
 
-/* Logs the failure of operation op (with errno err) on the file of the
- * watcher. A persisting failure is logged at most once every
- * CHECK_ERROR_LOG_INTERVAL_SECS. */
-static void LogCheckError(FileWatcherState *fws, const char *op, int err)
+/* Logs the failure of operation op (with error message error) on the file of
+ * the watcher. A persisting failure is logged at most once every
+ * CHECK_ERROR_LOG_INTERVAL_SECS.
+ *
+ * Takes the message rather than an error code, since on Windows
+ * GetErrorStrFromCode() expects a Windows error code, not an errno value. */
+static void LogCheckError(FileWatcherState *fws, const char *op, const char *error)
 {
     assert(fws != NULL);
+    assert(error != NULL);
 
     const time_t now = time(NULL);
     if (fws->last_error_logged == 0 ||
         now - fws->last_error_logged >= CHECK_ERROR_LOG_INTERVAL_SECS)
     {
         Log(LOG_LEVEL_ERR, "Unable to %s '%s' while checking for file events: %s",
-            op, fws->path, GetErrorStrFromCode(err));
+            op, fws->path, error);
         fws->last_error_logged = now;
     }
 }
@@ -173,7 +177,7 @@ static bool FileLstat(FileWatcherState *fws, bool *exists, struct stat *sb)
         return true;
     }
 
-    LogCheckError(fws, "lstat", errno);
+    LogCheckError(fws, "lstat", strerror(errno));
     return false;
 }
 
@@ -354,7 +358,7 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
         }
         else if (errno != ENOENT && errno != ENOTDIR) /* Not deleted since lstat() */
         {
-            LogCheckError(fws, "hash", errno);
+            LogCheckError(fws, "hash", strerror(errno));
             return WATCHER_CHECK_ERROR;
         }
     }

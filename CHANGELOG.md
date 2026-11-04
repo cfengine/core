@@ -1,10 +1,8 @@
 ## 3.29.0
 
 - Added --no-lock long option to cf-runagent, matching the existing -K short option
-- Added SELinux state and Federated Reporting transport metadata to cf-support
-  (ENT-14405)
-- Added Termux for sys.os_name_human when running in Termux Linux Environment (Android)
-  (CFE-4427)
+- Added SELinux state and Federated Reporting transport metadata to `cf-support` (ENT-14405)
+- Added Termux for `sys.os_name_human` when running in Termux Linux Environment (Android) (CFE-4427)
 - Added `package_installed` and `package_uninstalled` watchers to `cf-reactor`
   (ENT-14766)
 - Added file_older_than policy function (ENT-6065)
@@ -15,8 +13,7 @@
   (ENT-14405)
 - Added the `silence` attribute to `body changes`, which suppresses the alert output of selected file-change categories while still setting the change classes and writing the audit log.
   (CFE-159)
-- Added the parameters of string_mustache() to the syntax description
-  (CFE-4534)
+- Added the parameters of `string_mustache()` to the syntax description (CFE-4534)
 - Added the promisee to verbose output for reports promises (CFE-4228)
 - Added validfiledata policy function (ENT-8193)
 - Adjusted IsReadable() to not use pthread_cancel() on Termux platform
@@ -27,42 +24,36 @@
 - Community 'files' promises using hash => "best" now use SHA-512 (previously MD5+SHA1) and no longer report a content change on two consecutive agent runs. Affected files are re-baselined on the first run after upgrade.
   (CFE-3725)
 - Extended string_replace with list arguments (CFE-4694)
-- Fix ipv6 mask check (CFE-2034)
+- IPv6 masks in `iprange()` no longer need to be a multiple of 8 bits (CFE-2034)
 - Fixed --simulate symlink errors to show the real target, not a chroot path
   (ENT-14714)
 - Fixed --simulate=diff to report permission and ownership changes
   (ENT-14694)
 - Fixed --simulate=diff to show the new target of a replaced symlink
   (ENT-14713)
-- Fixed Federated Reporting transport failing on RHEL 10 hubs
-  (ENT-14405)
+- Fixed Federated Reporting transport failing on RHEL 10 hubs (ENT-14405)
 - Fixed a bug regarding the resolution of namespaces inside function-calls
   (ENT-10199)
-- Fixed cf-agent assertion failure when reading /proc/<pid>/stat
-  (CFE-4285)
+- Fixed `cf-agent` assertion failure when reading `/proc/<pid>/stat` (CFE-4285)
 - Fixed cf-check -V (--version) short option
 - Fixed cf-net -t (--tls-version) and -c (--ciphers) short options
 - Fixed cf-secret -v (--verbose), -g (--log-level) and -I (--inform) short options
 - Fixed cf-serverd -L (--ld-library-path) to accept its argument
-- Fixed insert_lines ignoring include_end_delimiter when locating the region
-  (CFE-3988)
-- Fixed insert_lines prepending to the file instead of to the selected region
-  (CFE-3987)
+- Fixed `insert_lines` ignoring `include_end_delimiter` when locating the region (CFE-3988)
+- Fixed `insert_lines` prepending to the file instead of to the selected region (CFE-3987)
 - Fixed lmdb maxkeysize assertion for macos
 - Fixed macOS process start-time/state detection (process_macos.c) and the macOS ps syntax bug in mon_processes_test.c
   (ENT-14471)
 - Fixed out-of-bounds read in RemoteDirList when parsing a listing
 - Fixed out-of-bounds read of extended attribute values in filestat()
-- Fixed process_select and file_select time ranges on Windows
+- Fixed `process_select` and `file_select` time ranges on Windows
 - Fixed reports promise being kept when the report could not be written
   (CFE-4699)
 - Fixed simulate diff mode not reporting a removal with a version
-- Fixed simulate mode reporting both removal and install of the same package
-  (CFE-4742)
+- Fixed simulate mode reporting both removal and install of the same package (CFE-4742)
 - Fixed simulate mode swapping package version and architecture
 - Fixed stack buffer overflow in GetServerLiteral for TLS VAR requests
-- Fixed usemodule() reporting success when the module exited non-zero
-  (CFE-942)
+- Fixed `usemodule()` reporting success when the module exited non-zero (CFE-942)
 - Increased the maximum number of cf-monitord measurement slots (CF_OBSERVABLES) from 100 to 300
   (ENT-6511)
 - Made an unrecognized action_policy fatal instead of defaulting to fix
@@ -72,15 +63,12 @@
 - Mounted a single filesystem surgically instead of running mount -a
   (CFE-1863)
 - Moved cf-reactor binary to core (ENT-14275)
-- Raised cf-apache.service start timeout to avoid PID-file race
-  (ENT-11189)
+- Raised `cf-apache.service` start timeout to avoid PID-file race (ENT-11189)
 - The source tarball is now reproducible
 - `cf-reactor` can now react to a user being added or removed, with the `user_added` and `user_removed` attributes of `when` bodies
   (ENT-14765)
-- and(), or(), concat(), ifelse(), findfiles(), mergedata() and the classmatch()
-  family reported no parameters at all. Only the leading arguments are described,
-  as bundlesmatching() and format() already do, and CF_ANYSTRING keeps the
-  argument type check they activate as permissive as it was. (CFE-4714)
+- `and()`, `or()`, `concat()`, `ifelse()`, `findfiles()`, `mergedata()` and the `classmatch()` family reported no parameters at all.
+  Only the leading arguments are described, as `bundlesmatching()` and `format()` already do. (CFE-4714)
 - cf-check dump reports measurement names instead of labelling them spare
   (ENT-14329)
 - cf-check: check LMDB value size before reading lastseen and lock structs

@@ -4,7 +4,8 @@
 set -ex
 thisdir="$(dirname "$0")"
 cd "$thisdir"/..
-OPTS="--enable-debug"
+# include any existing OPTS in calling environment
+OPTS="$OPTS --enable-debug"
 
 if [ -n "$TERMUX_VERSION" ]; then
     OPTS="$OPTS --without-pam"

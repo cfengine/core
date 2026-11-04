@@ -49,7 +49,7 @@ if [ -f /etc/os-release ]; then
         build_lmdb
         build_librsync
     elif [ "$ID" = "rhel" ] || [[ "$ID_LIKE" =~ "rhel" ]]; then
-        if [ "$VERSION_MAJOR" -ge "10" ]; then
+        if [ "$VERSION_MAJOR" -ge "8" ]; then
             # note that having a redhat subscription makes things easier: lmdb-devel and librsync-devel are available from codeready-builder repo
             if subscription-manager status; then
                 $GAINROOT subscription-manager config --rhsm.manage_repos=1

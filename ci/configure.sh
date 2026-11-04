@@ -13,6 +13,11 @@ if [ -f /etc/os-release ]; then
   fi
 fi
 
+# ci/dependencies.sh builds a newer pcre2 into /opt/pcre2 where the system one is too old (rhel-8)
+if [ -d /opt/pcre2 ]; then
+    OPTS="$OPTS --with-pcre2=/opt/pcre2"
+fi
+
 if [ -n "$TERMUX_VERSION" ] || [ "$ID" = "alpine" ]; then
     OPTS="$OPTS --without-pam"
 fi

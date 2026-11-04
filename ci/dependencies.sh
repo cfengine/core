@@ -23,7 +23,12 @@ build_lmdb() {
         git clone --recursive --depth 1 https://github.com/LMDB/lmdb
         cd lmdb/libraries/liblmdb
         make
-        $GAINROOT make install prefix=/usr
+        # lmdb's Makefile defaults to /usr/lib which is not in the runtime linker path on lib64 distributions (rhel, suse)
+        libdir=/usr/lib
+        if [ -d /usr/lib64 ]; then
+            libdir=/usr/lib64
+        fi
+        $GAINROOT make install prefix=/usr libdir="$libdir"
     )
 }
 
@@ -38,6 +43,49 @@ build_librsync() {
         make
         $GAINROOT make install
     )
+}
+
+# Build pcre2 into /opt/pcre2, away from the system pcre2, and ci/configure.sh will use it from there.
+# Use the same pcre2 release and checksum as the CFEngine packages, from buildscripts deps-packaging.
+build_pcre2() {
+    if [ -f /opt/pcre2/include/pcre2.h ]; then
+        echo pcre2 already installed in /opt/pcre2, no-op.
+        return
+    fi
+    deps_url=https://raw.githubusercontent.com/cfengine/buildscripts/master/deps-packaging/pcre2
+    tmpdir="$(mktemp -d)"
+    echo building pcre2 in "$tmpdir"
+    (
+        cd "$tmpdir"
+        curl --fail --location --silent --show-error --output source "$deps_url"/source
+        curl --fail --location --silent --show-error --output distfiles "$deps_url"/distfiles
+        tarball="$(awk '{print $2}' distfiles)"
+        curl --fail --location --silent --show-error --output "$tarball" "$(cat source)$tarball"
+        sha256sum --check distfiles
+        tar --extract --gzip --file "$tarball"
+        cd "${tarball%.tar.gz}"
+        ./configure --prefix=/opt/pcre2 --libdir=/opt/pcre2/lib
+        make
+        $GAINROOT make install
+    )
+}
+
+# libntech's configure.ac lists the pcre2 declarations it needs (AC_CHECK_DECLS([PCRE2_...])).
+# Build a newer pcre2 when the system one lacks any of them (rhel-8 has 10.32).
+ensure_pcre2() {
+    decls="$(sed -n 's/^ *AC_CHECK_DECLS(\[\(PCRE2_[^]]*\)\].*/\1/p' "$(dirname "$0")"/../libntech/configure.ac | tr ',' ' ')"
+    if [ -z "$decls" ]; then
+        echo "AC_CHECK_DECLS([PCRE2_...]) not found in libntech/configure.ac"
+        exit 1
+    fi
+    system_macros="$(printf '#define PCRE2_CODE_UNIT_WIDTH 8\n#include <pcre2.h>\n' | gcc -E -dM -)"
+    for decl in $decls; do
+        if ! echo "$system_macros" | grep --quiet --word-regexp "#define $decl"; then
+            echo "system pcre2 $(pcre2-config --version) lacks $decl required by libntech"
+            build_pcre2
+            return
+        fi
+    done
 }
 
 # limited support here, focused on rhel-like on aarch64 which has no previous CFEngine version to leverage: ENT-13016
@@ -68,6 +116,7 @@ if [ -f /etc/os-release ]; then
                 build_lmdb
                 build_librsync
             fi
+            ensure_pcre2
         else
             echo "Unsupported version of redhat for $0"
             exit 1

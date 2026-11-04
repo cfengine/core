@@ -8,6 +8,13 @@
 
 #include <server_classic.c>                            /* GetCommandClassic */
 
+#include <connection_info.h>
+#include <net.h>
+#include <eval_context.h>
+
+#include <sys/socket.h>
+#include <unistd.h>
+
 
 /*
  * The protocol consists of the following commands:
@@ -450,13 +457,58 @@ static void test_user_name(void)
     assert_true(IsUserNameValid(valid_user_name));
 }
 
+/*
+ * BusyWithNewProtocol() hands GetServerLiteral() a sendbuffer of only
+ * CF_BUFSIZE - CF_INBAND_OFFSET bytes. The function must not write past the
+ * size it is given, so guard bytes placed right after a buffer of that size
+ * have to survive the call.
+ */
+static void test_get_server_literal_sendbuffer_bound(void)
+{
+    int sv[2];
+    assert_int_equal(socketpair(AF_UNIX, SOCK_STREAM, 0, sv), 0);
+
+    ServerConnectionState *conn = xcalloc(1, sizeof(*conn));
+    conn->conn_info = ConnectionInfoNew();
+    ConnectionInfoSetSocket(conn->conn_info, sv[0]);
+    ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_CLASSIC);
+
+    ConnectionInfo *client = ConnectionInfoNew();
+    ConnectionInfoSetSocket(client, sv[1]);
+    ConnectionInfoSetProtocolVersion(client, CF_PROTOCOL_CLASSIC);
+
+    EvalContext *ctx = EvalContextNew();
+
+    char sendbuffer[CF_MSGSIZE + CF_INBAND_OFFSET];
+    memset(sendbuffer, 0x5a, sizeof(sendbuffer));
+
+    char recvbuffer[] = "VAR literal_handle";
+    GetServerLiteral(ctx, conn, sendbuffer, CF_MSGSIZE, recvbuffer, 0);
+
+    for (size_t i = CF_MSGSIZE; i < sizeof(sendbuffer); i++)
+    {
+        assert_int_equal(sendbuffer[i], 0x5a);
+    }
+
+    char reply[CF_BUFSIZE];
+    int len = ReceiveTransaction(client, reply, NULL);
+    assert_true(len > 0);
+    assert_string_equal(reply, "BAD: Not found");
+
+    EvalContextDestroy(ctx);
+    ConnectionInfoDestroy(&client);
+    ConnectionInfoDestroy(&conn->conn_info);
+    free(conn);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
           unit_test(test_command_parser),
-          unit_test(test_user_name)
+          unit_test(test_user_name),
+          unit_test(test_get_server_literal_sendbuffer_bound)
     };
 
     return run_tests(tests);

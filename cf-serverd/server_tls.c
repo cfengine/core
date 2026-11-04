@@ -1003,7 +1003,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        GetServerLiteral(ctx, conn, sendbuffer, recvbuffer, encrypted);
+        GetServerLiteral(ctx, conn, sendbuffer, sizeof(sendbuffer), recvbuffer, encrypted);
         return true;
     }
     case PROTOCOL_COMMAND_CONTEXT:

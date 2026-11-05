@@ -1,12 +1,5 @@
 name: Backport
 
-# Opens backport pull requests to the LTS branches when a pull request with the
-# `cherry-pick?` label is merged to master. Commits are cherry-picked with `-x`.
-# Each branch comments on the original pull request with the backport link, or
-# says that a manual backport is needed.
-#
-# The label must be set before merging.
-
 on:
   push:
     branches: [master]
@@ -18,84 +11,4 @@ permissions:
 jobs:
   backport:
     if: github.repository == 'cfengine/core'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        branch: [3.27.x, 3.24.x]
-    steps:
-      - name: Check for the label
-        id: find_pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          MERGE_SHA: ${{ github.sha }}
-        run: |
-          # For a commit on master, this returns the merged PR that added it.
-          pr=$(gh api "repos/$GH_REPO/commits/$MERGE_SHA/pulls" \
-            --jq 'first(.[] | select(any(.labels[]; .name == "cherry-pick?")))')
-          if [ -z "$pr" ]; then
-            echo "No merged PR with the cherry-pick? label, nothing to do"
-            exit 0
-          fi
-          echo "number=$(jq -r .number <<< "$pr")" >> "$GITHUB_OUTPUT"
-          echo "title=$(jq -r .title <<< "$pr")" >> "$GITHUB_OUTPUT"
-          echo "author=$(jq -r .user.login <<< "$pr")" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/checkout@v4
-        if: steps.find_pr.outputs.number != ''
-        with:
-          ref: ${{ matrix.branch }}
-          # 0 means full history. It is needed to reach the merged commits.
-          fetch-depth: 0
-
-      - name: Cherry-pick
-        id: cherry_pick
-        if: steps.find_pr.outputs.number != ''
-        continue-on-error: true
-        env:
-          MERGE_SHA: ${{ github.sha }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # A merge commit has two parents: ^1 is master before the merge, ^2 is
-          # the tip of the PR branch. ^1..^2 is then the commits of the PR.
-          # shellcheck disable=SC2046 # word splitting is intended
-          if ! git cherry-pick -x $(git rev-list --reverse --no-merges "$MERGE_SHA^1..$MERGE_SHA^2"); then
-            git cherry-pick --abort || true
-            exit 1
-          fi
-
-      - name: Open a pull request
-        id: create_pr
-        if: steps.cherry_pick.outcome == 'success'
-        uses: cfengine/create-pull-request@v7.0.7a
-        with:
-          base: ${{ matrix.branch }}
-          branch: backport-${{ steps.find_pr.outputs.number }}-${{ matrix.branch }}
-          delete-branch: true
-          sign-commits: true
-          title: ${{ steps.find_pr.outputs.title }} (${{ matrix.branch }})
-          body: |
-            Backport of #${{ steps.find_pr.outputs.number }} by @${{ steps.find_pr.outputs.author }} to ${{ matrix.branch }}.
-
-            Opened automatically by [.github/workflows/backport.yml](${{ github.server_url }}/${{ github.repository }}/blob/master/.github/workflows/backport.yml).
-
-            Pull requests opened with `GITHUB_TOKEN` do not trigger other workflows, so CI has not started on its own.
-
-      - name: Comment on the original pull request
-        if: always() && steps.find_pr.outputs.number != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PR: ${{ steps.find_pr.outputs.number }}
-          BRANCH: ${{ matrix.branch }}
-          URL: ${{ steps.create_pr.outputs.pull-request-url }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          if [ -n "$URL" ]; then
-            gh pr comment "$PR" --body "Backport to $BRANCH: $URL"
-          else
-            gh pr comment "$PR" --body "Backport to $BRANCH failed, manual backport needed: $RUN_URL"
-          fi
+    uses: ./.github/workflows/job-backport.yml

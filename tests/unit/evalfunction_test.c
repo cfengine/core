@@ -126,6 +126,40 @@ static void test_basename(void)
     basename_single_testcase("//a//b///c.csv////", ".csv", "c");
 }
 
+static FnCallResult format_single_testcase(const char *format, const char *arg)
+{
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, format);
+    RlistAppendScalar(&args, arg);
+    FnCall *call = FnCallNew("format", args);
+
+    FnCallResult res = FnCallFormat(NULL, NULL, call, args);
+
+    FnCallDestroy(call);
+    return res;
+}
+
+static void test_format_rejects_unpassed_arguments(void)
+{
+    FnCallResult res = format_single_testcase("%04d", "100");
+    assert_int_equal(res.status, FNCALL_SUCCESS);
+    assert_string_equal("0100", (char *) res.rval.item);
+    RvalDestroy(res.rval);
+
+    res = format_single_testcase("%-6s|", "abc");
+    assert_int_equal(res.status, FNCALL_SUCCESS);
+    assert_string_equal("abc   |", (char *) res.rval.item);
+    RvalDestroy(res.rval);
+
+    /* Each of these makes printf read an argument that is never passed. */
+    const char *const bad[] = { "%*d", "%.*f", "%*s", "%2$s", "%1$*2$d", "%ls", "%lS" };
+    for (size_t i = 0; i < sizeof(bad) / sizeof(bad[0]); i++)
+    {
+        res = format_single_testcase(bad[i], "7");
+        assert_int_equal(res.status, FNCALL_FAILURE);
+    }
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -133,6 +167,7 @@ int main()
         unit_test(test_hostinnetgroup_found),
         unit_test(test_hostinnetgroup_not_found),
         unit_test(test_basename),
+        unit_test(test_format_rejects_unpassed_arguments),
     };
 
     return run_tests(tests);

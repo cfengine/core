@@ -24,6 +24,7 @@ build_lmdb() {
         cd lmdb/libraries/liblmdb
         make
         $GAINROOT make install prefix=/usr
+        $GAINROOT ldconfig
     )
 }
 

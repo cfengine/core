@@ -102,6 +102,7 @@ Only in WORKDIR/tmp/sub-dir/.: sub-file
 -<Root/>
 +<Root><x foo="bar">y</x></Root>
 ===========================================================================
+'WORKDIR/tmp/perms' changed permissions from 0600 to 0000
 ===========================================================================
 'WORKDIR/tmp/transformer' no longer exists
 ===========================================================================

@@ -1,0 +1,14 @@
+name: Backport
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  backport:
+    if: github.repository == 'cfengine/core'
+    uses: ./.github/workflows/job-backport.yml

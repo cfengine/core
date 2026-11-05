@@ -6,18 +6,14 @@ name: Backport
 # says that a manual backport is needed.
 #
 # The label must be set before merging.
+#
+# Call it from a workflow triggered on push to master. The caller must grant
+# `contents: write` and `pull-requests: write`.
 
-on:
-  push:
-    branches: [master]
-
-permissions:
-  contents: write
-  pull-requests: write
+on: workflow_call
 
 jobs:
   backport:
-    if: github.repository == 'cfengine/core'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

@@ -4,7 +4,8 @@
 set -ex
 thisdir="$(dirname "$0")"
 cd "$thisdir"/..
-OPTS="--config-cache --enable-debug"
+# include any existing OPTS in calling environment
+OPTS="$OPTS --config-cache --enable-debug"
 
 if [ -f /etc/os-release ]; then
   source /etc/os-release

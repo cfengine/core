@@ -1335,16 +1335,26 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
                 strlcpy(vbuff, changes_sourcefile, CF_BUFSIZE);
                 ChopLastNode(vbuff);
                 AddSlash(vbuff);
-                strncat(vbuff, chrooted_linkbuf, CF_BUFSIZE - 1);
-                strlcpy(chrooted_linkbuf, vbuff, CF_BUFSIZE - 1);
+                if (strlcat(vbuff, chrooted_linkbuf, sizeof(vbuff)) >= sizeof(vbuff) ||
+                    strlcpy(chrooted_linkbuf, vbuff, sizeof(chrooted_linkbuf)) >= sizeof(chrooted_linkbuf))
+                {
+                    RecordFailure(ctx, pp, attr,
+                                  "Absolute target of link '%s' is too long", sourcefile);
+                    return PROMISE_RESULT_FAIL;
+                }
             }
             else
             {
                 strlcpy(vbuff, sourcefile, CF_BUFSIZE);
                 ChopLastNode(vbuff);
                 AddSlash(vbuff);
-                strncat(vbuff, linkbuf, CF_BUFSIZE - 1);
-                strlcpy(linkbuf, vbuff, CF_BUFSIZE - 1);
+                if (strlcat(vbuff, linkbuf, sizeof(vbuff)) >= sizeof(vbuff) ||
+                    strlcpy(linkbuf, vbuff, sizeof(linkbuf)) >= sizeof(linkbuf))
+                {
+                    RecordFailure(ctx, pp, attr,
+                                  "Absolute target of link '%s' is too long", sourcefile);
+                    return PROMISE_RESULT_FAIL;
+                }
             }
         }
     }

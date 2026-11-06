@@ -97,6 +97,8 @@ typedef struct
 
             // BODY AGENT CONTROL
             bool report_class_log;
+            Rlist *report_metatags_include;
+            Rlist *report_metatags_exclude;
         } agent;
         struct
         {

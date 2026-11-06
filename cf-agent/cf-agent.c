@@ -943,6 +943,8 @@ static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentCon
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
+    assert(config != NULL);
+
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_AGENT);
     if (constraints)
     {
@@ -1299,6 +1301,24 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 Log(LOG_LEVEL_VERBOSE, "Setting report_class_log to %s",
                     config->agent_specific.agent.report_class_log? "true" : "false");
+                continue;
+            }
+
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORT_METATAGS_INCLUDE].lval))
+            {
+                assert(value_type == CF_DATA_TYPE_STRING_LIST);
+                RlistDestroy(config->agent_specific.agent.report_metatags_include);
+                config->agent_specific.agent.report_metatags_include = RlistCopy(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting report_metatags_include");
+                continue;
+            }
+
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORT_METATAGS_EXCLUDE].lval))
+            {
+                assert(value_type == CF_DATA_TYPE_STRING_LIST);
+                RlistDestroy(config->agent_specific.agent.report_metatags_exclude);
+                config->agent_specific.agent.report_metatags_exclude = RlistCopy(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting report_metatags_exclude");
                 continue;
             }
 

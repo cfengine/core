@@ -325,6 +325,8 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewStringList("copyfrom_restrict_keys", ".*", "A list of key hashes to restrict copy_from to", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("evaluation_order", "(classic|top_down)", "Order of evaluation of promises of agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("default_directory_create_mode", ".*", "Default directory create mode (defaults to 0700 if not specified)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("report_metatags_include", CF_ANYSTRING, "List of regex filters for metatags of classes to be included into reports", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("report_metatags_exclude", CF_ANYSTRING, "List of regex filters for metatags of classes to be excluded from reports", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

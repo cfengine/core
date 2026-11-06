@@ -536,7 +536,13 @@ bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, c
         }
     }
 
-    strcat(linkpath, linkbuf);
+    if (strlcat(linkpath, linkbuf, sizeof(linkpath)) >= sizeof(linkpath))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Internal limit reached in KillGhostLink(),"
+            " path too long: '%s' + '%s'", linkpath, linkbuf);
+        return false;
+    }
     CompressPath(tmp, sizeof(tmp), linkpath);
 
     if (stat(tmp, &statbuf) == -1)    /* link points nowhere */

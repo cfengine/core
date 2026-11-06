@@ -109,6 +109,9 @@ LOG="$WORKDIR/reactor.log"
 PROMISE_NAME=$(basename "$t" .sh)
 export WORKDIR CFENGINE_TEST_OVERRIDE_WORKDIR LOG PROMISE_NAME
 
+echo "--- Validate test policy $policy ---"
+$CF_PROMISES -c $policy
+
 echo "--- Begin test $t ---"
 bash -ex "$t" "$policy" 2>&1 | tee "$WORKDIR/test.log"
 result=$?

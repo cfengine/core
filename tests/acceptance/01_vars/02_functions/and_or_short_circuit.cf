@@ -1,0 +1,124 @@
+######################################################
+#
+# Test that and() and or() stop evaluating arguments early
+#
+#####################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  vars:
+    "markers" slist => { "and_ran", "or_ran", "and_skipped", "or_skipped" };
+
+  files:
+    "$(G.testfile).$(markers)" delete => tidy;
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4272", "CFE-4751" }
+      string => "Test that and() and or() stop at the argument that decides the result";
+
+    # The sub policy runs touch with returnszero(..., "noshell").
+    "test_skip_unsupported" string => "windows";
+
+  methods:
+    "namespaced" usebundle => ns_and_or:local;
+
+  commands:
+    # The and() and or() calls are in a separate agent run because functions
+    # in classes promises are evaluated before the init bundle cleans up.
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub" contain => in_shell;
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "false_in_middle" slist => { "any", "!any", "any" };
+    "true_in_middle" slist => { "!any", "any", "!any" };
+
+  classes:
+    # A function returning a list expands to several arguments, each of which
+    # can decide the result. (@(list) is not expanded here, it is a single
+    # class expression.)
+    "and_list_false" expression => and("any", getvalues("false_in_middle"));
+    "or_list_true" expression => or("!any", getvalues("true_in_middle"));
+
+    # A failing call after the deciding argument isn't made, so it no longer
+    # causes the whole or() to be skipped.
+    "or_true_before_failing_call"
+      expression => or(
+        "any",
+        islessthan(filestat("$(G.testfile).does_not_exist", "size"), "1")
+      );
+
+    # Unresolved variables still skip evaluation of and() and or() (so not()
+    # of it is skipped too), even after an argument that decides the result.
+    "and_false_before_unresolved"
+      expression => not(and("!any", "$(no_such_bundle.no_such_var)"));
+
+    "and_false_before_unresolved_in_fncall"
+      expression => not(
+        and("!any", strcmp("$(no_such_bundle.no_such_var)", "x"))
+      );
+
+    "or_true_before_unresolved"
+      expression => or("any", "$(no_such_bundle.no_such_var)");
+
+    "or_true_before_unresolved_in_fncall"
+      expression => or("any", strcmp("$(no_such_bundle.no_such_var)", "x"));
+
+    "ok"
+      and => {
+        fileexists("$(G.testfile).and_ran"),
+        fileexists("$(G.testfile).or_ran"),
+        not(fileexists("$(G.testfile).and_skipped")),
+        not(fileexists("$(G.testfile).or_skipped")),
+        "!and_false_before_unresolved",
+        "!and_false_before_unresolved_in_fncall",
+        "!or_true_before_unresolved",
+        "!or_true_before_unresolved_in_fncall",
+        "!and_list_false",
+        "or_list_true",
+        "or_true_before_failing_call",
+        "ns_and_or:and_local_var",
+        "ns_and_or:or_local_var",
+      };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body file control
+{
+  namespace => "ns_and_or";
+}
+
+# Bundle-qualified variables in and()/or() resolve in the caller's namespace.
+bundle agent local
+{
+  vars:
+    "v" string => "x";
+
+  classes:
+    "and_local_var"
+      expression => and("any", strcmp("$(local.v)", "x")),
+      scope => "namespace";
+
+    "or_local_var"
+      expression => or("!any", strcmp("$(local.v)", "x")),
+      scope => "namespace";
+}

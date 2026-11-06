@@ -1,0 +1,22 @@
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+}
+
+bundle agent main
+{
+  classes:
+    # The first argument doesn't decide the result, so the second one must be
+    # evaluated.
+    "and_ran"
+      expression => and("any", returnszero("$(G.touch) $(G.testfile).and_ran", "noshell"));
+    "or_ran"
+      expression => or("!any", returnszero("$(G.touch) $(G.testfile).or_ran", "noshell"));
+
+    # The first argument decides the result, so the second one must not be
+    # evaluated.
+    "and_skipped"
+      expression => and("!any", returnszero("$(G.touch) $(G.testfile).and_skipped", "noshell"));
+    "or_skipped"
+      expression => or("any", returnszero("$(G.touch) $(G.testfile).or_skipped", "noshell"));
+}

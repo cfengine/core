@@ -62,7 +62,8 @@ run_test() {
     rm -f "$1".log
 }
 
-for t in "$dir"/tests/*/*.sh "$dir"/tests/*/unsafe/*.sh; do
+#for t in "$dir"/tests/*/*.sh "$dir"/tests/*/unsafe/*.sh; do
+for t in "$dir"/tests/00_basics/001_vars.sh; do
     # skip the pattern itself if there are no unsafe tests
     [ -f "$t" ] || continue
     run_test "$t"

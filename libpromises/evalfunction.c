@@ -9164,8 +9164,25 @@ static char *StringReplaceWithLists(const char *input_string, JsonElement *match
     const size_t len = JsonLength(match_list);
     for (size_t i = 0; i < len; i++)
     {
-        const char *m = JsonPrimitiveGetAsString(JsonAt(match_list, i));
-        const char *s = JsonPrimitiveGetAsString(JsonAt(substitute_list, i));
+        JsonElement *match_el = JsonAt(match_list, i);
+        JsonElement *substitute_el = JsonAt(substitute_list, i);
+
+        /* The elements must be primitives. JsonPrimitiveGetAsString() returns
+         * the aliased container pointer for a nested array or object, which is
+         * then used as a C string. */
+        if (JsonGetElementType(match_el) != JSON_ELEMENT_TYPE_PRIMITIVE ||
+            JsonGetElementType(substitute_el) != JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Failed to replace with function '%s', string: '%s': "
+                "match and substitute lists must contain only strings",
+                fp->name, input_string);
+            free(ret);
+            return NULL;
+        }
+
+        const char *m = JsonPrimitiveGetAsString(match_el);
+        const char *s = JsonPrimitiveGetAsString(substitute_el);
 
         char *next = SearchAndReplace(ret, m, s);
         free(ret);

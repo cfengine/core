@@ -27,11 +27,10 @@
 
 #include <platform.h>
 
-bool IsLoopbackAddress(const char *address);
 int FuzzySetMatch(const char *s1, const char *s2);
+bool FuzzyMatchParse(const char *s);
 bool FuzzyHostParse(const char *arg2);
-int FuzzyHostMatch(const char *arg0, const char *arg1, const char *basename);
-bool FuzzyMatchParse(const char *item);
+int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost);
 
 typedef enum {
     ADDRESS_TYPE_OTHER, // Hostname or invalid

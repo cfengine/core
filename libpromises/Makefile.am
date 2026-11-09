@@ -66,6 +66,7 @@ libpromises_la_SOURCES = \
 	assoc.c assoc.h \
 	attributes.c attributes.h \
 	audit.c audit.h \
+	augments.c augments.h \
 	bootstrap.c bootstrap.h bootstrap.inc failsafe.cf \
 	cf-windows-functions.h \
 	cf3.defs.h \

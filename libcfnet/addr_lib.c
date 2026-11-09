@@ -28,7 +28,19 @@
 #include <logging.h>
 #include <string_lib.h>
 
-#define CF_ADDRSIZE 128
+#define IPV4_OCTETS 4
+#define IPV6_GROUPS 8
+
+/* Large enough for the binary form of both IPv4 and IPv6 addresses */
+#define BINARY_ADDR_SIZE sizeof(struct in6_addr)
+
+/* Inclusive interval matched by one octet/group of a range pattern,
+ * e.g. "10-20", or "7" which is the interval 7-7. */
+typedef struct
+{
+    unsigned long from;
+    unsigned long to;
+} Interval;
 
 /* Notation used by an address pattern, see FuzzySetMatch() */
 typedef enum
@@ -37,6 +49,210 @@ typedef enum
     PATTERN_CIDR,   // "10.1.2.0/24", "2001:db8::/32"
     PATTERN_RANGE,  // "10.1.2.1-50", "2001:db8:0-ff::1"
 } PatternNotation;
+
+/******************************************************************************/
+/* Parsing helpers                                                            */
+/******************************************************************************/
+
+/**
+ * Parses the unsigned number in [start, end), written in the given base
+ * (10 or 16). Unlike strtoul(), no sign, whitespace or "0x" is accepted.
+ *
+ * @return false if the input is empty, has invalid digits or exceeds max
+ */
+static bool ParseNumber(const char *start, const char *end, int base,
+                        unsigned long max, unsigned long *value)
+{
+    assert(base == 10 || base == 16);
+
+    if (start == end)
+    {
+        return false;
+    }
+
+    unsigned long result = 0;
+    for (const char *c = start; c < end; c++)
+    {
+        const unsigned char ch = *c;
+        unsigned long digit;
+        if (isdigit(ch))
+        {
+            digit = ch - '0';
+        }
+        else if (base == 16 && isxdigit(ch))
+        {
+            digit = tolower(ch) - 'a' + 10;
+        }
+        else
+        {
+            return false;
+        }
+
+        if (result > (max - digit) / base)
+        {
+            return false;
+        }
+        result = result * base + digit;
+    }
+
+    *value = result;
+    return true;
+}
+
+/**
+ * Parses "N" or "FROM-TO" in [start, end) into an interval.
+ *
+ * @return false if a number is invalid, exceeds max, or FROM > TO
+ */
+static bool ParseInterval(const char *start, const char *end, int base,
+                          unsigned long max, Interval *interval)
+{
+    assert(interval != NULL);
+
+    const char *dash = memchr(start, '-', end - start);
+    if (dash == NULL)
+    {
+        if (!ParseNumber(start, end, base, max, &interval->from))
+        {
+            return false;
+        }
+        interval->to = interval->from;
+        return true;
+    }
+
+    return ParseNumber(start, dash, base, max, &interval->from) &&
+           ParseNumber(dash + 1, end, base, max, &interval->to) &&
+           interval->from <= interval->to;
+}
+
+/**
+ * Parses an IPv4 pattern of 1 to 4 '.'-separated octets, each of which is a
+ * decimal number or range, e.g. "10.0.0.1-50", "10.1-5" or "10.1.2.3".
+ *
+ * @return the number of octets parsed, or 0 if the pattern is invalid
+ */
+static size_t ParseIPv4Pattern(const char *pattern, Interval octets[IPV4_OCTETS])
+{
+    const char *start = pattern;
+    for (size_t count = 0; count < IPV4_OCTETS; count++)
+    {
+        const char *end = start + strcspn(start, ".");
+        if (!ParseInterval(start, end, 10, 255, &octets[count]))
+        {
+            return 0;
+        }
+
+        if (*end == '\0')
+        {
+            return count + 1;
+        }
+        start = end + 1;
+    }
+
+    return 0; // More than 4 octets
+}
+
+/**
+ * Parses up to max ':'-separated hex groups (numbers or ranges) in
+ * [start, end). An empty input yields 0 groups.
+ */
+static bool ParseIPv6Groups(const char *start, const char *end,
+                            Interval *groups, size_t max, size_t *count)
+{
+    *count = 0;
+    if (start == end)
+    {
+        return true;
+    }
+
+    while (*count < max)
+    {
+        const char *sep = memchr(start, ':', end - start);
+        const char *group_end = (sep != NULL) ? sep : end;
+        if (!ParseInterval(start, group_end, 16, 0xFFFF, &groups[*count]))
+        {
+            return false;
+        }
+        (*count)++;
+
+        if (sep == NULL)
+        {
+            return true;
+        }
+        start = sep + 1;
+    }
+
+    return false; // Too many groups
+}
+
+/**
+ * Parses an IPv6 range pattern into exactly 8 groups, expanding "::",
+ * e.g. "2001:db8:1-5::1".
+ */
+static bool ParseIPv6RangePattern(const char *pattern, Interval groups[IPV6_GROUPS])
+{
+    const char *end = pattern + strlen(pattern);
+    const char *gap = strstr(pattern, "::");
+    size_t count;
+
+    if (gap == NULL)
+    {
+        return ParseIPv6Groups(pattern, end, groups, IPV6_GROUPS, &count) &&
+               count == IPV6_GROUPS;
+    }
+
+    if (strstr(gap + 1, "::") != NULL)
+    {
+        return false; // More than one "::" (or ":::")
+    }
+
+    // "::" stands for at least one zero group
+    size_t head_count, tail_count;
+    Interval tail[IPV6_GROUPS];
+    if (!ParseIPv6Groups(pattern, gap, groups, IPV6_GROUPS - 1, &head_count) ||
+        !ParseIPv6Groups(gap + 2, end, tail, IPV6_GROUPS - 1 - head_count, &tail_count))
+    {
+        return false;
+    }
+
+    const size_t zero_count = IPV6_GROUPS - head_count - tail_count;
+    for (size_t i = head_count; i < head_count + zero_count; i++)
+    {
+        groups[i] = (Interval) { .from = 0, .to = 0 };
+    }
+    memcpy(groups + head_count + zero_count, tail, tail_count * sizeof(*tail));
+    return true;
+}
+
+/**
+ * Parses a CIDR pattern "ADDRESS/BITS" of the given family.
+ *
+ * @param address receives the binary network address (BINARY_ADDR_SIZE bytes)
+ */
+static bool ParseCIDR(const char *pattern, int family,
+                      unsigned char *address, unsigned long *bits)
+{
+    assert(family == AF_INET || family == AF_INET6);
+
+    const char *slash = strchr(pattern, '/');
+    if (slash == NULL)
+    {
+        return false;
+    }
+
+    char address_str[CF_MAX_IP_LEN];
+    const size_t address_len = slash - pattern;
+    if (address_len >= sizeof(address_str))
+    {
+        return false;
+    }
+    memcpy(address_str, pattern, address_len);
+    address_str[address_len] = '\0';
+
+    const unsigned long max_bits = (family == AF_INET) ? 32 : 128;
+    return inet_pton(family, address_str, address) == 1 &&
+           ParseNumber(slash + 1, slash + strlen(slash), 10, max_bits, bits);
+}
 
 /**
  * Determines the notation of an address pattern.
@@ -74,224 +290,106 @@ static bool MatchPrefix(const char *pattern, const char *address)
            (address[len] == '\0' || address[len] == '.');
 }
 
-static bool MatchIPv4CIDR(const char *pattern, const char *address)
+/* True if the first bits of a and b are equal */
+static bool LeadingBitsEqual(const unsigned char *a, const unsigned char *b,
+                             unsigned long bits)
 {
-    struct sockaddr_in addr1, addr2;
-    char network[CF_ADDRSIZE];
-    unsigned long mask;
+    const size_t whole_bytes = bits / 8;
+    const unsigned int remaining_bits = bits % 8;
 
-    // Checks that the addr to match is a valid address
-    // else bogus addresses will always match /0 range
-    if (inet_pton(AF_INET, address, &addr2.sin_addr) != 1)
+    if (memcmp(a, b, whole_bytes) != 0)
     {
-        Log(LOG_LEVEL_ERR, "Invalid reference IPv4: %s", address);
         return false;
     }
-
-    network[0] = '\0';
-    int ret = sscanf(pattern, "%16[^/]/%lu", network, &mask);
-    if (ret != 2 || mask > 32)
+    if (remaining_bits == 0)
     {
-        Log(LOG_LEVEL_ERR, "Invalid IPv4 CIDR: %s", pattern);
-        return false;
-    }
-    else if (mask == 0)
-    {
-        return true;                     /* /0 CIDR matches everything */
+        return true;
     }
 
-    inet_pton(AF_INET, network, &addr1.sin_addr);
-
-    unsigned long a1 = htonl(addr1.sin_addr.s_addr);
-    unsigned long a2 = htonl(addr2.sin_addr.s_addr);
-
-    unsigned long shift = 32 - mask;
-    assert(shift < 32);                /* Undefined behaviour if 32 */
-
-    return (a1 >> shift) == (a2 >> shift);
+    const unsigned char mask = (unsigned char) (0xFF << (8 - remaining_bits));
+    return (a[whole_bytes] & mask) == (b[whole_bytes] & mask);
 }
 
-static bool MatchIPv6CIDR(const char *pattern, const char *address)
+static bool MatchCIDR(const char *pattern, int family, const char *address)
 {
-    struct sockaddr_in6 addr1 = {0};
-    struct sockaddr_in6 addr2 = {0};
-    char network[CF_ADDRSIZE];
-    unsigned long mask;
+    const char *family_name = (family == AF_INET) ? "IPv4" : "IPv6";
 
-    network[0] = '\0';
-    int ret = sscanf(pattern, "%40[^/]/%lu", network, &mask);
-    if (ret != 2 || mask > 128)
+    unsigned char network[BINARY_ADDR_SIZE];
+    unsigned long bits;
+    if (!ParseCIDR(pattern, family, network, &bits))
     {
-        Log(LOG_LEVEL_ERR, "Invalid IPv6 CIDR: %s", pattern);
-        return false;
-    }
-    int blocks = mask / 8;
-    int remaining_bits = mask % 8;
-
-    addr1.sin6_family = AF_INET6;
-    if (inet_pton(AF_INET6, network, &addr1.sin6_addr) != 1)
-    {
-        return false;
-    }
-    addr2.sin6_family = AF_INET6;
-    if (inet_pton(AF_INET6, address, &addr2.sin6_addr) != 1)
-    {
+        Log(LOG_LEVEL_ERR, "Invalid %s CIDR: %s", family_name, pattern);
         return false;
     }
 
-    for (int i = 0; i < blocks; i++)
+    // Checks that the address to match is valid, else bogus addresses
+    // would always match a /0 range
+    unsigned char addr[BINARY_ADDR_SIZE];
+    if (inet_pton(family, address, addr) != 1)
     {
-        if (addr1.sin6_addr.s6_addr[i] != addr2.sin6_addr.s6_addr[i])
-        {
-            return false;
-        }
+        Log(LOG_LEVEL_ERR, "Invalid reference %s: %s", family_name, address);
+        return false;
     }
 
-    if (remaining_bits > 0)
-    {
-        uint8_t bitmask = (uint8_t)(0xFF << (8 - remaining_bits));
-
-        if ((addr1.sin6_addr.s6_addr[blocks] & bitmask) !=
-            (addr2.sin6_addr.s6_addr[blocks] & bitmask))
-        {
-            return false;
-        }
-    }
-    return true;
+    return LeadingBitsEqual(network, addr, bits);
 }
 
+/**
+ * Matches an IPv4 range pattern. A pattern with fewer than 4 octets matches
+ * on the leading octets only, e.g. "10.1-5" matches "10.3.7.8".
+ */
 static bool MatchIPv4Range(const char *pattern, const char *address)
 {
-    long from = -1, to = -1, cmp = -1;
-    char buffer1[64], buffer2[64];
-
-    const char *sp1 = pattern;
-    const char *sp2 = address;
-
-    for (int i = 0; i < 4; i++)
+    Interval octets[IPV4_OCTETS];
+    const size_t count = ParseIPv4Pattern(pattern, octets);
+    if (count == 0)
     {
-        buffer1[0] = '\0';
-        sscanf(sp1, "%63[^.]", buffer1);
-        buffer1[63] = '\0';
+        Log(LOG_LEVEL_DEBUG, "Invalid IPv4 range '%s'", pattern);
+        return false;
+    }
 
-        if (strlen(buffer1) == 0)
+    const char *start = address;
+    for (size_t i = 0; i < count; i++)
+    {
+        const char *end = start + strcspn(start, ".");
+        unsigned long value;
+        if (!ParseNumber(start, end, 10, 255, &value) ||
+            value < octets[i].from || value > octets[i].to)
         {
-            break;
-        }
-
-        sp1 += strlen(buffer1);
-        if (*sp1 == '.')
-        {
-            sp1++;
-        }
-
-        buffer2[0] = '\0';
-        sscanf(sp2, "%63[^.]", buffer2);
-        buffer2[63] = '\0';
-
-        if (strlen(buffer2) == 0)
-        {
-            /* address has fewer octets than the pattern: no match */
             return false;
         }
 
-        sp2 += strlen(buffer2);
-        if (*sp2 == '.')
+        if (*end == '\0')
         {
-            sp2++;
+            return (i + 1 == count); // Address must have at least count octets
         }
-
-        if (strstr(buffer1, "-"))
-        {
-            sscanf(buffer1, "%ld-%ld", &from, &to);
-            sscanf(buffer2, "%ld", &cmp);
-
-            if ((from < 0) || (to < 0))
-            {
-                Log(LOG_LEVEL_DEBUG, "Couldn't read range");
-                return false;
-            }
-
-            if ((from > cmp) || (cmp > to))
-            {
-                Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld, range '%s'", from, cmp, to, buffer2);
-                return false;
-            }
-        }
-        else
-        {
-            sscanf(buffer1, "%ld", &from);
-            sscanf(buffer2, "%ld", &cmp);
-
-            if (from != cmp)
-            {
-                Log(LOG_LEVEL_DEBUG, "Unequal");
-                return false;
-            }
-        }
-
-        Log(LOG_LEVEL_DEBUG, "Matched octet '%s' with '%s'", buffer1, buffer2);
+        start = end + 1;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Matched IP range");
     return true;
 }
 
 static bool MatchIPv6Range(const char *pattern, const char *address)
 {
-    long from = -1, to = -1, cmp = -1;
-    char buffer1[64], buffer2[64];
-
-    const char *sp1 = pattern;
-    const char *sp2 = address;
-
-    for (int i = 0; i < 8; i++)
+    Interval groups[IPV6_GROUPS];
+    if (!ParseIPv6RangePattern(pattern, groups))
     {
-        buffer1[0] = '\0';
-        sscanf(sp1, "%63[^:]", buffer1);
-        buffer1[63] = '\0';
+        Log(LOG_LEVEL_DEBUG, "Invalid IPv6 range '%s'", pattern);
+        return false;
+    }
 
-        sp1 += strlen(buffer1);
-        if (*sp1 == ':')
+    struct in6_addr addr;
+    if (inet_pton(AF_INET6, address, &addr) != 1)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < IPV6_GROUPS; i++)
+    {
+        const unsigned long value = (addr.s6_addr[2 * i] << 8) | addr.s6_addr[2 * i + 1];
+        if (value < groups[i].from || value > groups[i].to)
         {
-            sp1++;
-        }
-
-        buffer2[0] = '\0';
-        sscanf(sp2, "%63[^:]", buffer2);
-        buffer2[63] = '\0';
-
-        sp2 += strlen(buffer2);
-        if (*sp2 == ':')
-        {
-            sp2++;
-        }
-
-        if (strstr(buffer1, "-"))
-        {
-            sscanf(buffer1, "%lx-%lx", &from, &to);
-            sscanf(buffer2, "%lx", &cmp);
-
-            if (from < 0 || to < 0)
-            {
-                return false;
-            }
-
-            if ((from >= cmp) || (cmp > to))
-            {
-                Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx", from, cmp, to);
-                return false;
-            }
-        }
-        else
-        {
-            sscanf(buffer1, "%ld", &from);
-            sscanf(buffer2, "%ld", &cmp);
-
-            if (from != cmp)
-            {
-                return false;
-            }
+            return false;
         }
     }
 
@@ -346,7 +444,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
         match = MatchPrefix(s1, s2);
         break;
     case PATTERN_CIDR:
-        match = is_v4 ? MatchIPv4CIDR(s1, s2) : MatchIPv6CIDR(s1, s2);
+        match = MatchCIDR(s1, is_v4 ? AF_INET : AF_INET6, s2);
         break;
     case PATTERN_RANGE:
         match = is_v4 ? MatchIPv4Range(s1, s2) : MatchIPv6Range(s1, s2);
@@ -356,178 +454,65 @@ int FuzzySetMatch(const char *s1, const char *s2)
     return match ? 0 : -1;
 }
 
+/**
+ * Checks that s is an address pattern understood by FuzzySetMatch().
+ */
 bool FuzzyMatchParse(const char *s)
 {
-    short isCIDR = false, isrange = false, isv6 = false, isv4 = false, isADDR = false;
-    char address[CF_ADDRSIZE];
-    int mask, count = 0;
+    const bool is_v4 = (strchr(s, '.') != NULL);
+    const bool is_v6 = (strchr(s, ':') != NULL);
 
-    for (const char *sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
+    if (is_v4 && is_v6)
     {
-        if (!isxdigit((int) *sp))
-        {
-            isADDR = false;
-            break;
-        }
-
-        if (*sp == ':')         /* Catches any ipv6 address */
-        {
-            isADDR = true;
-            break;
-        }
-
-        if (isdigit((int) *sp)) /* catch non-ipv4 address - no more than 3 digits */
-        {
-            count++;
-            if (count > 3)
-            {
-                isADDR = false;
-                break;
-            }
-        }
-        else
-        {
-            count = 0;
-        }
-    }
-
-    if (!isADDR)
-    {
-        return true;
-    }
-
-    if (strstr(s, "/") != 0)
-    {
-        isCIDR = true;
-    }
-
-    if (strstr(s, "-") != 0)
-    {
-        isrange = true;
-    }
-
-    if (strstr(s, ".") != 0)
-    {
-        isv4 = true;
-    }
-
-    if (strstr(s, ":") != 0)
-    {
-        isv6 = true;
-    }
-
-    if (isv4 && isv6)
-    {
-        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses");
+        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses in '%s'", s);
         return false;
     }
 
-    if (isCIDR && isrange)
+    if (!is_v4 && !is_v6)
     {
-        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xx-yy range notation");
+        Log(LOG_LEVEL_ERR, "'%s' is not an IP address, range or subnet", s);
         return false;
     }
 
-    if (isv4 && isCIDR)
+    PatternNotation notation;
+    if (!GetPatternNotation(s, &notation))
     {
-        if (strlen(s) > 4 + 3 * 4 + 1 + 2)      /* xxx.yyy.zzz.mmm/cc */
-        {
-            Log(LOG_LEVEL_ERR, "IPv4 address looks too long");
-            return false;
-        }
-
-        address[0] = '\0';
-        mask = 0;
-        sscanf(s, "%16[^/]/%d", address, &mask);
-
-        if (mask < 8)
-        {
-            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is less than 8", mask, s);
-            return false;
-        }
-
-        if (mask > 30)
-        {
-            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is silly (> 30)", mask, s);
-            return false;
-        }
+        return false;
     }
 
-    if (isv4 && isrange)
+    bool valid = false;
+    if (notation == PATTERN_CIDR)
     {
-        long i, from = -1, to = -1;
-        char buffer1[64];
-
-        const char *sp1 = s;
-
-        for (i = 0; i < 4; i++)
-        {
-            buffer1[0] = '\0';
-            sscanf(sp1, "%63[^.]", buffer1);
-            buffer1[63] = '\0';
-
-            if (strlen(buffer1) == 0)
-            {
-                break;
-            }
-
-            sp1 += strlen(buffer1);
-            if (*sp1 == '.')
-            {
-                sp1++;
-            }
-
-            if (strstr(buffer1, "-"))
-            {
-                sscanf(buffer1, "%ld-%ld", &from, &to);
-
-                if ((from < 0) || (to < 0))
-                {
-                    Log(LOG_LEVEL_ERR, "Error in IP range - looks like address, or bad hostname");
-                    return false;
-                }
-
-                if (to < from)
-                {
-                    Log(LOG_LEVEL_ERR, "Bad IP range");
-                    return false;
-                }
-
-            }
-        }
+        unsigned char network[BINARY_ADDR_SIZE];
+        unsigned long bits;
+        valid = ParseCIDR(s, is_v4 ? AF_INET : AF_INET6, network, &bits);
+    }
+    else if (is_v4) // Range or prefix
+    {
+        Interval octets[IPV4_OCTETS];
+        valid = (ParseIPv4Pattern(s, octets) > 0);
+    }
+    else if (notation == PATTERN_RANGE) // IPv6
+    {
+        Interval groups[IPV6_GROUPS];
+        valid = ParseIPv6RangePattern(s, groups);
+    }
+    else // IPv6 full address, or prefix of 1-7 groups
+    {
+        struct in6_addr addr;
+        Interval groups[IPV6_GROUPS - 1];
+        size_t count;
+        valid = inet_pton(AF_INET6, s, &addr) == 1 ||
+                (ParseIPv6Groups(s, s + strlen(s), groups, IPV6_GROUPS - 1, &count) &&
+                 count > 0);
     }
 
-    if (isv6 && isCIDR)
+    if (!valid)
     {
-        char address[CF_ADDRSIZE];
-        int mask;
-
-        if (strlen(s) < 20)
-        {
-            Log(LOG_LEVEL_ERR, "IPv6 address looks too short");
-            return false;
-        }
-
-        if (strlen(s) > 42)
-        {
-            Log(LOG_LEVEL_ERR, "IPv6 address looks too long");
-            return false;
-        }
-
-        address[0] = '\0';
-        mask = 0;
-        sscanf(s, "%40[^/]/%d", address, &mask);
-
-        if (mask > 15)
-        {
-            Log(LOG_LEVEL_ERR, "IPv6 CIDR mask is too large");
-            return false;
-        }
+        Log(LOG_LEVEL_ERR, "Invalid IP address, range or subnet '%s'", s);
     }
-
-    return true;
+    return valid;
 }
-
 
 bool FuzzyHostParse(const char *arg2)
 {
@@ -542,48 +527,43 @@ bool FuzzyHostParse(const char *arg2)
     return true;
 }
 
-int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost)
+/**
+ * Checks whether refhost is prefix followed by a number within range,
+ * e.g. FuzzyHostMatch("host", "1-10", "HOST5") == 0.
+ * The comparison of the prefix is case-insensitive.
+ *
+ * Returns 0 on match.
+ */
+int FuzzyHostMatch(const char *prefix, const char *range, const char *refhost)
 {
-    char *sp, refbase[1024];
-    long cmp = -1, start = -1, end = -1;
-    char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE];
-
-    strlcpy(refbase, refhost, sizeof(refbase));
-    sp = refbase + strlen(refbase) - 1;
-
-    while (isdigit((int) *sp))
+    // Split refhost into base name and trailing number, e.g. "host12"
+    const size_t len = strlen(refhost);
+    size_t base_len = len;
+    while (base_len > 0 && isdigit((unsigned char) refhost[base_len - 1]))
     {
-        sp--;
+        base_len--;
     }
 
-    sp++;
-    sscanf(sp, "%ld", &cmp);
-    *sp = '\0';
-
-    if (cmp < 0)
+    if (base_len == 0 || base_len == len)
     {
-        return 1;
+        return 1; // No base name, or no number
     }
 
-    if (strlen(refbase) == 0)
+    unsigned long number;
+    if (!ParseNumber(refhost + base_len, refhost + len, 10, LONG_MAX, &number))
     {
-        return 1;
+        return 1; // Number too large
     }
 
-    sscanf(arg1, "%ld-%ld", &start, &end);
-
-    if ((cmp < start) || (cmp > end))
+    long start = -1, end = -1;
+    sscanf(range, "%ld-%ld", &start, &end);
+    if ((long) number < start || (long) number > end)
     {
         return 1;
     }
 
-    strlcpy(buf1, refbase, CF_BUFSIZE);
-    strlcpy(buf2, arg0, CF_BUFSIZE);
-
-    ToLowerStrInplace(buf1);
-    ToLowerStrInplace(buf2);
-
-    if (strcmp(buf1, buf2) != 0)
+    if (strlen(prefix) != base_len ||
+        !StringEqualN_IgnoreCase(prefix, refhost, base_len))
     {
         return 1;
     }
@@ -597,9 +577,9 @@ int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost)
  *
  * @param hostname will point to the hostname, or NULL if no or empty hostname
  * @param port will point to the port, or NULL if no or empty port
- * @return the type of hostname: ADDRESS_TYPE_IPV4 if it starts with a digit,
- *         ADDRESS_TYPE_IPV6 if it looks like an IPv6 address, otherwise
- *         (hostname, invalid or too long) ADDRESS_TYPE_OTHER
+ * @return the type of hostname: ADDRESS_TYPE_IPV4 if it is a valid IPv4
+ *         address, ADDRESS_TYPE_IPV6 if it looks like an IPv6 address,
+ *         otherwise (hostname, invalid or too long) ADDRESS_TYPE_OTHER
  * @WARNING modifies #s to '\0' terminate hostname if followed by port.
  */
 AddressType ParseHostPort(char *s, char **hostname, char **port)
@@ -642,18 +622,12 @@ AddressType ParseHostPort(char *s, char **hostname, char **port)
 
         if (first_colon != NULL)
         {
-            if (first_dot != NULL && first_dot < first_colon)
+            // "1.2.3.4:80", "cfengine.com:80", "localhost:80" or "localhost:"
+            if ((first_dot != NULL && first_dot < first_colon) ||
+                strchr(first_colon + 1, ':') == NULL)
             {
-                // "1.2.3.4:80" or "cfengine.com:80"
                 *first_colon = '\0';
                 port_str = first_colon + 1;
-            }
-            else if (strchr(first_colon + 1, ':') == NULL)
-            {
-                // "localhost:80" or "localhost:"
-                *first_colon = '\0';
-                port_str = first_colon + 1;
-                classify = false;
             }
             else                   // Multiple colons: IPv6 address, no port
             {
@@ -674,7 +648,8 @@ AddressType ParseHostPort(char *s, char **hostname, char **port)
         return ADDRESS_TYPE_IPV6;
     }
 
-    return isdigit((unsigned char) (*hostname)[0])
+    struct in_addr addr;
+    return (inet_pton(AF_INET, *hostname, &addr) == 1)
         ? ADDRESS_TYPE_IPV4
         : ADDRESS_TYPE_OTHER;
 }

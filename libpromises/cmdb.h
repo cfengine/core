@@ -25,12 +25,10 @@
 #ifndef CFENGINE_CMDB_H
 #define CFENGINE_CMDB_H
 
-#include <json.h>
-#include <logging.h>
+#include <eval_context.h>       /* EvalContext */
 
 #define CMDB_SOURCE_TAG "source=cmdb"
 
-JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_max);
 bool LoadCMDBData(EvalContext *ctx);
 
 #endif  /* CFENGINE_CMDB_H */

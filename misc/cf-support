@@ -396,7 +396,7 @@ if [ "$OS" = "aix" ]; then
   syslog_cmd="errpt -a"
   # error report can reference cfengine, reports are delimitted by bars of `-` characters
   echo "r !errpt -a
-g/cfengine/?---?,/---/p" | ed > "$_syslog_filtered" || true
+g/cfengine/?---?,/---/p" | ed | gzip -c > "$_syslog_out" || true
 else
   if [ -n "$unfiltered_args" ]; then
     $syslog_cmd "$unfiltered_args" | gzip -c > "$_syslog_out" || true

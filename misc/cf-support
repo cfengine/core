@@ -11,11 +11,12 @@ WORKDIR=/var/cfengine; export WORKDIR
 BINDIR="$WORKDIR/bin"; export BINDIR
 non_interactive=0; export non_interactive
 
-if [ $# -gt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+if [ $# -gt 2 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo "usage: `basename "$0"` [OPTIONS]"
   echo ''
   echo 'Options:'
   echo '	--yes, -y - Non-interactive use. Assume no ticket number and assume include masterfiles.'
+  echo '	--unfiltered-syslog - do not filter syslog for only CFE entries, also restricts journalctl to last 2 hours.'
   echo '	--help, -h - Print the help message'
   echo ''
   echo 'Website: https://cfengine.com'
@@ -59,6 +60,8 @@ cf-support gathers various details about the system and creates a tarball in the
 .SH OPTIONS
 .IP "--yes"
 Non-interactive use. Assume no ticket number and assume include masterfiles.
+.IP "--unfiltered-syslog"
+do not filter syslog for only CFE entries, also restricts journalctl to last 2 hours.
 .SH CFENGINE
 CFEngine provides automated configuration management of large-scale computer systems. A system administrator describes the desired state of a system using CFEngine policy code. The program \\fBcf-agent\\fR reads policy code and attempts to bring the current system state to the desired state described. Policy code is downloaded by \\fBcf-agent\\fR from a \\fBcf-serverd\\fR daemon. The daemon \\fBcf-execd\\fR is responsible for running \\fBcf-agent\\fR periodically.
 .br
@@ -91,7 +94,10 @@ EOF
   exit 0
 fi
 
-[ "$1" = "--yes" ] || [ "$1" = "-y" ] && non_interactive=1
+for arg in "$@"; do
+  [ "$arg" = "--yes" ] || [ "$arg" = "-y" ] && non_interactive=1
+  [ "$arg" = "--unfiltered-syslog" ] && unfiltered_syslog=1
+done
 
 # POSIX friendly version of bash $EUID
 euid=`id | sed -n 's/uid=\([0-9]*\).*/\1/p'`
@@ -371,14 +377,20 @@ for f in /var/log/CFEngine-Install*; do
 done
 
 # system log
+unfiltered_args="" # empty by default, --unfiltered-syslog optional arg enables, TODO: support syslogs other than journalctl
+_syslog_out="$tmpdir"/syslog-filtered-for-cfengine.log.gz
+
 [ -f /var/log/messages ] && syslog_cmd="cat /var/log/messages"
 [ -f /var/log/syslog ] && syslog_cmd="cat /var/log/syslog"
-command -v journalctl >/dev/null && syslog_cmd="journalctl"
+if command -v journalctl >/dev/null; then
+  syslog_cmd="journalctl"
+  [ "$unfiltered_syslog" = "1" ] && unfiltered_args="--since=-2h"
+  _syslog_out="$tmpdir"/syslog.log.gz
+fi
 [ -z "$syslog_cmd" ] && syslog_cmd="dmesg"
 if [ "$OS" = "solaris" ]; then
   syslog_cmd="cat /var/adm/messages*"
 fi
-_syslog_filtered="$tmpdir"/syslog-filtered-for-cfengine.log.gz
 
 if [ "$OS" = "aix" ]; then
   syslog_cmd="errpt -a"
@@ -386,16 +398,21 @@ if [ "$OS" = "aix" ]; then
   echo "r !errpt -a
 g/cfengine/?---?,/---/p" | ed > "$_syslog_filtered" || true
 else
-  $syslog_cmd | sed -n '/[Cc][Ff][Ee-]/p' | gzip -c > "$_syslog_filtered" || true
+  if [ -n "$unfiltered_args" ]; then
+    $syslog_cmd "$unfiltered_args" | gzip -c > "$_syslog_out" || true
+    echo "Captured output of $syslog_cmd $unfiltered_args (unfiltered due to --unfiltered-syslog arg provided)"
+  else
+    $syslog_cmd | sed -n '/[Cc][Ff][Ee-]/p' | gzip -c > "$_syslog_out" || true
+    echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
+  fi
 fi
-echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
 # Report entries the client dropped before sending. This warning is the only
 # record that the row existed: the hub never receives it, so the resulting
 # CFPA_ERR_ZERO_ROWS has no hub-side explanation. Surfaced separately because
 # the filtered syslog above is routinely hundreds of megabytes.
 _dropped="$tmpdir"/report-entries-over-network-limit.log
-gzip -cd "$_syslog_filtered" 2>/dev/null | grep "exceeds network limit" > "$_dropped" 2>/dev/null
+gzip -cd "$_syslog_out" 2>/dev/null | grep "exceeds network limit" > "$_dropped" 2>/dev/null
 _dropped_n=$(wc -l < "$_dropped" 2>/dev/null | tr -d ' ')
 echo "** Report entries dropped for exceeding CF_MAXTRANSSIZE" >> "$info_file"
 if [ "${_dropped_n:-0}" -eq 0 ]; then

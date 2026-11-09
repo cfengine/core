@@ -22,6 +22,29 @@
   included file COSL.txt.
 */
 
+/*
+ * Loading of augments files (def.json).
+ *
+ * LoadAugments() is called by the agents after the CMDB (host-specific)
+ * data is loaded and before the policy is parsed. It loads
+ * def_preferred.json (unless --ignore-preferred-augments is given) or
+ * def.json from the policy input directory:
+ *
+ *   LoadAugments()               pick def_preferred.json or def.json
+ *     LoadAugmentsFiles()        expand the filename and parse the JSON file
+ *       LoadAugmentsData()       handle each top-level key of the JSON object
+ *         ReadAugmentVars()      "vars"
+ *         ReadAugmentVariables() "variables"
+ *         ReadAugmentClasses()   "classes"
+ *         ReadAugmentInputs()    "inputs"
+ *         ReadAugmentAugments()  "augments", calls LoadAugmentsFiles() for
+ *                                each further file
+ *
+ * Variables and classes already defined from host-specific data are not
+ * overridden (see CanSetVariable() and CanSetClass()), except for classes
+ * whose expression is "true".
+ */
+
 #include <platform.h>
 
 #include <augments.h>
@@ -189,514 +212,560 @@ static inline const char *GetAugmentsComment(const char *item_type, const char *
     return JsonPrimitiveGetAsString(json_comment);
 }
 
-static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
+/** Loads the "vars" key of augments data into the context */
+static bool ReadAugmentVars(EvalContext *ctx, const char *filename, JsonElement *element)
 {
-    bool loaded = false;
+    JsonElement* vars = JsonExpandElement(ctx, element);
 
-    if (JsonGetElementType(augment) != JSON_ELEMENT_TYPE_CONTAINER ||
-        JsonGetContainerType(augment) != JSON_CONTAINER_TYPE_OBJECT)
+    if (vars == NULL ||
+        JsonGetElementType(vars) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonGetContainerType(vars) != JSON_CONTAINER_TYPE_OBJECT)
     {
-        Log(LOG_LEVEL_ERR, "Invalid augments file contents in '%s', must be a JSON object", filename);
+        Log(LOG_LEVEL_ERR, "Invalid augments vars in '%s', must be a JSON object", filename);
+        JsonDestroy(vars);
+        return false;
     }
-    else
+
+    JsonIterator iter = JsonIteratorInit(vars);
+    const char *vkey;
+    while ((vkey = JsonIteratorNextKey(&iter)))
     {
-        loaded = true;
-        Log(LOG_LEVEL_VERBOSE, "Loaded augments file '%s', installing contents", filename);
-
-        JsonIterator iter = JsonIteratorInit(augment);
-        const char *key;
-        while ((key = JsonIteratorNextKey(&iter)))
+        VarRef *ref = VarRefParse(vkey);
+        if (ref->ns != NULL)
         {
-            if (!(StringEqual(key, "vars") ||
-                  StringEqual(key, "classes") ||
-                  StringEqual(key, "inputs") ||
-                  StringEqual(key, "augments") ||
-                  StringEqual(key, "variables")))
+            if (ref->scope == NULL)
             {
-                Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
-                    key, filename);
-            }
-        }
-
-        /* load variables (if any) */
-        JsonElement *element = JsonObjectGet(augment, "vars");
-        if (JSON_NOT_NULL(element))
-        {
-            JsonElement* vars = JsonExpandElement(ctx, element);
-
-            if (vars == NULL ||
-                JsonGetElementType(vars) != JSON_ELEMENT_TYPE_CONTAINER ||
-                JsonGetContainerType(vars) != JSON_CONTAINER_TYPE_OBJECT)
-            {
-                Log(LOG_LEVEL_ERR, "Invalid augments vars in '%s', must be a JSON object", filename);
-                goto vars_cleanup;
-            }
-
-            JsonIterator iter = JsonIteratorInit(vars);
-            const char *vkey;
-            while ((vkey = JsonIteratorNextKey(&iter)))
-            {
-                VarRef *ref = VarRefParse(vkey);
-                if (ref->ns != NULL)
-                {
-                    if (ref->scope == NULL)
-                    {
-                        Log(LOG_LEVEL_ERR, "Invalid variable specification in augments data in '%s': '%s'"
-                            " (bundle name has to be specified if namespace is specified)", filename, vkey);
-                        VarRefDestroy(ref);
-                        continue;
-                    }
-                }
-                if (ref->scope == NULL)
-                {
-                    ref->scope = xstrdup("def");
-                }
-
-                JsonElement *data = JsonObjectGet(vars, vkey);
-                if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
-                {
-                    char *value = JsonPrimitiveToString(data);
-                    if ((ref->ns == NULL) && (ref->scope == NULL))
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
-                        }
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s=%s' from file '%s'",
-                            vkey, value, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING, "source=augments_file");
-                        }
-                    }
-                    free(value);
-                }
-                else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
-                         JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
-                         JsonArrayContainsOnlyPrimitives(data))
-                {
-                    // map to slist if the data only has primitives
-                    Rlist *data_as_rlist = RlistFromContainer(data);
-                    if ((ref->ns == NULL) && (ref->scope == NULL))
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                          vkey, data_as_rlist,
-                                                          CF_DATA_TYPE_STRING_LIST,
-                                                          "source=augments_file");
-                        }
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s' from file '%s'",
-                            vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            EvalContextVariablePut(ctx, ref, data_as_rlist, CF_DATA_TYPE_STRING_LIST,
-                                                   "source=augments_file");
-                        }
-                    }
-
-                    RlistDestroy(data_as_rlist);
-                }
-                else // install as a data container
-                {
-                    if ((ref->ns == NULL) && (ref->scope == NULL))
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                          vkey, data,
-                                                          CF_DATA_TYPE_CONTAINER,
-                                                          "source=augments_file");
-                        }
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s' from file '%s'",
-                            vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            EvalContextVariablePut(ctx, ref, data,
-                                                   CF_DATA_TYPE_CONTAINER,
-                                                   "source=augments_file");
-                        }
-                    }
-                }
+                Log(LOG_LEVEL_ERR, "Invalid variable specification in augments data in '%s': '%s'"
+                    " (bundle name has to be specified if namespace is specified)", filename, vkey);
                 VarRefDestroy(ref);
+                continue;
             }
-
-          vars_cleanup:
-            JsonDestroy(vars);
+        }
+        if (ref->scope == NULL)
+        {
+            ref->scope = xstrdup("def");
         }
 
-        /* Uses the new format allowing metadata (CFE-3633) */
-        element = JsonObjectGet(augment, "variables");
-        if (JSON_NOT_NULL(element))
+        JsonElement *data = JsonObjectGet(vars, vkey);
+        if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
         {
-            JsonElement* variables = JsonExpandElement(ctx, element);
-
-            if (variables == NULL || JsonGetType(variables) != JSON_TYPE_OBJECT)
+            char *value = JsonPrimitiveToString(data);
+            if ((ref->ns == NULL) && (ref->scope == NULL))
             {
-                Log(LOG_LEVEL_ERR, "Invalid augments variables in '%s', must be a JSON object", filename);
-                goto variables_cleanup;
+                Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
+                    SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s=%s' from file '%s'",
+                    vkey, value, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING, "source=augments_file");
+                }
+            }
+            free(value);
+        }
+        else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
+                    JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
+                    JsonArrayContainsOnlyPrimitives(data))
+        {
+            // map to slist if the data only has primitives
+            Rlist *data_as_rlist = RlistFromContainer(data);
+            if ((ref->ns == NULL) && (ref->scope == NULL))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
+                    SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                    vkey, data_as_rlist,
+                                                    CF_DATA_TYPE_STRING_LIST,
+                                                    "source=augments_file");
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s' from file '%s'",
+                    vkey, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    EvalContextVariablePut(ctx, ref, data_as_rlist, CF_DATA_TYPE_STRING_LIST,
+                                            "source=augments_file");
+                }
             }
 
-            JsonIterator variables_iter = JsonIteratorInit(variables);
-            const char *vkey;
-            while ((vkey = JsonIteratorNextKey(&variables_iter)))
+            RlistDestroy(data_as_rlist);
+        }
+        else // install as a data container
+        {
+            if ((ref->ns == NULL) && (ref->scope == NULL))
             {
-                VarRef *ref = VarRefParse(vkey);
-                if (ref->ns != NULL)
+                Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
+                    SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                if (CanSetVariable(ctx, ref))
                 {
-                    if (ref->scope == NULL)
-                    {
-                        Log(LOG_LEVEL_ERR, "Invalid variable specification in augments data in '%s': '%s'"
-                            " (bundle name has to be specified if namespace is specified)", filename, vkey);
-                        VarRefDestroy(ref);
-                        continue;
-                    }
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                    vkey, data,
+                                                    CF_DATA_TYPE_CONTAINER,
+                                                    "source=augments_file");
                 }
-                if (ref->scope == NULL)
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s' from file '%s'",
+                    vkey, filename);
+                if (CanSetVariable(ctx, ref))
                 {
-                    ref->scope = xstrdup("def");
+                    EvalContextVariablePut(ctx, ref, data,
+                                            CF_DATA_TYPE_CONTAINER,
+                                            "source=augments_file");
                 }
+            }
+        }
+        VarRefDestroy(ref);
+    }
 
-                const JsonElement *const var_info = JsonObjectGet(variables, vkey);
+    JsonDestroy(vars);
+    return true;
+}
 
-                const JsonElement *data;
-                StringSet *tags;
-                const char *comment = NULL;
+/** Loads the "variables" key of augments data (uses the new format allowing metadata, CFE-3633) */
+static bool ReadAugmentVariables(EvalContext *ctx, const char *filename, JsonElement *element)
+{
+    JsonElement* variables = JsonExpandElement(ctx, element);
 
-                if (JsonGetType(var_info) == JSON_TYPE_OBJECT)
-                {
-                    data = JsonObjectGet(var_info, AUGMENTS_VARIABLES_DATA);
+    if (variables == NULL || JsonGetType(variables) != JSON_TYPE_OBJECT)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid augments variables in '%s', must be a JSON object", filename);
+        JsonDestroy(variables);
+        return false;
+    }
 
-                    if (NULL_JSON(data))
-                    {
-                        Log(LOG_LEVEL_ERR, "Missing value for the augments variable '%s' in '%s' (value field is required)",
-                            vkey, filename);
-                        VarRefDestroy(ref);
-                        continue;
-                    }
-
-                    const JsonElement *json_tags = JsonObjectGet(var_info, AUGMENTS_VARIABLES_TAGS);
-                    tags = GetTagsFromAugmentsTags("variable", vkey, json_tags, "source=augments_file", filename);
-                    comment = GetAugmentsComment("variable", vkey, filename, var_info);
-                }
-                else
-                {
-                    // Just a bare value, like in "vars", no metadata
-                    data = var_info;
-                    tags = GetTagsFromAugmentsTags("variable", vkey, NULL, "source=augments_file", filename);
-                }
-
-                assert(tags != NULL);
-                assert(data != NULL);
-
-                bool installed = false;
-                if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
-                {
-                    char *value = JsonPrimitiveToString(data);
-                    if ((ref->ns == NULL) && (ref->scope == NULL))
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF, vkey, value,
-                                                                                        CF_DATA_TYPE_STRING, tags, comment);
-                        }
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s=%s' from file '%s'",
-                            vkey, value, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
-                                                                                 tags, comment);
-                        }
-                    }
-                    free(value);
-                }
-                else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
-                         JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
-                         JsonArrayContainsOnlyPrimitives((JsonElement *) data))
-                {
-                    // map to slist if the data only has primitives
-                    Rlist *data_as_rlist = RlistFromContainer(data);
-                    if ((ref->ns == NULL) && (ref->scope == NULL))
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF,
-                                                                                        vkey, data_as_rlist,
-                                                                                        CF_DATA_TYPE_STRING_LIST,
-                                                                                        tags, comment);
-                        }
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s' from file '%s'",
-                            vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, data_as_rlist,
-                                                                                 CF_DATA_TYPE_STRING_LIST,
-                                                                                 tags, comment);
-                        }
-                    }
-
-                    RlistDestroy(data_as_rlist);
-                }
-                else // install as a data container
-                {
-                    if ((ref->ns == NULL) && (ref->scope == NULL))
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF,
-                                                                                        vkey, data,
-                                                                                        CF_DATA_TYPE_CONTAINER,
-                                                                                        tags, comment);
-                        }
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s' from file '%s'",
-                            vkey, filename);
-                        if (CanSetVariable(ctx, ref))
-                        {
-                            installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, data,
-                                                                                 CF_DATA_TYPE_CONTAINER,
-                                                                                 tags, comment);
-                        }
-                    }
-                }
+    JsonIterator variables_iter = JsonIteratorInit(variables);
+    const char *vkey;
+    while ((vkey = JsonIteratorNextKey(&variables_iter)))
+    {
+        VarRef *ref = VarRefParse(vkey);
+        if (ref->ns != NULL)
+        {
+            if (ref->scope == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Invalid variable specification in augments data in '%s': '%s'"
+                    " (bundle name has to be specified if namespace is specified)", filename, vkey);
                 VarRefDestroy(ref);
-                if (!installed)
+                continue;
+            }
+        }
+        if (ref->scope == NULL)
+        {
+            ref->scope = xstrdup("def");
+        }
+
+        const JsonElement *const var_info = JsonObjectGet(variables, vkey);
+
+        const JsonElement *data;
+        StringSet *tags;
+        const char *comment = NULL;
+
+        if (JsonGetType(var_info) == JSON_TYPE_OBJECT)
+        {
+            data = JsonObjectGet(var_info, AUGMENTS_VARIABLES_DATA);
+
+            if (NULL_JSON(data))
+            {
+                Log(LOG_LEVEL_ERR, "Missing value for the augments variable '%s' in '%s' (value field is required)",
+                    vkey, filename);
+                VarRefDestroy(ref);
+                continue;
+            }
+
+            const JsonElement *json_tags = JsonObjectGet(var_info, AUGMENTS_VARIABLES_TAGS);
+            tags = GetTagsFromAugmentsTags("variable", vkey, json_tags, "source=augments_file", filename);
+            comment = GetAugmentsComment("variable", vkey, filename, var_info);
+        }
+        else
+        {
+            // Just a bare value, like in "vars", no metadata
+            data = var_info;
+            tags = GetTagsFromAugmentsTags("variable", vkey, NULL, "source=augments_file", filename);
+        }
+
+        assert(tags != NULL);
+        assert(data != NULL);
+
+        bool installed = false;
+        if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            char *value = JsonPrimitiveToString(data);
+            if ((ref->ns == NULL) && (ref->scope == NULL))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
+                    SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
+                if (CanSetVariable(ctx, ref))
                 {
-                    /* EvalContextVariablePutTagsSetWithComment() and
-                     * EvalContextVariablePutSpecialTagsSetWithComment() take
-                     * over tags in case of success. Otherwise we have to
-                     * destroy the set. */
-                    StringSetDestroy(tags);
+                    installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF, vkey, value,
+                                                                                CF_DATA_TYPE_STRING, tags, comment);
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s=%s' from file '%s'",
+                    vkey, value, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
+                                                                            tags, comment);
+                }
+            }
+            free(value);
+        }
+        else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
+                    JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
+                    JsonArrayContainsOnlyPrimitives((JsonElement *) data))
+        {
+            // map to slist if the data only has primitives
+            Rlist *data_as_rlist = RlistFromContainer(data);
+            if ((ref->ns == NULL) && (ref->scope == NULL))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
+                    SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF,
+                                                                                vkey, data_as_rlist,
+                                                                                CF_DATA_TYPE_STRING_LIST,
+                                                                                tags, comment);
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s' from file '%s'",
+                    vkey, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, data_as_rlist,
+                                                                            CF_DATA_TYPE_STRING_LIST,
+                                                                            tags, comment);
                 }
             }
 
-          variables_cleanup:
-            JsonDestroy(variables);
+            RlistDestroy(data_as_rlist);
         }
-
-        /* load classes (if any) */
-        element = JsonObjectGet(augment, "classes");
-        if (JSON_NOT_NULL(element))
+        else // install as a data container
         {
-            JsonElement* classes = JsonExpandElement(ctx, element);
-
-            if (JsonGetElementType(classes) != JSON_ELEMENT_TYPE_CONTAINER ||
-                JsonGetContainerType(classes) != JSON_CONTAINER_TYPE_OBJECT)
+            if ((ref->ns == NULL) && (ref->scope == NULL))
             {
-                Log(LOG_LEVEL_ERR, "Invalid augments classes in '%s', must be a JSON object", filename);
-                goto classes_cleanup;
-            }
-
-            const char default_tags[] = "source=augments_file";
-            JsonIterator iter = JsonIteratorInit(classes);
-            const char *ckey;
-            while ((ckey = JsonIteratorNextKey(&iter)))
-            {
-                JsonElement *data = JsonObjectGet(classes, ckey);
-                if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
+                    SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                if (CanSetVariable(ctx, ref))
                 {
-                    char *check = JsonPrimitiveToString(data);
-                    // check if class is true
-                    if (CheckContextClassmatch(ctx, check))
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
-                            ckey, check, filename);
-                        if (CanSetClass(ctx, ckey))
-                        {
-                            EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
-                        }
-                    }
-                    else if (StringEqual(check, "true"))
+                    installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF,
+                                                                                vkey, data,
+                                                                                CF_DATA_TYPE_CONTAINER,
+                                                                                tags, comment);
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s' from file '%s'",
+                    vkey, filename);
+                if (CanSetVariable(ctx, ref))
+                {
+                    installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, data,
+                                                                            CF_DATA_TYPE_CONTAINER,
+                                                                            tags, comment);
+                }
+            }
+        }
+        VarRefDestroy(ref);
+        if (!installed)
+        {
+            /* EvalContextVariablePutTagsSetWithComment() and
+                * EvalContextVariablePutSpecialTagsSetWithComment() take
+                * over tags in case of success. Otherwise we have to
+                * destroy the set. */
+            StringSetDestroy(tags);
+        }
+    }
+
+    JsonDestroy(variables);
+    return true;
+}
+
+/** Loads the "classes" key of augments data into the context */
+static bool ReadAugmentClasses(EvalContext *ctx, const char *filename, JsonElement *element)
+{
+    JsonElement* classes = JsonExpandElement(ctx, element);
+
+    if (JsonGetElementType(classes) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonGetContainerType(classes) != JSON_CONTAINER_TYPE_OBJECT)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid augments classes in '%s', must be a JSON object", filename);
+        JsonDestroy(classes);
+        return false;
+    }
+
+    const char default_tags[] = "source=augments_file";
+    JsonIterator iter = JsonIteratorInit(classes);
+    const char *ckey;
+    while ((ckey = JsonIteratorNextKey(&iter)))
+    {
+        JsonElement *data = JsonObjectGet(classes, ckey);
+        if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            char *check = JsonPrimitiveToString(data);
+            // check if class is true
+            if (CheckContextClassmatch(ctx, check))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
+                    ckey, check, filename);
+                if (CanSetClass(ctx, ckey))
+                {
+                    EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
+                }
+            }
+            else if (StringEqual(check, "true"))
+            {
+                EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
+            }
+            free(check);
+        }
+        else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
+                    JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
+                    JsonArrayContainsOnlyPrimitives(data))
+        {
+            // check if each class is true
+            JsonIterator data_iter = JsonIteratorInit(data);
+            const JsonElement *el;
+            while ((el = JsonIteratorNextValueByType(&data_iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+            {
+                char *check = JsonPrimitiveToString(el);
+                if (CheckContextClassmatch(ctx, check))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
+                        ckey, check, filename);
+                    if (CanSetClass(ctx, ckey))
                     {
                         EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
                     }
                     free(check);
+                    break;
                 }
-                else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
-                         JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
-                         JsonArrayContainsOnlyPrimitives(data))
+                else if (StringEqual(check, "true"))
                 {
-                    // check if each class is true
-                    JsonIterator data_iter = JsonIteratorInit(data);
-                    const JsonElement *el;
-                    while ((el = JsonIteratorNextValueByType(&data_iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
-                    {
-                        char *check = JsonPrimitiveToString(el);
-                        if (CheckContextClassmatch(ctx, check))
-                        {
-                            Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
-                                ckey, check, filename);
-                            if (CanSetClass(ctx, ckey))
-                            {
-                                EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
-                            }
-                            free(check);
-                            break;
-                        }
-                        else if (StringEqual(check, "true"))
-                        {
-                            EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
-                        }
-
-                        free(check);
-                    }
+                    EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
                 }
-                else if (JsonGetType(data) == JSON_TYPE_OBJECT)
-                {
-                    const JsonElement *class_exprs = JsonObjectGet(data, AUGMENTS_CLASSES_CLASS_EXPRESSIONS);
-                    const JsonElement *reg_exprs = JsonObjectGet(data, AUGMENTS_CLASSES_REGULAR_EXPRESSIONS);
-                    const JsonElement *json_tags = JsonObjectGet(data, AUGMENTS_CLASSES_TAGS);
 
-                    if ((JSON_NOT_NULL(class_exprs) && JSON_NOT_NULL(reg_exprs)) ||
-                        (NULL_JSON(class_exprs) && NULL_JSON(reg_exprs)))
-                    {
-                        Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s':"
-                            " either \"class_expressions\" or \"regular_expressions\" need to be specified",
-                            ckey, filename);
-                        continue;
-                    }
-
-                    StringSet *tags = GetTagsFromAugmentsTags("class", ckey, json_tags,
-                                                              "source=augments_file", filename);
-                    const char *comment = GetAugmentsComment("class", ckey, filename, data);
-                    bool installed = false;
-                    JsonIterator exprs_iter = JsonIteratorInit(class_exprs ? class_exprs : reg_exprs);
-                    const JsonElement *el;
-                    while ((el = JsonIteratorNextValueByType(&exprs_iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
-                    {
-                        char *check = JsonPrimitiveToString(el);
-                        if (CheckContextClassmatch(ctx, check))
-                        {
-                            Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
-                                ckey, check, filename);
-                            if (CanSetClass(ctx, ckey))
-                            {
-                                installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
-                                                                                      tags, comment);
-                            }
-                            else if (StringEqual(check, "true"))
-                            {
-                                installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
-                                                                                      tags, comment);
-                            }
-                            free(check);
-                            break;
-                        }
-
-                        free(check);
-                    }
-                    if (!installed)
-                    {
-                        /* EvalContextClassPutSoftTagsSetWithComment() takes over tags in
-                         * case of success. Otherwise we have to destroy the set. */
-                        StringSetDestroy(tags);
-                    }
-                }
-                else
-                {
-                    Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s'",
-                        ckey, filename);
-                }
+                free(check);
             }
-
-          classes_cleanup:
-            JsonDestroy(classes);
         }
-
-        /* load inputs (if any) */
-        element = JsonObjectGet(augment, "inputs");
-        if (JSON_NOT_NULL(element))
+        else if (JsonGetType(data) == JSON_TYPE_OBJECT)
         {
-            JsonElement* inputs = JsonExpandElement(ctx, element);
+            const JsonElement *class_exprs = JsonObjectGet(data, AUGMENTS_CLASSES_CLASS_EXPRESSIONS);
+            const JsonElement *reg_exprs = JsonObjectGet(data, AUGMENTS_CLASSES_REGULAR_EXPRESSIONS);
+            const JsonElement *json_tags = JsonObjectGet(data, AUGMENTS_CLASSES_TAGS);
 
-            if (JsonGetElementType(inputs) == JSON_ELEMENT_TYPE_CONTAINER &&
-                JsonGetContainerType(inputs) == JSON_CONTAINER_TYPE_ARRAY &&
-                JsonArrayContainsOnlyPrimitives(inputs))
+            if ((JSON_NOT_NULL(class_exprs) && JSON_NOT_NULL(reg_exprs)) ||
+                (NULL_JSON(class_exprs) && NULL_JSON(reg_exprs)))
             {
-                Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
-                    filename);
-                Rlist *rlist = RlistFromContainer(inputs);
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                              "augments_inputs", rlist,
-                                              CF_DATA_TYPE_STRING_LIST,
-                                              "source=augments_file");
-                RlistDestroy(rlist);
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
-                    filename);
+                Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s':"
+                    " either \"class_expressions\" or \"regular_expressions\" need to be specified",
+                    ckey, filename);
+                continue;
             }
 
-            JsonDestroy(inputs);
-        }
-
-        /* load further def.json files (if any) */
-        element = JsonObjectGet(augment, "augments");
-        if (JSON_NOT_NULL(element))
-        {
-            JsonElement* further_augments = element;
-            assert(further_augments != NULL);
-
-            if (JsonGetElementType(further_augments) == JSON_ELEMENT_TYPE_CONTAINER &&
-                JsonGetContainerType(further_augments) == JSON_CONTAINER_TYPE_ARRAY &&
-                JsonArrayContainsOnlyPrimitives(further_augments))
+            StringSet *tags = GetTagsFromAugmentsTags("class", ckey, json_tags,
+                                                        "source=augments_file", filename);
+            const char *comment = GetAugmentsComment("class", ckey, filename, data);
+            bool installed = false;
+            JsonIterator exprs_iter = JsonIteratorInit(class_exprs ? class_exprs : reg_exprs);
+            const JsonElement *el;
+            while ((el = JsonIteratorNextValueByType(&exprs_iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
             {
-                JsonIterator iter = JsonIteratorInit(further_augments);
-                const JsonElement *el;
-                while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)) != NULL)
+                char *check = JsonPrimitiveToString(el);
+                if (CheckContextClassmatch(ctx, check))
                 {
-                    char *nested_filename = JsonPrimitiveToString(el);
-                    bool further_loaded = LoadAugmentsFiles(ctx, nested_filename);
-                    if (further_loaded)
+                    Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
+                        ckey, check, filename);
+                    if (CanSetClass(ctx, ckey))
                     {
-                        Log(LOG_LEVEL_VERBOSE, "Completed augmenting from file '%s'", nested_filename);
+                        installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
+                                                                                tags, comment);
                     }
-                    else
+                    else if (StringEqual(check, "true"))
                     {
-                        Log(LOG_LEVEL_ERR, "Could not load requested further augments from file '%s'", nested_filename);
+                        installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
+                                                                                tags, comment);
                     }
-                    free(nested_filename);
+                    free(check);
+                    break;
                 }
+
+                free(check);
             }
-            else
+            if (!installed)
             {
-                Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
-                    filename);
+                /* EvalContextClassPutSoftTagsSetWithComment() takes over tags in
+                    * case of success. Otherwise we have to destroy the set. */
+                StringSetDestroy(tags);
             }
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s'",
+                ckey, filename);
         }
     }
 
-    return loaded;
+    JsonDestroy(classes);
+    return true;
+}
+
+/** Loads the "inputs" key of augments data into def.augments_inputs */
+static bool ReadAugmentInputs(EvalContext *ctx, const char *filename, JsonElement *element)
+{
+    JsonElement* inputs = JsonExpandElement(ctx, element);
+
+    if (JsonGetElementType(inputs) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonGetContainerType(inputs) != JSON_CONTAINER_TYPE_ARRAY ||
+        !JsonArrayContainsOnlyPrimitives(inputs))
+    {
+        Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
+            filename);
+        JsonDestroy(inputs);
+        return false;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
+        filename);
+    Rlist *rlist = RlistFromContainer(inputs);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                  "augments_inputs", rlist,
+                                  CF_DATA_TYPE_STRING_LIST,
+                                  "source=augments_file");
+    RlistDestroy(rlist);
+
+    JsonDestroy(inputs);
+    return true;
+}
+
+/** Loads further augments files listed in the "augments" key */
+static bool ReadAugmentAugments(EvalContext *ctx, const char *filename, JsonElement *further_augments)
+{
+    assert(further_augments != NULL);
+
+    if (JsonGetElementType(further_augments) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonGetContainerType(further_augments) != JSON_CONTAINER_TYPE_ARRAY ||
+        !JsonArrayContainsOnlyPrimitives(further_augments))
+    {
+        Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
+            filename);
+        return false;
+    }
+
+    JsonIterator iter = JsonIteratorInit(further_augments);
+    const JsonElement *el;
+    while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)) != NULL)
+    {
+        char *nested_filename = JsonPrimitiveToString(el);
+        bool further_loaded = LoadAugmentsFiles(ctx, nested_filename);
+        if (further_loaded)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Completed augmenting from file '%s'", nested_filename);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Could not load requested further augments from file '%s'", nested_filename);
+        }
+        free(nested_filename);
+    }
+
+    return true;
+}
+
+/**
+ * Installs the contents of one augments file into the evaluation context.
+ *
+ * The data is a JSON object and each supported top-level key is handled by its
+ * own ReadAugment*() function, in this order (the same structure as
+ * LoadCMDBData() in cmdb.c):
+ *
+ *   "vars"       ReadAugmentVars()       variables (old format)
+ *   "variables"  ReadAugmentVariables()  variables with tags and comments
+ *   "classes"    ReadAugmentClasses()    classes
+ *   "inputs"     ReadAugmentInputs()     def.augments_inputs
+ *   "augments"   ReadAugmentAugments()   further augments files to load
+ *
+ * Unknown keys are logged and skipped. An invalid key does not stop the
+ * processing of the other keys.
+ *
+ * @return %false if the data is not a JSON object or any key is invalid
+ */
+static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
+{
+    if (JsonGetElementType(augment) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonGetContainerType(augment) != JSON_CONTAINER_TYPE_OBJECT)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid augments file contents in '%s', must be a JSON object", filename);
+        return false;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Loaded augments file '%s', installing contents", filename);
+
+    JsonIterator iter = JsonIteratorInit(augment);
+    const char *key;
+    while ((key = JsonIteratorNextKey(&iter)))
+    {
+        if (!(StringEqual(key, "vars") ||
+                StringEqual(key, "classes") ||
+                StringEqual(key, "inputs") ||
+                StringEqual(key, "augments") ||
+                StringEqual(key, "variables")))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
+                key, filename);
+        }
+    }
+
+    bool success = true;
+    JsonElement *vars = JsonObjectGet(augment, "vars");
+    if (JSON_NOT_NULL(vars) && !ReadAugmentVars(ctx, filename, vars))
+    {
+        success = false;
+    }
+
+    /* Uses the new format allowing metadata (CFE-3633) */
+    JsonElement *variables = JsonObjectGet(augment, "variables");
+    if (JSON_NOT_NULL(variables) && !ReadAugmentVariables(ctx, filename, variables))
+    {
+        success = false;
+    }
+
+    JsonElement *classes = JsonObjectGet(augment, "classes");
+    if (JSON_NOT_NULL(classes) && !ReadAugmentClasses(ctx, filename, classes))
+    {
+        success = false;
+    }
+
+    JsonElement *inputs = JsonObjectGet(augment, "inputs");
+    if (JSON_NOT_NULL(inputs) && !ReadAugmentInputs(ctx, filename, inputs))
+    {
+        success = false;
+    }
+
+    /* load further def.json files (if any) */
+    JsonElement *augments = JsonObjectGet(augment, "augments");
+    if (JSON_NOT_NULL(augments) && !ReadAugmentAugments(ctx, filename, augments))
+    {
+        success = false;
+    }
+
+    return success;
 }
 
 static bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)

@@ -42,7 +42,7 @@ typedef struct
     unsigned long to;
 } Interval;
 
-/* Notation used by an address pattern, see FuzzySetMatch() */
+/* Notation used by an address pattern, see IPRangeMatch() */
 typedef enum
 {
     PATTERN_PREFIX, // "10.1.2.3", "10.1.2"
@@ -400,82 +400,79 @@ static bool MatchIPv6Range(const char *pattern, const char *address)
 /* Public API                                                                 */
 /******************************************************************************/
 
-/* Match two IP strings - with : or . in hex or decimal
-   s1 is the test string, and s2 is the reference e.g.
-   FuzzySetMatch("128.39.74.10/23","128.39.75.56") == 0
-
-   s1 may be a CIDR ("10.0.0.0/8", "2001:db8::/32"), a range
-   ("10.0.0.1-50", "2001:db8:0-ff::1") or an address prefix ("10.1.2").
-
-   Returns 0 on match. */
-
-/* TODO rename to AddrSubnetMatch() */
-int FuzzySetMatch(const char *s1, const char *s2)
+/**
+ * Checks whether an IPv4 or IPv6 address is matched by a pattern, e.g.
+ * IPRangeMatch("128.39.74.10/23", "128.39.75.56") is true.
+ *
+ * The pattern may be a CIDR ("10.0.0.0/8", "2001:db8::/32"), a range
+ * ("10.0.0.1-50", "2001:db8:0-ff::1") or an address prefix ("10.1.2").
+ */
+bool IPRangeMatch(const char *pattern, const char *address)
 {
-    if (strcmp(s1, s2) == 0)
+    if (strcmp(pattern, address) == 0)
     {
-        return 0;
+        return true;
     }
 
-    const bool is_v4 = (strchr(s1, '.') != NULL || strchr(s2, '.') != NULL);
-    const bool is_v6 = (strchr(s1, ':') != NULL || strchr(s2, ':') != NULL);
+    const bool is_v4 = (strchr(pattern, '.') != NULL || strchr(address, '.') != NULL);
+    const bool is_v6 = (strchr(pattern, ':') != NULL || strchr(address, ':') != NULL);
 
     if (is_v4 && is_v6)
     {
-        return -1; // Mixed IPv4 and IPv6
+        return false; // Mixed IPv4 and IPv6
     }
 
     PatternNotation notation;
-    if (!GetPatternNotation(s1, &notation))
+    if (!GetPatternNotation(pattern, &notation))
     {
-        return -1;
+        return false;
     }
 
     if (!is_v4 && !is_v6)
     {
-        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name '%s'", s1);
-        return -1;
+        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name '%s'", pattern);
+        return false;
     }
 
     bool match = false;
     switch (notation)
     {
     case PATTERN_PREFIX:
-        match = MatchPrefix(s1, s2);
+        match = MatchPrefix(pattern, address);
         break;
     case PATTERN_CIDR:
-        match = MatchCIDR(s1, is_v4 ? AF_INET : AF_INET6, s2);
+        match = MatchCIDR(pattern, is_v4 ? AF_INET : AF_INET6, address);
         break;
     case PATTERN_RANGE:
-        match = is_v4 ? MatchIPv4Range(s1, s2) : MatchIPv6Range(s1, s2);
+        match = is_v4 ? MatchIPv4Range(pattern, address) : MatchIPv6Range(pattern, address);
         break;
     }
 
-    return match ? 0 : -1;
+    return match;
 }
 
 /**
- * Checks that s is an address pattern understood by FuzzySetMatch().
+ * Checks that pattern is an address pattern understood by IPRangeMatch().
  */
-bool FuzzyMatchParse(const char *s)
+bool IPRangeIsValid(const char *pattern)
 {
-    const bool is_v4 = (strchr(s, '.') != NULL);
-    const bool is_v6 = (strchr(s, ':') != NULL);
+    const bool is_v4 = (strchr(pattern, '.') != NULL);
+    const bool is_v6 = (strchr(pattern, ':') != NULL);
 
     if (is_v4 && is_v6)
     {
-        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses in '%s'", s);
+        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses in '%s'", pattern);
         return false;
     }
 
     if (!is_v4 && !is_v6)
     {
-        Log(LOG_LEVEL_ERR, "'%s' is not an IP address, range or subnet", s);
+        Log(LOG_LEVEL_ERR, "'%s' is not an IP address, range or subnet", pattern);
         return false;
     }
 
     PatternNotation notation;
-    if (!GetPatternNotation(s, &notation))
+    if (!GetPatternNotation(pattern, &notation))
     {
         return false;
     }
@@ -485,39 +482,43 @@ bool FuzzyMatchParse(const char *s)
     {
         unsigned char network[BINARY_ADDR_SIZE];
         unsigned long bits;
-        valid = ParseCIDR(s, is_v4 ? AF_INET : AF_INET6, network, &bits);
+        valid = ParseCIDR(pattern, is_v4 ? AF_INET : AF_INET6, network, &bits);
     }
     else if (is_v4) // Range or prefix
     {
         Interval octets[IPV4_OCTETS];
-        valid = (ParseIPv4Pattern(s, octets) > 0);
+        valid = (ParseIPv4Pattern(pattern, octets) > 0);
     }
     else if (notation == PATTERN_RANGE) // IPv6
     {
         Interval groups[IPV6_GROUPS];
-        valid = ParseIPv6RangePattern(s, groups);
+        valid = ParseIPv6RangePattern(pattern, groups);
     }
     else // IPv6 full address, or prefix of 1-7 groups
     {
         struct in6_addr addr;
         Interval groups[IPV6_GROUPS - 1];
         size_t count;
-        valid = inet_pton(AF_INET6, s, &addr) == 1 ||
-                (ParseIPv6Groups(s, s + strlen(s), groups, IPV6_GROUPS - 1, &count) &&
+        valid = inet_pton(AF_INET6, pattern, &addr) == 1 ||
+                (ParseIPv6Groups(pattern, pattern + strlen(pattern), groups, IPV6_GROUPS - 1, &count) &&
                  count > 0);
     }
 
     if (!valid)
     {
-        Log(LOG_LEVEL_ERR, "Invalid IP address, range or subnet '%s'", s);
+        Log(LOG_LEVEL_ERR, "Invalid IP address, range or subnet '%s'", pattern);
     }
     return valid;
 }
 
-bool FuzzyHostParse(const char *arg2)
+/**
+ * Checks that range has the form "X-Y", where X and Y are decimal numbers,
+ * as used by HostRangeMatch().
+ */
+bool HostRangeIsValid(const char *range)
 {
     long start = -1, end = -1;
-    if (sscanf(arg2, "%ld-%ld", &start, &end) != 2)
+    if (sscanf(range, "%ld-%ld", &start, &end) != 2)
     {
         Log(LOG_LEVEL_ERR,
             "HostRange syntax error: second arg should have X-Y format where X and Y are decimal numbers");
@@ -528,47 +529,45 @@ bool FuzzyHostParse(const char *arg2)
 }
 
 /**
- * Checks whether refhost is prefix followed by a number within range,
- * e.g. FuzzyHostMatch("host", "1-10", "HOST5") == 0.
+ * Checks whether hostname is prefix followed by a number within range,
+ * e.g. HostRangeMatch("host", "1-10", "HOST5") is true.
  * The comparison of the prefix is case-insensitive.
- *
- * Returns 0 on match.
  */
-int FuzzyHostMatch(const char *prefix, const char *range, const char *refhost)
+bool HostRangeMatch(const char *prefix, const char *range, const char *hostname)
 {
-    // Split refhost into base name and trailing number, e.g. "host12"
-    const size_t len = strlen(refhost);
+    // Split hostname into base name and trailing number, e.g. "host12"
+    const size_t len = strlen(hostname);
     size_t base_len = len;
-    while (base_len > 0 && isdigit((unsigned char) refhost[base_len - 1]))
+    while (base_len > 0 && isdigit((unsigned char) hostname[base_len - 1]))
     {
         base_len--;
     }
 
     if (base_len == 0 || base_len == len)
     {
-        return 1; // No base name, or no number
+        return false; // No base name, or no number
     }
 
     unsigned long number;
-    if (!ParseNumber(refhost + base_len, refhost + len, 10, LONG_MAX, &number))
+    if (!ParseNumber(hostname + base_len, hostname + len, 10, LONG_MAX, &number))
     {
-        return 1; // Number too large
+        return false; // Number too large
     }
 
     long start = -1, end = -1;
     sscanf(range, "%ld-%ld", &start, &end);
     if ((long) number < start || (long) number > end)
     {
-        return 1;
+        return false;
     }
 
     if (strlen(prefix) != base_len ||
-        !StringEqualN_IgnoreCase(prefix, refhost, base_len))
+        !StringEqualN_IgnoreCase(prefix, hostname, base_len))
     {
-        return 1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
 /**

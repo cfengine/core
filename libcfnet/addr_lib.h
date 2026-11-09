@@ -27,10 +27,10 @@
 
 #include <platform.h>
 
-int FuzzySetMatch(const char *s1, const char *s2);
-bool FuzzyMatchParse(const char *s);
-bool FuzzyHostParse(const char *arg2);
-int FuzzyHostMatch(const char *prefix, const char *range, const char *refhost);
+bool IPRangeMatch(const char *pattern, const char *address);
+bool IPRangeIsValid(const char *pattern);
+bool HostRangeMatch(const char *prefix, const char *range, const char *hostname);
+bool HostRangeIsValid(const char *range);
 
 typedef enum {
     ADDRESS_TYPE_OTHER, // Hostname or invalid

@@ -178,11 +178,11 @@ static void test_ParseHostPort_address_type()
 }
 
 #define ASSERT_MATCH(pattern, address) \
-    assert_int_equal(FuzzySetMatch(pattern, address), 0)
+    assert_true(IPRangeMatch(pattern, address))
 #define ASSERT_NO_MATCH(pattern, address) \
-    assert_int_not_equal(FuzzySetMatch(pattern, address), 0)
+    assert_false(IPRangeMatch(pattern, address))
 
-static void test_FuzzySetMatch_ipv4()
+static void test_IPRangeMatch_ipv4()
 {
     /* Prefix */
     ASSERT_MATCH("1.2.3", "1.2.3.4");
@@ -220,7 +220,7 @@ static void test_FuzzySetMatch_ipv4()
     ASSERT_NO_MATCH("10.0.0.0/8", "::1");
 }
 
-static void test_FuzzySetMatch_ipv6()
+static void test_IPRangeMatch_ipv6()
 {
     /* CIDR */
     ASSERT_MATCH("2001:db8::/32", "2001:db8:ffff::1");
@@ -259,92 +259,92 @@ static void test_FuzzySetMatch_ipv6()
 #undef ASSERT_MATCH
 #undef ASSERT_NO_MATCH
 
-static void test_FuzzySetMatch()
+static void test_IPRangeMatch()
 {
     /* Sanity: exact and subnet matches still work. */
-    assert_int_equal(FuzzySetMatch("128.39.74.10/23", "128.39.75.56"), 0);
-    assert_int_not_equal(FuzzySetMatch("128.39.74.10/24", "128.39.75.56"), 0);
-    assert_int_equal(FuzzySetMatch("1.2.3.4", "1.2.3.4"), 0);
-    assert_int_not_equal(FuzzySetMatch("1.2.3.4", "1.2.3.5"), 0);
+    assert_true(IPRangeMatch("128.39.74.10/23", "128.39.75.56"));
+    assert_false(IPRangeMatch("128.39.74.10/24", "128.39.75.56"));
+    assert_true(IPRangeMatch("1.2.3.4", "1.2.3.4"));
+    assert_false(IPRangeMatch("1.2.3.4", "1.2.3.5"));
 
     /* An address with fewer octets than the pattern used to walk the scan
      * pointer past the end of the string. Heap-allocate the address so that
      * the over-read is caught under ASan. It must simply not match. */
     char *s = xstrdup("1");
-    assert_int_not_equal(FuzzySetMatch("1.2.3.4", s), 0);
+    assert_false(IPRangeMatch("1.2.3.4", s));
     free(s);
 
     s = xstrdup("1.2");
-    assert_int_not_equal(FuzzySetMatch("1.2.3.4", s), 0);
+    assert_false(IPRangeMatch("1.2.3.4", s));
     free(s);
 
     /* Same for an IPv6 range pattern against a short address. */
     s = xstrdup("2001");
-    assert_int_not_equal(FuzzySetMatch("2001:0-ffff:0:0:0:0:0:1", s), 0);
+    assert_false(IPRangeMatch("2001:0-ffff:0:0:0:0:0:1", s));
     free(s);
 }
 
-static void test_FuzzyMatchParse()
+static void test_IPRangeIsValid()
 {
-    assert_true(FuzzyMatchParse("1.2.3.4"));
-    assert_true(FuzzyMatchParse("1-10.2.3.4"));
-    assert_true(FuzzyMatchParse("1.2.3"));
-    assert_true(FuzzyMatchParse("192.168.1.50-140"));
-    assert_true(FuzzyMatchParse("0.0.0.0/0"));
-    assert_true(FuzzyMatchParse("8.8.8.8/31"));
-    assert_true(FuzzyMatchParse("1.2.3.4/32"));
-    assert_true(FuzzyMatchParse("2001:db8::1"));
-    assert_true(FuzzyMatchParse("2001:db8"));
-    assert_true(FuzzyMatchParse("2001:db8::/64"));
-    assert_true(FuzzyMatchParse("::/0"));
-    assert_true(FuzzyMatchParse("2001:db8:1-5::1"));
-    assert_true(FuzzyMatchParse("2001:0-ffff:0:0:0:0:0:1"));
+    assert_true(IPRangeIsValid("1.2.3.4"));
+    assert_true(IPRangeIsValid("1-10.2.3.4"));
+    assert_true(IPRangeIsValid("1.2.3"));
+    assert_true(IPRangeIsValid("192.168.1.50-140"));
+    assert_true(IPRangeIsValid("0.0.0.0/0"));
+    assert_true(IPRangeIsValid("8.8.8.8/31"));
+    assert_true(IPRangeIsValid("1.2.3.4/32"));
+    assert_true(IPRangeIsValid("2001:db8::1"));
+    assert_true(IPRangeIsValid("2001:db8"));
+    assert_true(IPRangeIsValid("2001:db8::/64"));
+    assert_true(IPRangeIsValid("::/0"));
+    assert_true(IPRangeIsValid("2001:db8:1-5::1"));
+    assert_true(IPRangeIsValid("2001:0-ffff:0:0:0:0:0:1"));
 
-    assert_false(FuzzyMatchParse(""));
-    assert_false(FuzzyMatchParse("localhost"));
-    assert_false(FuzzyMatchParse("www.cfengine.com"));
-    assert_false(FuzzyMatchParse("1.2.3.4.5"));
-    assert_false(FuzzyMatchParse("1.2.3."));
-    assert_false(FuzzyMatchParse("1.2.3.256"));
-    assert_false(FuzzyMatchParse("10.5-1.0.0"));
-    assert_false(FuzzyMatchParse("10.0.0.0/33"));
-    assert_false(FuzzyMatchParse("10.0.0.0/"));
-    assert_false(FuzzyMatchParse("10.0.0/8"));
-    assert_false(FuzzyMatchParse("1.2.3.4/8-9"));
-    assert_false(FuzzyMatchParse("1.2.3.4:5::"));
-    assert_false(FuzzyMatchParse("2001:db8::/129"));
-    assert_false(FuzzyMatchParse("2001:db8:1-5"));
-    assert_false(FuzzyMatchParse("2001::1::1-2"));
-    assert_false(FuzzyMatchParse("2001:db8:5-1::1"));
-    assert_false(FuzzyMatchParse("2001:db8:g::1"));
+    assert_false(IPRangeIsValid(""));
+    assert_false(IPRangeIsValid("localhost"));
+    assert_false(IPRangeIsValid("www.cfengine.com"));
+    assert_false(IPRangeIsValid("1.2.3.4.5"));
+    assert_false(IPRangeIsValid("1.2.3."));
+    assert_false(IPRangeIsValid("1.2.3.256"));
+    assert_false(IPRangeIsValid("10.5-1.0.0"));
+    assert_false(IPRangeIsValid("10.0.0.0/33"));
+    assert_false(IPRangeIsValid("10.0.0.0/"));
+    assert_false(IPRangeIsValid("10.0.0/8"));
+    assert_false(IPRangeIsValid("1.2.3.4/8-9"));
+    assert_false(IPRangeIsValid("1.2.3.4:5::"));
+    assert_false(IPRangeIsValid("2001:db8::/129"));
+    assert_false(IPRangeIsValid("2001:db8:1-5"));
+    assert_false(IPRangeIsValid("2001::1::1-2"));
+    assert_false(IPRangeIsValid("2001:db8:5-1::1"));
+    assert_false(IPRangeIsValid("2001:db8:g::1"));
 
     /* A range with fewer octets used to read past the end of the string. */
     char *s = xstrdup("1-2.3");
-    FuzzyMatchParse(s);
+    IPRangeIsValid(s);
     free(s);
 }
 
-static void test_FuzzyHostMatch()
+static void test_HostRangeMatch()
 {
-    assert_int_equal(FuzzyHostMatch("host", "1-10", "host1"), 0);
-    assert_int_equal(FuzzyHostMatch("host", "1-10", "host10"), 0);
-    assert_int_equal(FuzzyHostMatch("host", "1-10", "HOST5"), 0);
-    assert_int_equal(FuzzyHostMatch("Host", "1-10", "host5"), 0);
-    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host0"), 0);
-    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host11"), 0);
-    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "hostx5"), 0);
-    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "myhost5"), 0);
-    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host"), 0);
-    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host99999999999999999999999"), 0);
+    assert_true(HostRangeMatch("host", "1-10", "host1"));
+    assert_true(HostRangeMatch("host", "1-10", "host10"));
+    assert_true(HostRangeMatch("host", "1-10", "HOST5"));
+    assert_true(HostRangeMatch("Host", "1-10", "host5"));
+    assert_false(HostRangeMatch("host", "1-10", "host0"));
+    assert_false(HostRangeMatch("host", "1-10", "host11"));
+    assert_false(HostRangeMatch("host", "1-10", "hostx5"));
+    assert_false(HostRangeMatch("host", "1-10", "myhost5"));
+    assert_false(HostRangeMatch("host", "1-10", "host"));
+    assert_false(HostRangeMatch("host", "1-10", "host99999999999999999999999"));
 
     /* Host names that are empty or all digits used to be scanned backwards
      * past the start of the buffer. */
     char *s = xstrdup("");
-    assert_int_not_equal(FuzzyHostMatch("host", "1-10", s), 0);
+    assert_false(HostRangeMatch("host", "1-10", s));
     free(s);
 
     s = xstrdup("123");
-    assert_int_not_equal(FuzzyHostMatch("", "1-200", s), 0);
+    assert_false(HostRangeMatch("", "1-200", s));
     free(s);
 }
 
@@ -355,11 +355,11 @@ int main()
     {
         unit_test(test_ParseHostPort),
         unit_test(test_ParseHostPort_address_type),
-        unit_test(test_FuzzySetMatch),
-        unit_test(test_FuzzySetMatch_ipv4),
-        unit_test(test_FuzzySetMatch_ipv6),
-        unit_test(test_FuzzyMatchParse),
-        unit_test(test_FuzzyHostMatch),
+        unit_test(test_IPRangeMatch),
+        unit_test(test_IPRangeMatch_ipv4),
+        unit_test(test_IPRangeMatch_ipv6),
+        unit_test(test_IPRangeIsValid),
+        unit_test(test_HostRangeMatch),
     };
 
     return run_tests(tests);

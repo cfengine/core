@@ -29,7 +29,7 @@
 #include "strlist.h"
 #include "server.h"
 
-#include <addr_lib.h>                                     /* FuzzySetMatch */
+#include <addr_lib.h>                                     /* IPRangeMatch */
 #include <string_lib.h>                      /* StringMatchFull TODO REMOVE */
 #include <misc_lib.h>
 #include <file_lib.h>
@@ -73,6 +73,8 @@ static bool access_CheckResource(const struct resource_acl *acl,
                                  const char *ipaddr, const char *hostname,
                                  const char *key, const char *username)
 {
+    assert(acl != NULL);
+
     bool access     = false;                 /* DENY by default */
     bool have_match = false;                 /* No matching rule found yet */
 
@@ -90,7 +92,7 @@ static bool access_CheckResource(const struct resource_acl *acl,
         const char *rule = NULL;
         for (size_t i = 0; i < StrList_Len(acl->admit.ips); i++)
         {
-            if (FuzzySetMatch(StrList_At(acl->admit.ips, i), ipaddr) == 0 ||
+            if (IPRangeMatch(StrList_At(acl->admit.ips, i), ipaddr) ||
                 /* Legacy regex matching, TODO DEPRECATE */
                 StringMatchFull(StrList_At(acl->admit.ips, i), ipaddr))
             {
@@ -196,7 +198,7 @@ static bool access_CheckResource(const struct resource_acl *acl,
         const char *rule = NULL;
         for (size_t i = 0; i < StrList_Len(acl->deny.ips); i++)
         {
-            if (FuzzySetMatch(StrList_At(acl->deny.ips, i), ipaddr) == 0 ||
+            if (IPRangeMatch(StrList_At(acl->deny.ips, i), ipaddr) ||
                 /* Legacy regex matching, TODO DEPRECATE */
                 StringMatchFull(StrList_At(acl->deny.ips, i), ipaddr))
             {

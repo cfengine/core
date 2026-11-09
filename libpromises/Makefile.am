@@ -107,6 +107,7 @@ libpromises_la_SOURCES = \
 	generic_agent.c generic_agent.h \
 	global_mutex.c global_mutex.h \
 	granules.c granules.h \
+	host_data.c host_data.h \
 	instrumentation.c instrumentation.h \
 	item_lib.c item_lib.h \
 	iteration.c iteration.h \

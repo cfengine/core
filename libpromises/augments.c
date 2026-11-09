@@ -58,14 +58,8 @@
 #include <var_expressions.h>    /* VarRef, VarRefParse() */
 #include <expand.h>             /* ExpandScalar() */
 #include <rlist.h>              /* RlistFromContainer() */
-#include <cmdb.h>               /* ReadJsonFile(), CMDB_SOURCE_TAG */
-
-#define AUGMENTS_VARIABLES_TAGS "tags"
-#define AUGMENTS_VARIABLES_DATA "value"
-#define AUGMENTS_CLASSES_TAGS "tags"
-#define AUGMENTS_CLASSES_CLASS_EXPRESSIONS "class_expressions"
-#define AUGMENTS_CLASSES_REGULAR_EXPRESSIONS "regular_expressions"
-#define AUGMENTS_COMMENT_KEY "comment"
+#include <cmdb.h>               /* CMDB_SOURCE_TAG */
+#include <host_data.h>          /* ReadJsonFile(), JSON data helpers */
 
 static bool LoadAugmentsFiles(EvalContext *ctx, const char *filename);
 
@@ -102,44 +96,6 @@ static bool CheckContextClassmatch(EvalContext *ctx, const char *class_str)
     ClassTableIteratorDestroy(iter);
 
     return found;
-}
-
-static StringSet *GetTagsFromAugmentsTags(const char *item_type,
-                                          const char *key,
-                                          const JsonElement *json_tags,
-                                          const char *default_tag,
-                                          const char *filename)
-{
-    StringSet *tags = NULL;
-    if (JSON_NOT_NULL(json_tags))
-    {
-        if ((JsonGetType(json_tags) != JSON_TYPE_ARRAY) ||
-            (!JsonArrayContainsOnlyPrimitives((JsonElement*) json_tags)))
-        {
-            Log(LOG_LEVEL_ERR,
-                "Invalid tags information for %s '%s' in augments file '%s':"
-                " must be a JSON array of strings",
-                item_type, key, filename);
-        }
-        else
-        {
-            tags = JsonArrayToStringSet(json_tags);
-            if (tags == NULL)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Invalid meta information %s '%s' in augments file '%s':"
-                    " must be a JSON array of strings",
-                    item_type, key, filename);
-            }
-        }
-    }
-    if (tags == NULL)
-    {
-        tags = StringSetNew();
-    }
-    StringSetAdd(tags, xstrdup(default_tag));
-
-    return tags;
 }
 
 static inline bool CanSetVariable(const EvalContext *ctx, VarRef *var_ref)
@@ -188,52 +144,6 @@ static inline bool CanSetClass(const EvalContext *ctx, const char *class_spec)
     }
 
     return can_set;
-}
-
-static inline const char *GetAugmentsComment(const char *item_type, const char *identifier,
-                                             const char *file_name, const JsonElement *json_object)
-{
-    assert(JsonGetType(json_object) == JSON_TYPE_OBJECT);
-
-    JsonElement *json_comment = JsonObjectGet(json_object, AUGMENTS_COMMENT_KEY);
-    if (NULL_JSON(json_comment))
-    {
-        return NULL;
-    }
-
-    if (JsonGetType(json_comment) != JSON_TYPE_STRING)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Invalid type of the 'comment' field for the '%s' %s in augments data in '%s', must be a string",
-            identifier, item_type, file_name);
-        return NULL;
-    }
-
-    return JsonPrimitiveGetAsString(json_comment);
-}
-
-/**
- * Parses the name of a variable from augments data. Variables without a bundle
- * name go into the 'def' bundle.
- *
- * @return The variable reference or %NULL (after logging an error) if the
- *         specification is invalid.
- */
-static VarRef *GetAugmentsVariableRef(const char *key, const char *filename)
-{
-    VarRef *ref = VarRefParse(key);
-    if ((ref->ns != NULL) && (ref->scope == NULL))
-    {
-        Log(LOG_LEVEL_ERR, "Invalid variable specification in augments data in '%s': '%s'"
-            " (bundle name has to be specified if namespace is specified)", filename, key);
-        VarRefDestroy(ref);
-        return NULL;
-    }
-    if (ref->scope == NULL)
-    {
-        ref->scope = xstrdup("def");
-    }
-    return ref;
 }
 
 /**
@@ -363,22 +273,25 @@ static bool ReadAugmentVars(EvalContext *ctx, const char *filename, JsonElement 
         return false;
     }
 
+    char *source = StringFormat("augments data in '%s'", filename);
+
     JsonIterator iter = JsonIteratorInit(vars);
     const char *vkey;
     while ((vkey = JsonIteratorNextKey(&iter)))
     {
-        VarRef *ref = GetAugmentsVariableRef(vkey, filename);
+        VarRef *ref = GetVariableRefFromDataKey(vkey, NULL, "def", source);
         if (ref == NULL)
         {
             continue;
         }
 
         const JsonElement *data = JsonObjectGet(vars, vkey);
-        StringSet *tags = GetTagsFromAugmentsTags("variable", vkey, NULL, "source=augments_file", filename);
+        StringSet *tags = GetTagsFromJsonTags("variable", vkey, NULL, "source=augments_file", source);
         AddAugmentsVariable(ctx, vkey, ref, data, tags, NULL, filename);
         VarRefDestroy(ref);
     }
 
+    free(source);
     JsonDestroy(vars);
     return true;
 }
@@ -395,11 +308,13 @@ static bool ReadAugmentVariables(EvalContext *ctx, const char *filename, JsonEle
         return false;
     }
 
+    char *source = StringFormat("augments data in '%s'", filename);
+
     JsonIterator variables_iter = JsonIteratorInit(variables);
     const char *vkey;
     while ((vkey = JsonIteratorNextKey(&variables_iter)))
     {
-        VarRef *ref = GetAugmentsVariableRef(vkey, filename);
+        VarRef *ref = GetVariableRefFromDataKey(vkey, NULL, "def", source);
         if (ref == NULL)
         {
             continue;
@@ -413,7 +328,7 @@ static bool ReadAugmentVariables(EvalContext *ctx, const char *filename, JsonEle
 
         if (JsonGetType(var_info) == JSON_TYPE_OBJECT)
         {
-            data = JsonObjectGet(var_info, AUGMENTS_VARIABLES_DATA);
+            data = JsonObjectGet(var_info, JSON_DATA_KEY_VALUE);
 
             if (NULL_JSON(data))
             {
@@ -423,15 +338,15 @@ static bool ReadAugmentVariables(EvalContext *ctx, const char *filename, JsonEle
                 continue;
             }
 
-            const JsonElement *json_tags = JsonObjectGet(var_info, AUGMENTS_VARIABLES_TAGS);
-            tags = GetTagsFromAugmentsTags("variable", vkey, json_tags, "source=augments_file", filename);
-            comment = GetAugmentsComment("variable", vkey, filename, var_info);
+            const JsonElement *json_tags = JsonObjectGet(var_info, JSON_DATA_KEY_TAGS);
+            tags = GetTagsFromJsonTags("variable", vkey, json_tags, "source=augments_file", source);
+            comment = GetCommentFromJsonData("variable", vkey, var_info, source);
         }
         else
         {
             // Just a bare value, like in "vars", no metadata
             data = var_info;
-            tags = GetTagsFromAugmentsTags("variable", vkey, NULL, "source=augments_file", filename);
+            tags = GetTagsFromJsonTags("variable", vkey, NULL, "source=augments_file", source);
         }
 
         assert(tags != NULL);
@@ -441,6 +356,7 @@ static bool ReadAugmentVariables(EvalContext *ctx, const char *filename, JsonEle
         VarRefDestroy(ref);
     }
 
+    free(source);
     JsonDestroy(variables);
     return true;
 }
@@ -458,6 +374,8 @@ static bool ReadAugmentClasses(EvalContext *ctx, const char *filename, JsonEleme
         return false;
     }
 
+    char *source = StringFormat("augments data in '%s'", filename);
+
     JsonIterator iter = JsonIteratorInit(classes);
     const char *ckey;
     while ((ckey = JsonIteratorNextKey(&iter)))
@@ -471,8 +389,8 @@ static bool ReadAugmentClasses(EvalContext *ctx, const char *filename, JsonEleme
             {
                 Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
                     ckey, check, filename);
-                StringSet *tags = GetTagsFromAugmentsTags("class", ckey, NULL,
-                                                          "source=augments_file", filename);
+                StringSet *tags = GetTagsFromJsonTags("class", ckey, NULL,
+                                                      "source=augments_file", source);
                 AddAugmentsClass(ctx, ckey, check, tags, NULL);
             }
             free(check);
@@ -487,17 +405,17 @@ static bool ReadAugmentClasses(EvalContext *ctx, const char *filename, JsonEleme
             {
                 Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
                     ckey, check, filename);
-                StringSet *tags = GetTagsFromAugmentsTags("class", ckey, NULL,
-                                                          "source=augments_file", filename);
+                StringSet *tags = GetTagsFromJsonTags("class", ckey, NULL,
+                                                      "source=augments_file", source);
                 AddAugmentsClass(ctx, ckey, check, tags, NULL);
                 free(check);
             }
         }
         else if (JsonGetType(data) == JSON_TYPE_OBJECT)
         {
-            const JsonElement *class_exprs = JsonObjectGet(data, AUGMENTS_CLASSES_CLASS_EXPRESSIONS);
-            const JsonElement *reg_exprs = JsonObjectGet(data, AUGMENTS_CLASSES_REGULAR_EXPRESSIONS);
-            const JsonElement *json_tags = JsonObjectGet(data, AUGMENTS_CLASSES_TAGS);
+            const JsonElement *class_exprs = JsonObjectGet(data, JSON_DATA_KEY_CLASS_EXPRESSIONS);
+            const JsonElement *reg_exprs = JsonObjectGet(data, JSON_DATA_KEY_REGULAR_EXPRESSIONS);
+            const JsonElement *json_tags = JsonObjectGet(data, JSON_DATA_KEY_TAGS);
 
             if ((JSON_NOT_NULL(class_exprs) && JSON_NOT_NULL(reg_exprs)) ||
                 (NULL_JSON(class_exprs) && NULL_JSON(reg_exprs)))
@@ -508,9 +426,9 @@ static bool ReadAugmentClasses(EvalContext *ctx, const char *filename, JsonEleme
                 continue;
             }
 
-            StringSet *tags = GetTagsFromAugmentsTags("class", ckey, json_tags,
-                                                      "source=augments_file", filename);
-            const char *comment = GetAugmentsComment("class", ckey, filename, data);
+            StringSet *tags = GetTagsFromJsonTags("class", ckey, json_tags,
+                                                  "source=augments_file", source);
+            const char *comment = GetCommentFromJsonData("class", ckey, data, source);
             char *check = GetFirstMatchingClassExpression(ctx, class_exprs ? class_exprs : reg_exprs);
             if (check != NULL)
             {
@@ -531,6 +449,7 @@ static bool ReadAugmentClasses(EvalContext *ctx, const char *filename, JsonEleme
         }
     }
 
+    free(source);
     JsonDestroy(classes);
     return true;
 }

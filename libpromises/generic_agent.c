@@ -73,6 +73,7 @@
 #include <libgen.h>
 #include <cleanup.h>
 #include <cmdb.h>               /* LoadCMDBData() */
+#include <host_data.h>          /* ReadJsonFile() */
 #include <augments.h>           /* LoadAugments() */
 #include "cf3.defs.h"
 

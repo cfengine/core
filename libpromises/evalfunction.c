@@ -6571,6 +6571,48 @@ static FnCallResult FnCallIsIpInSubnet(ARG_UNUSED EvalContext *ctx,
     Log(LOG_LEVEL_DEBUG, "%s(%s): no match", fp->name, range);
     return FnReturnContext(false);
 }
+
+/*********************************************************************/
+
+static FnCallResult FnCallIsValidIP(ARG_UNUSED EvalContext *ctx,
+                                    ARG_UNUSED const Policy *policy,
+                                    const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+
+    if (finalargs == NULL ||
+        (finalargs->next != NULL && finalargs->next->next != NULL))
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires one or two arguments", fp->name);
+        return FnFailure();
+    }
+
+    const char *address = RlistScalarValue(finalargs);
+    const char *version = (finalargs->next != NULL)
+        ? RlistScalarValue(finalargs->next)
+        : NULL;
+
+    if (version != NULL &&
+        !StringEqual(version, "ipv4") && !StringEqual(version, "ipv6"))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Function '%s': invalid IP version '%s', expected 'ipv4' or 'ipv6'",
+            fp->name, version);
+        return FnFailure();
+    }
+
+    const bool check_ipv4 = (version == NULL || StringEqual(version, "ipv4"));
+    const bool check_ipv6 = (version == NULL || StringEqual(version, "ipv6"));
+
+    unsigned char binary[sizeof(struct in6_addr)];
+    const bool valid =
+        (check_ipv4 && inet_pton(AF_INET, address, binary) == 1) ||
+        (check_ipv6 && inet_pton(AF_INET6, address, binary) == 1);
+
+    Log(LOG_LEVEL_DEBUG, "%s(%s): %s", fp->name, address, valid ? "valid" : "invalid");
+    return FnReturnContext(valid);
+}
+
 /*********************************************************************/
 
 static FnCallResult FnCallHostRange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
@@ -11098,6 +11140,13 @@ static const FnCallArg IPRANGE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg ISVALIDIP_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to validate as an IP address"},
+    {"ipv4,ipv6", CF_DATA_TYPE_OPTION, "Only accept this IP version"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg IRANGE_ARGS[] =
 {
     {CF_INTRANGE, CF_DATA_TYPE_INT, "Integer start of range"},
@@ -12004,6 +12053,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL, ARGC(1, -1)),
     FnCallTypeNew("isipinsubnet", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIsIpInSubnet, "True if an IP address specified in arg2, arg3, ... lies in the range of IP addresses specified in arg1",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL, ARGC(1, -1)),
+    FnCallTypeNew("isvalidip", CF_DATA_TYPE_CONTEXT, ISVALIDIP_ARGS, &FnCallIsValidIP, "True if arg1 is a valid IPv4 or IPv6 address (only the IP version arg2, if given)",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL, ARGC(1, 2)),
     FnCallTypeNew("irange", CF_DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("isconnectable", CF_DATA_TYPE_CONTEXT, ISCONNECTABLE_ARGS, &FnCallIsConnectable, "Check if a port is connectable",

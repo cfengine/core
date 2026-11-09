@@ -1,0 +1,109 @@
+#######################################################
+#
+# Test isvalidip()
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3478" }
+      string => "Test that isvalidip() validates IPv4 and IPv6 addresses";
+
+  vars:
+    "valid"
+      slist => {
+        "1.2.3.4",
+        "127.0.0.1",
+        "5.9.10.22",
+        "0.0.0.0",
+        "255.255.255.255",
+        "FE80:CD00:0000:0CDE:1257:0000:211E:729C",
+        "fe80:cd00:0:cde:1257:0:211e:729c",
+        "2001:db8::1",
+        "::1",
+        "::",
+        "::ffff:192.0.2.128",
+      };
+
+    "invalid"
+      slist => {
+        "",
+        "10510.17.10",
+        "100",
+        "1.2.3",
+        "1.2.3.4.5",
+        "233.444.23.1",
+        "300.123.123.1",
+        "1.2.3.4/24",
+        "1.2.3.4:80",
+        " 1.2.3.4",
+        "1.2.3.4 ",
+        "localhost",
+        "[::1]",
+        "[::1]:80",
+        "1::2::3",
+        "12345::1",
+        "g::1",
+        "1:2:3:4:5:6:7:8:9",
+        "2001:db8::/32",
+      };
+
+    "valid_ipv4" slist => { "1.2.3.4", "255.255.255.255" };
+
+    "invalid_ipv4"
+      slist => {
+        "::1",
+        "::ffff:192.0.2.128",
+        "FE80:CD00:0000:0CDE:1257:0000:211E:729C",
+        "300.123.123.1",
+      };
+
+    "valid_ipv6"
+      slist => {
+        "::1", "::ffff:192.0.2.128", "FE80:CD00:0000:0CDE:1257:0000:211E:729C",
+      };
+
+    "invalid_ipv6" slist => { "1.2.3.4", "255.255.255.255", "12345::1" };
+}
+
+#######################################################
+bundle agent check
+{
+  classes:
+    "fail" not => isvalidip("$(test.valid)");
+    "fail" expression => isvalidip("$(test.invalid)");
+    "fail" not => isvalidip("$(test.valid_ipv4)", "ipv4");
+    "fail" expression => isvalidip("$(test.invalid_ipv4)", "ipv4");
+    "fail" not => isvalidip("$(test.valid_ipv6)", "ipv6");
+    "fail" expression => isvalidip("$(test.invalid_ipv6)", "ipv6");
+
+  reports:
+    "Wrongly rejected '$(test.valid)'" unless => isvalidip("$(test.valid)");
+    "Wrongly accepted '$(test.invalid)'" if => isvalidip("$(test.invalid)");
+
+    "Wrongly rejected '$(test.valid_ipv4)' as IPv4"
+      unless => isvalidip("$(test.valid_ipv4)", "ipv4");
+
+    "Wrongly accepted '$(test.invalid_ipv4)' as IPv4"
+      if => isvalidip("$(test.invalid_ipv4)", "ipv4");
+
+    "Wrongly rejected '$(test.valid_ipv6)' as IPv6"
+      unless => isvalidip("$(test.valid_ipv6)", "ipv6");
+
+    "Wrongly accepted '$(test.invalid_ipv6)' as IPv6"
+      if => isvalidip("$(test.invalid_ipv6)", "ipv6");
+
+    !fail::
+      "$(this.promise_filename) Pass";
+
+    fail::
+      "$(this.promise_filename) FAIL";
+}

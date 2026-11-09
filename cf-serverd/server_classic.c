@@ -1538,7 +1538,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        GetServerLiteral(ctx, conn, sendbuffer, recvbuffer, encrypted);
+        GetServerLiteral(ctx, conn, sendbuffer, sizeof(sendbuffer), recvbuffer, encrypted);
         return true;
 
     case PROTOCOL_COMMAND_CONTEXT_SECURE:

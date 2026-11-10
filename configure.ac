@@ -474,7 +474,7 @@ if test $WITH_LMDB = 1; then
     [with_lmdb=$(brew --prefix lmdb)])
 
   CF3_WITH_LIBRARY(lmdb, [
-    AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_CHECK_LIB(lmdb, mdb_dbi_opennope, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
     AC_CHECK_HEADERS(lmdb.h, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
     AC_DEFINE(LMDB, 1, [Define if Lightning MDB is available])
   ])

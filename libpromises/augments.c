@@ -426,10 +426,22 @@ static bool ReadAugmentClasses(EvalContext *ctx, const char *filename, JsonEleme
                 continue;
             }
 
+            /* NULL_JSON() above also treats a JSON null as not specified */
+            const bool use_class_exprs = JSON_NOT_NULL(class_exprs);
+            const JsonElement *exprs = use_class_exprs ? class_exprs : reg_exprs;
+            if (JsonGetType(exprs) != JSON_TYPE_ARRAY)
+            {
+                Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s':"
+                    " \"%s\" must be a JSON array",
+                    ckey, filename,
+                    use_class_exprs ? JSON_DATA_KEY_CLASS_EXPRESSIONS : JSON_DATA_KEY_REGULAR_EXPRESSIONS);
+                continue;
+            }
+
             StringSet *tags = GetTagsFromJsonTags("class", ckey, json_tags,
                                                   "source=augments_file", source);
             const char *comment = GetCommentFromJsonData("class", ckey, data, source);
-            char *check = GetFirstMatchingClassExpression(ctx, class_exprs ? class_exprs : reg_exprs);
+            char *check = GetFirstMatchingClassExpression(ctx, exprs);
             if (check != NULL)
             {
                 Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",

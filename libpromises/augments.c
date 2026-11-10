@@ -140,8 +140,9 @@ static inline bool CanSetClass(const EvalContext *ctx, const char *class_spec)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Cannot set class %s:%s from augments, already defined from host-specific data",
-            ns, class_spec);
+            (ns != NULL) ? ns : "default", class_spec);
     }
+    free(ns);
 
     return can_set;
 }

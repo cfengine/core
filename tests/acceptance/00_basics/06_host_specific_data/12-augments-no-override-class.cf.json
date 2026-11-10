@@ -1,0 +1,6 @@
+{
+  "classes": {
+    "default:test_class_default_ns": "any::",
+    "ns1:test_class_ns1": "any::"
+  }
+}

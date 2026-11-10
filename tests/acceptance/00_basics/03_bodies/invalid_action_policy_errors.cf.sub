@@ -1,0 +1,19 @@
+body common control
+{
+  bundlesequence => { "main" };
+}
+
+# The value has to arrive through a variable. A literal invalid option is
+# already rejected by the parser, which is why this defect is only reachable
+# via an expanded value.
+body action parameterized_action_policy(policy)
+{
+  action_policy => "$(policy)";
+}
+
+bundle agent main
+{
+  reports:
+    "Report with a misspelled action_policy"
+      action => parameterized_action_policy("waarn");
+}

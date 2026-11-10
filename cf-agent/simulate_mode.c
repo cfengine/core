@@ -793,6 +793,31 @@ static inline char *GetPkgOperationMsg(ChrootPkgOperationCode op, const char *pk
     return msg;
 }
 
+static bool PkgRecordShouldBeReplaced(const PkgOperationRecord *prev_record,
+                                      const char *new_ver)
+{
+    if (prev_record == NULL)
+    {
+        /* Nothing recorded yet */
+        return true;
+    }
+
+    if (NULL_OR_EMPTY(new_ver))
+    {
+        /* An unversioned record never replaces an existing one */
+        return false;
+    }
+
+    if (NULL_OR_EMPTY(prev_record->pkg_ver))
+    {
+        /* A versioned record is more specific than an unversioned one */
+        return true;
+    }
+
+    /* Both are versioned, keep the higher version */
+    return PkgVersionIsGreater(new_ver, prev_record->pkg_ver);
+}
+
 bool DiffPkgOperations()
 {
     const char *pkgs_ops_csv_file = ToChangesChroot(CHROOT_PKGS_OPS_FILE);
@@ -893,7 +918,7 @@ bool DiffPkgOperations()
             MapRemove(removed, name_arch);
 
             PkgOperationRecord *prev_record = MapGet(installed, name_arch);
-            if ((prev_record == NULL) || PkgVersionIsGreater(pkg_ver, prev_record->pkg_ver))
+            if (PkgRecordShouldBeReplaced(prev_record, pkg_ver))
             {
                 char *msg = GetPkgOperationMsg(CHROOT_PKG_OPERATION_CODE_INSTALL,
                                                pkg_name, pkg_arch, pkg_ver);

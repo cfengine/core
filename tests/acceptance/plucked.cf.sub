@@ -726,10 +726,18 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
 {
   vars:
       "index" slist => getindices("$(tab)[$(sectionName)]");
+      "_escaped_section" string => escape("$(sectionName)");
+
+  classes:
+      "section_$(sectionName)_exists"
+        expression => regline("^\[$(_escaped_section)\]", "$(edit.filename)"),
+        if => fileexists("$(edit.filename)"),
+        comment => "Check if the section header already exists in the file";
 
   delete_lines:
       ".*"
       select_region => INI_section(escape("$(sectionName)")),
+      if            => canonify("section_$(sectionName)_exists"),
       comment       => "Remove all entries in the region so there are no extra entries";
 
   insert_lines:
@@ -738,7 +746,12 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
       comment => "Insert lines";
 
       "$(index)=$($(tab)[$(sectionName)][$(index)])"
-      select_region => INI_section(escape("$(sectionName)"));
+      select_region => INI_section(escape("$(sectionName)")),
+      if => canonify("section_$(sectionName)_exists");
+
+      "$(index)=$($(tab)[$(sectionName)][$(index)])"
+      location => after("^\[$(_escaped_section)\]"),
+      if => not(canonify("section_$(sectionName)_exists"));
 }
 
 bundle edit_line set_variable_values_ini(tab, sectionName)

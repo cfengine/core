@@ -504,7 +504,7 @@ static bool ReadAugmentAugments(EvalContext *ctx, const char *filename, JsonElem
         JsonGetContainerType(further_augments) != JSON_CONTAINER_TYPE_ARRAY ||
         !JsonArrayContainsOnlyPrimitives(further_augments))
     {
-        Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
+        Log(LOG_LEVEL_ERR, "Trying to load further augments files in '%s' but the value was not a list of strings",
             filename);
         return false;
     }

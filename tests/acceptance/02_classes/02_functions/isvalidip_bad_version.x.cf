@@ -1,0 +1,29 @@
+#######################################################
+#
+# Test that isvalidip() rejects an unknown IP version
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3478" }
+      string => "Test that isvalidip() fails on an IP version other than ipv4 or ipv6";
+
+  classes:
+    "valid" expression => isvalidip("1.2.3.4", "ipv5");
+}
+
+#######################################################
+bundle agent check
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}

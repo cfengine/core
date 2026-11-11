@@ -360,8 +360,18 @@ static char *BootstrapIDFilename(const char *workdir)
 char *CreateBootstrapIDFile(const char *workdir)
 {
     assert(workdir != NULL);
-    char *filename = BootstrapIDFilename(workdir);
+    CryptoInitialize();
+    #define RANDOM_BYTES 240 / 8 // 240 avoids padding (divisible by 6)
+    #define BASE_64_LENGTH_NO_PADDING (4 * (RANDOM_BYTES / 3))
+    unsigned char buf[RANDOM_BYTES];
+    if (RAND_bytes(buf, RANDOM_BYTES) != 1)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to generate random bootstrap id (RAND_bytes: %s)",
+            CryptoLastErrorString());
+        return NULL;
+    }
 
+    char *filename = BootstrapIDFilename(workdir);
     FILE *file = safe_fopen_create_perms(filename, "w", CF_PERMS_DEFAULT);
     if (file == NULL)
     {
@@ -369,11 +379,6 @@ char *CreateBootstrapIDFile(const char *workdir)
         free(filename);
         return NULL;
     }
-    CryptoInitialize();
-    #define RANDOM_BYTES 240 / 8 // 240 avoids padding (divisible by 6)
-    #define BASE_64_LENGTH_NO_PADDING (4 * (RANDOM_BYTES / 3))
-    unsigned char buf[RANDOM_BYTES];
-    RAND_bytes(buf, RANDOM_BYTES);
     char *b64_id = StringEncodeBase64(buf, RANDOM_BYTES);
     fprintf(file, "%s\n", b64_id);
     fclose(file);

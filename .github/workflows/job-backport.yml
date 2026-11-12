@@ -70,7 +70,7 @@ jobs:
         uses: cfengine/create-pull-request@v7.0.7a
         with:
           base: ${{ matrix.branch }}
-          branch: backport-${{ steps.find_pr.outputs.number }}-${{ matrix.branch }}
+          branch: backport/${{ steps.find_pr.outputs.number }}-${{ matrix.branch }}
           delete-branch: true
           sign-commits: true
           title: ${{ steps.find_pr.outputs.title }} (${{ matrix.branch }})

@@ -89,7 +89,7 @@ mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
 #ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises$ext"
 ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises"
 ln -s "$CF_REACTOR" "$WORKDIR/bin/cf-reactor"
-ln -s "$CF_AGENT" "WORKDIR/bin/cf-agent"
+ln -s "$CF_AGENT" "$WORKDIR/bin/cf-agent"
 
 if [ -f "$CF_BINDIR/cf.events.dll" ]; then
     ln -s "$CF_BINDIR/cf.events.dll" "$WORKDIR/bin/cf.events.dll"
@@ -115,7 +115,7 @@ PROMISE_NAME=$(basename "$t" .sh)
 export WORKDIR CFENGINE_TEST_OVERRIDE_WORKDIR LOG PROMISE_NAME
 
 echo "--- Validate test policy $policy ---"
-"$CF_PROMISES" -dc $policy
+"$CF_PROMISES" -dc "$policy"
 
 echo "--- Begin test $t ---"
 bash -ex "$t" "$policy" 2>&1 | tee "$WORKDIR/test.log"

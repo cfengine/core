@@ -32,40 +32,16 @@
 #include <eval_context.h>       /* EvalContext*() */
 #include <files_names.h>        /* JoinPaths() */
 
+#include <host_data.h>
 #include <cmdb.h>
 
 #define HOST_SPECIFIC_DATA_FILE "host_specific.json"
 #define HOST_SPECIFIC_DATA_MAX_SIZE (5 * 1024 * 1024) /* maximum size of the host-specific.json file */
 
 #define CMDB_NAMESPACE "data"
-#define CMDB_VARIABLES_TAGS "tags"
-#define CMDB_VARIABLES_DATA "value"
-#define CMDB_CLASSES_TAGS "tags"
-#define CMDB_CLASSES_CLASS_EXPRESSIONS "class_expressions"
-#define CMDB_CLASSES_REGULAR_EXPRESSIONS "regular_expressions"
-#define CMDB_COMMENT_KEY "comment"
 
-JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_max)
-{
-    assert(filename != NULL);
-
-    JsonElement *doc = NULL;
-    JsonParseError err = JsonParseFile(filename, size_max, &doc);
-
-    if (err == JSON_PARSE_ERROR_NO_SUCH_FILE)
-    {
-        Log(log_level, "Could not open JSON file %s", filename);
-        return NULL;
-    }
-
-    if (err != JSON_PARSE_OK ||
-        doc == NULL)
-    {
-        Log(log_level, "Could not parse JSON file %s: %s", filename, JsonParseErrorToString(err));
-    }
-
-    return doc;
-}
+/* Description of the data used in log messages */
+#define CMDB_DATA_DESCRIPTION "CMDB data"
 
 static bool CheckPrimitiveForUnexpandedVars(JsonElement *primitive, ARG_UNUSED void *data)
 {
@@ -91,31 +67,6 @@ static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *d
         }
     }
     return true;
-}
-
-static VarRef *GetCMDBVariableRef(const char *key)
-{
-    VarRef *ref = VarRefParse(key);
-    if (ref->ns == NULL)
-    {
-        ref->ns = xstrdup(CMDB_NAMESPACE);
-    }
-    else
-    {
-        if (ref->scope == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "Invalid variable specification in CMDB data: '%s'"
-                " (bundle name has to be specified if namespace is specified)", key);
-            VarRefDestroy(ref);
-            return NULL;
-        }
-    }
-
-    if (ref->scope == NULL)
-    {
-        ref->scope = xstrdup("variables");
-    }
-    return ref;
 }
 
 static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref,
@@ -189,7 +140,7 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
         const char *key = JsonIteratorNextKey(&iter);
         JsonElement *data = JsonObjectGet(vars, key);
 
-        VarRef *ref = GetCMDBVariableRef(key);
+        VarRef *ref = GetVariableRefFromDataKey(key, CMDB_NAMESPACE, "variables", CMDB_DATA_DESCRIPTION);
         if (ref == NULL)
         {
             continue;
@@ -206,65 +157,6 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
         }
     }
     return true;
-}
-
-static StringSet *GetTagsFromJsonTags(const char *item_type,
-                                      const char *key,
-                                      const JsonElement *json_tags,
-                                      const char *default_tag)
-{
-    StringSet *tags = NULL;
-    if (JSON_NOT_NULL(json_tags))
-    {
-        if ((JsonGetType(json_tags) != JSON_TYPE_ARRAY) ||
-            (!JsonArrayContainsOnlyPrimitives((JsonElement*) json_tags)))
-        {
-            Log(LOG_LEVEL_ERR,
-                "Invalid json_tags information for %s '%s' in CMDB data:"
-                " must be a JSON array of strings",
-                item_type, key);
-        }
-        else
-        {
-            tags = JsonArrayToStringSet(json_tags);
-            if (tags == NULL)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Invalid json_tags information %s '%s' in CMDB data:"
-                    " must be a JSON array of strings",
-                    item_type, key);
-            }
-        }
-    }
-    if (tags == NULL)
-    {
-        tags = StringSetNew();
-    }
-    StringSetAdd(tags, xstrdup(default_tag));
-
-    return tags;
-}
-
-static inline const char *GetCMDBComment(const char *item_type, const char *identifier,
-                                         const JsonElement *json_object)
-{
-    assert(JsonGetType(json_object) == JSON_TYPE_OBJECT);
-
-    JsonElement *json_comment = JsonObjectGet(json_object, CMDB_COMMENT_KEY);
-    if (NULL_JSON(json_comment))
-    {
-        return NULL;
-    }
-
-    if (JsonGetType(json_comment) != JSON_TYPE_STRING)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Invalid type of the 'comment' field for the '%s' %s in CMDB data, must be a string",
-            identifier, item_type);
-        return NULL;
-    }
-
-    return JsonPrimitiveGetAsString(json_comment);
 }
 
 /** Uses the new format allowing metadata (CFE-3633) */
@@ -289,7 +181,7 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
     {
         const char *key = JsonIteratorNextKey(&iter);
 
-        VarRef *ref = GetCMDBVariableRef(key);
+        VarRef *ref = GetVariableRefFromDataKey(key, CMDB_NAMESPACE, "variables", CMDB_DATA_DESCRIPTION);
         if (ref == NULL)
         {
             continue;
@@ -303,7 +195,7 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
 
         if (JsonGetType(var_info) == JSON_TYPE_OBJECT)
         {
-            data = JsonObjectGet(var_info, CMDB_VARIABLES_DATA);
+            data = JsonObjectGet(var_info, JSON_DATA_KEY_VALUE);
 
             if (data == NULL)
             {
@@ -312,15 +204,15 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
                 continue;
             }
 
-            JsonElement *json_tags = JsonObjectGet(var_info, CMDB_VARIABLES_TAGS);
-            tags = GetTagsFromJsonTags("variable", key, json_tags, CMDB_SOURCE_TAG);
-            comment = GetCMDBComment("variable", key, var_info);
+            JsonElement *json_tags = JsonObjectGet(var_info, JSON_DATA_KEY_TAGS);
+            tags = GetTagsFromJsonTags("variable", key, json_tags, CMDB_SOURCE_TAG, CMDB_DATA_DESCRIPTION);
+            comment = GetCommentFromJsonData("variable", key, var_info, CMDB_DATA_DESCRIPTION);
         }
         else
         {
             // Just a bare value, like in "vars", no metadata
             data = var_info;
-            tags = GetTagsFromJsonTags("variable", key, NULL, CMDB_SOURCE_TAG);
+            tags = GetTagsFromJsonTags("variable", key, NULL, CMDB_SOURCE_TAG, CMDB_DATA_DESCRIPTION);
         }
 
         assert(tags != NULL);
@@ -456,9 +348,9 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
         }
         else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_OBJECT)
         {
-            const JsonElement *class_exprs = JsonObjectGet(data, CMDB_CLASSES_CLASS_EXPRESSIONS);
-            const JsonElement *reg_exprs = JsonObjectGet(data, CMDB_CLASSES_REGULAR_EXPRESSIONS);
-            const JsonElement *json_tags = JsonObjectGet(data, CMDB_CLASSES_TAGS);
+            const JsonElement *class_exprs = JsonObjectGet(data, JSON_DATA_KEY_CLASS_EXPRESSIONS);
+            const JsonElement *reg_exprs = JsonObjectGet(data, JSON_DATA_KEY_REGULAR_EXPRESSIONS);
+            const JsonElement *json_tags = JsonObjectGet(data, JSON_DATA_KEY_TAGS);
 
             if (JSON_NOT_NULL(class_exprs) &&
                 (JsonGetType(class_exprs) != JSON_TYPE_ARRAY ||
@@ -483,8 +375,8 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                 continue;
             }
 
-            StringSet *tags = GetTagsFromJsonTags("class", key, json_tags, CMDB_SOURCE_TAG);
-            const char *comment = GetCMDBComment("class", key, data);
+            StringSet *tags = GetTagsFromJsonTags("class", key, json_tags, CMDB_SOURCE_TAG, CMDB_DATA_DESCRIPTION);
+            const char *comment = GetCommentFromJsonData("class", key, data, CMDB_DATA_DESCRIPTION);
             bool ret = AddCMDBClass(ctx, key, tags, comment);
             if (!ret)
             {

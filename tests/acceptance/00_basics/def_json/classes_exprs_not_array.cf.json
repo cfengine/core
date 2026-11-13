@@ -1,0 +1,20 @@
+{
+  "classes": {
+    "test_class_string_class_exprs": {
+      "class_expressions": "any"
+    },
+    "test_class_string_reg_exprs": {
+      "regular_expressions": "any"
+    },
+    "test_class_object_class_exprs": {
+      "class_expressions": { "any": "any" }
+    },
+    "test_class_null_class_exprs": {
+      "class_expressions": null,
+      "regular_expressions": ["any"]
+    },
+    "test_class_valid": {
+      "class_expressions": ["any"]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+# Test that augments (def.json) cannot override classes defined in the
+# host-specific data (host_specific.json), with and without a namespace in the
+# augments class name
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+      create => "true",
+      perms => mog(
+        "0700", "$(sys.user_data[username])", "$(sys.user_data[username])"
+      );
+
+  methods:
+    "prepare_host_specific_data"
+      usebundle => file_copy(
+        "$(this.promise_filename).json",
+        "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"
+      ),
+      handle => "prepare_host_specific_data";
+
+    "def_json"
+      usebundle => file_copy(
+        "$(this.promise_filename).def.json", "$(sys.inputdir)/def.json"
+      );
+
+    "empty_promises_cf"
+      usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "command"
+      string => "$(sys.cf_promises) --verbose -f $(sys.inputdir)/promises.cf 2>&1 | $(G.grep) 'Cannot set class'";
+
+  methods:
+    ""
+      usebundle => dcs_passif_output(
+        concat(
+          "(?=.*Cannot set class default:test_class_default_ns from augments, already defined from host-specific data)",
+          "(?=.*Cannot set class ns1:test_class_ns1 from augments, already defined from host-specific data)",
+          ".*"
+        ),
+        ".*\(null\).*",
+        $(command),
+        $(this.promise_filename)
+      );
+}

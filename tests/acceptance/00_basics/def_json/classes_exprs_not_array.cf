@@ -1,0 +1,49 @@
+# Test that augments classes whose "class_expressions" or
+# "regular_expressions" are not JSON arrays are rejected with an error message
+# instead of crashing, and that a JSON null value is treated as not specified.
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3658" }
+      string => "Augments class expressions that are not arrays do not crash the agent";
+
+  methods:
+    "" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+
+    ""
+      usebundle => file_copy(
+        "$(this.promise_filename).json", "$(sys.inputdir)/def.json"
+      );
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "command"
+      string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf 2>&1";
+
+  methods:
+    ""
+      usebundle => dcs_passif_output(
+        concat(
+          "(?=.*Invalid augments class data for class 'test_class_string_class_exprs' in '[^']*': \"class_expressions\" must be a JSON array)",
+          "(?=.*Invalid augments class data for class 'test_class_string_reg_exprs' in '[^']*': \"regular_expressions\" must be a JSON array)",
+          "(?=.*Invalid augments class data for class 'test_class_object_class_exprs' in '[^']*': \"class_expressions\" must be a JSON array)",
+          "(?=.*\ntest_class_null_class_exprs\s+source=augments_file)",
+          "(?=.*\ntest_class_valid\s+source=augments_file)",
+          ".*"
+        ),
+        ".*\n(test_class_string_class_exprs|test_class_string_reg_exprs|test_class_object_class_exprs)\s.*",
+        $(command),
+        $(this.promise_filename)
+      );
+}

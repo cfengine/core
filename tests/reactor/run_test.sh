@@ -61,8 +61,10 @@ find_binary() {
 
 CF_REACTOR=${CF_REACTOR:-$(find_binary cf-reactor)}
 CF_PROMISES=${CF_PROMISES:-$(find_binary cf-promises)}
+CF_AGENT=${CF_AGENT:-$(find_binary cf-agent)}
 export CF_REACTOR
 export CF_PROMISES
+export CF_AGENT
 
 for b in "$CF_REACTOR" "$CF_PROMISES"; do
     if [ ! -x "$b" ]; then
@@ -80,11 +82,14 @@ WORKDIR=$(cd "$WORKDIR" && pwd)
 trap 'rm -rf "$WORKDIR"' EXIT
 mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
 
-ext=""
-if echo $CF_PROMISES | grep -q exe; then
-    ext=".exe";
-fi
-ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises$ext"
+#ext=""
+#if echo $CF_PROMISES | grep -q exe; then
+#    ext=".exe";
+#fi
+#ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises$ext"
+ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises"
+ln -s "$CF_REACTOR" "$WORKDIR/bin/cf-reactor"
+ln -s "$CF_AGENT" "WORKDIR/bin/cf-agent"
 
 if [ -f "$CF_BINDIR/cf.events.dll" ]; then
     ln -s "$CF_BINDIR/cf.events.dll" "$WORKDIR/bin/cf.events.dll"

@@ -1,4 +1,5 @@
 #!/bin/sh
+set -ex
 
 # Usage: run_test.sh TEST
 #
@@ -40,7 +41,16 @@ REACTOR_TESTS_DIR=$(cd "$(dirname "$0")" && pwd)
 # Print the path of binary $1, see the usage above.
 find_binary() {
     if [ -n "$CF_BINDIR" ]; then
-        echo "$CF_BINDIR/$1"
+        if [ -x "$CF_BINDIR/$1.exe" ]; then
+            echo "$CF_BINDIR/$1.exe"
+            return
+        fi
+        if [ -x "$CF_BINDIR/$1" ]; then
+            echo "$CF_BINDIR/$1"
+            return
+        fi
+        echo "Unable to find executable for $1 in $CF_BINDIR"
+        exit 1
     elif [ -x "$REACTOR_TESTS_DIR/../../$1/$1" ]; then
         # in-tree build, may be a libtool wrapper script
         echo "$REACTOR_TESTS_DIR/../../$1/$1"
@@ -51,7 +61,10 @@ find_binary() {
 
 CF_REACTOR=${CF_REACTOR:-$(find_binary cf-reactor)}
 CF_PROMISES=${CF_PROMISES:-$(find_binary cf-promises)}
+CF_AGENT=${CF_AGENT:-$(find_binary cf-agent)}
 export CF_REACTOR
+export CF_PROMISES
+export CF_AGENT
 
 for b in "$CF_REACTOR" "$CF_PROMISES"; do
     if [ ! -x "$b" ]; then
@@ -68,7 +81,21 @@ WORKDIR=$(mktemp -d "${TMPDIR:-/tmp}/cf-reactor-test.XXXXXX" 2>/dev/null) || {
 WORKDIR=$(cd "$WORKDIR" && pwd)
 trap 'rm -rf "$WORKDIR"' EXIT
 mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
-ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises"
+
+#ext=""
+if echo $CF_PROMISES | grep -q exe; then
+    ext=".exe";
+fi
+ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises$ext"
+ln -s "$CF_REACTOR" "$WORKDIR/bin/cf-reactor"
+ln -s "$CF_AGENT" "$WORKDIR/bin/cf-agent"
+
+if [ -f "$CF_BINDIR/cf.events.dll" ]; then
+    ln -s "$CF_BINDIR/cf.events.dll" "$WORKDIR/bin/cf.events.dll"
+fi
+echo CRAIG DEBUG
+ls -l "$WORKDIR"/bin
+
 
 # Run a copy of the policy, keeping its path relative to lib.cf, as CFEngine
 # refuses to read policy files writable by group or others, which those of a
@@ -86,9 +113,14 @@ LOG="$WORKDIR/reactor.log"
 PROMISE_NAME=$(basename "$t" .sh)
 export WORKDIR CFENGINE_TEST_OVERRIDE_WORKDIR LOG PROMISE_NAME
 
-sh "$t" "$policy" > "$WORKDIR/test.log" 2>&1
+echo "--- Validate test policy $policy ---"
+"$CF_PROMISES" -dc "$policy"
+
+echo "--- Begin test $t ---"
+bash -ex "$t" "$policy" 2>&1 | tee "$WORKDIR/test.log"
 result=$?
 if [ "$result" -ne 0 ]; then
     cat "$WORKDIR/test.log"
 fi
+echo "--- End test $t with exit code $result ---"
 exit "$result"

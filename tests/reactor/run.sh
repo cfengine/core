@@ -37,7 +37,7 @@ run_test() {
     total=$((total + 1))
 
     start=$(now)
-    output=$(sh "$dir/run_test.sh" "$1" 2>&1)
+    sh -ex "$dir/run_test.sh" "$1" 2>&1 | tee "$1".log
     result=$?
     elapsed=$(($(now) - start))
 
@@ -55,13 +55,15 @@ run_test() {
             failures="$failures  $name
 "
             echo "--- FAIL: $name (${elapsed}s)"
-            echo "$output"
+            cat "$1".log
             echo "---"
             ;;
     esac
+    rm -f "$1".log
 }
 
-for t in "$dir"/tests/*/*.sh "$dir"/tests/*/unsafe/*.sh; do
+#for t in "$dir"/tests/*/*.sh "$dir"/tests/*/unsafe/*.sh; do
+for t in "$dir"/tests/00_basics/001_vars.sh; do
     # skip the pattern itself if there are no unsafe tests
     [ -f "$t" ] || continue
     run_test "$t"

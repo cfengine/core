@@ -170,8 +170,13 @@ set_installed_packages() {
 # Start cf-reactor in the background with policy file $1, logging to $LOG.
 # It is stopped when the test exits.
 start_reactor() {
-    "$CF_REACTOR" --no-fork --verbose -f "$1" >>"$LOG" 2>&1 &
+    "$CF_REACTOR" --no-fork --debug -f "$1" >>"$LOG" 2>&1 &
     reactor_pid=$!
+    echo "reactor_pid is $reactor_pid"
+    if grep 'error:' "$LOG"; then
+        stop_reactor
+        exit 1
+    fi
     trap stop_reactor EXIT
 }
 

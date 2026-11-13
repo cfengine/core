@@ -265,7 +265,7 @@ bool RecordFileEvaluatedInChroot(const char *path)
     return ret;
 }
 
-bool RecordPkgOperationInChroot(const char *op, const char *name, const char *arch, const char *version)
+bool RecordPkgOperationInChroot(const char *op, const char *name, const char *version, const char *arch)
 {
     assert(op != NULL);
     assert(name != NULL);
@@ -297,10 +297,11 @@ bool RecordPkgOperationInChroot(const char *op, const char *name, const char *ar
         return false;
     }
 
+    /* Record format: op,name,version,architecture */
     CsvWriterField(csv_writer, op);
     CsvWriterField(csv_writer, name);
-    CsvWriterField(csv_writer, NULL_TO_EMPTY_STRING(arch));
     CsvWriterField(csv_writer, NULL_TO_EMPTY_STRING(version));
+    CsvWriterField(csv_writer, NULL_TO_EMPTY_STRING(arch));
 
     CsvWriterNewRecord(csv_writer);
     CsvWriterClose(csv_writer);

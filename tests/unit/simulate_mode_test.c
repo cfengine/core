@@ -27,6 +27,7 @@
 #include <eval_context.h>       /* SetChangesChroot(), ToChangesChroot() */
 #include <changes_chroot.h>     /* CHROOT_PKGS_OPS_FILE */
 #include <file_lib.h>           /* DeleteDirectoryTree() */
+#include <string_lib.h>         /* StringContains() */
 
 #include <simulate_mode.h>
 
@@ -81,8 +82,53 @@ static void test_diff_install_cancels_removal(void)
     char output[4096];
     assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
 
-    assert_true(strstr(output, "Package 'foo [1.2.3]' would be installed") != NULL);
-    assert_true(strstr(output, "would be removed") == NULL);
+    assert_true(StringContains(output, "Package 'foo [1.2.3]' would be installed"));
+    assert_false(StringContains(output, "would be removed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* A package recorded with both a version and an architecture must be
+ * reported with each in its own place. */
+static void test_diff_version_and_architecture(void)
+{
+    assert_true(RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL,
+                                           "foo", "1.2.3", "x86_64"));
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo-x86_64 [1.2.3]' would be installed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* A removal with a version and no install record to cancel is a removal to
+ * report. */
+static void test_diff_removal_with_version(void)
+{
+    write_pkgs_ops("r,foo,1.0,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [1.0]' would be removed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* A removal with a version that differs from the recorded installation would
+ * fail, so only the installation is reported. */
+static void test_diff_removal_with_other_version_keeps_install(void)
+{
+    write_pkgs_ops("i,foo,2.0,\r\n"
+                   "r,foo,1.0,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [2.0]' would be installed"));
+    assert_false(StringContains(output, "would be removed"));
 
     unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
 }
@@ -95,8 +141,106 @@ static void test_manifest_install_cancels_removal(void)
     char output[4096];
     assert_true(call_with_captured_stdout(&ManifestPkgOperations, output, sizeof(output)));
 
-    assert_true(strstr(output, "Package 'foo [1.2.3]' would be present") != NULL);
-    assert_true(strstr(output, "would be absent") == NULL);
+    assert_true(StringContains(output, "Package 'foo [1.2.3]' would be present"));
+    assert_false(StringContains(output, "would be absent"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* Two recorded installations of the same package without a version must be
+ * reported once, not abort on comparing the empty versions. */
+static void test_diff_repeated_unversioned_install(void)
+{
+    write_pkgs_ops("i,foo,,\r\n"
+                   "i,foo,,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo' would be installed"));
+    /* Reported once: the report has no other line. */
+    assert_int_equal(StringCountTokens(output, strlen(output), "\n"), 1);
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* A versioned installation record is more specific than an unversioned one
+ * of the same package, so it is the one to report. */
+static void test_diff_unversioned_then_versioned_install(void)
+{
+    write_pkgs_ops("i,foo,,\r\n"
+                   "i,foo,1.2.3,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [1.2.3]' would be installed"));
+    assert_false(StringContains(output, "Package 'foo' would be installed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* An unversioned installation record must never replace an existing
+ * versioned installation record of the same package. */
+static void test_diff_versioned_then_unversioned_install(void)
+{
+    write_pkgs_ops("i,foo,1.2.3,\r\n"
+                   "i,foo,,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [1.2.3]' would be installed"));
+    assert_false(StringContains(output, "Package 'foo' would be installed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* When two installations are recorded with different versions and the first
+ * has the higher version, the first record is kept. */
+static void test_diff_install_higher_version_first_keeps_first(void)
+{
+    write_pkgs_ops("i,foo,2.0.0,\r\n"
+                   "i,foo,1.0.0,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [2.0.0]' would be installed"));
+    assert_false(StringContains(output, "Package 'foo [1.0.0]' would be installed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* When two installations are recorded with different versions and the last
+ * has the higher version, the last record replaces the first. */
+static void test_diff_install_higher_version_last_keeps_last(void)
+{
+    write_pkgs_ops("i,foo,1.0.0,\r\n"
+                   "i,foo,2.0.0,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [2.0.0]' would be installed"));
+    assert_false(StringContains(output, "Package 'foo [1.0.0]' would be installed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* Two recorded installations of the same package with the same version
+ * must be reported once. */
+static void test_diff_repeated_versioned_install(void)
+{
+    write_pkgs_ops("i,foo,1.2.3,\r\n"
+                   "i,foo,1.2.3,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [1.2.3]' would be installed"));
+    /* Reported once: the report has no other line. */
+    assert_int_equal(StringCountTokens(output, strlen(output), "\n"), 1);
 
     unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
 }
@@ -111,7 +255,16 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_diff_install_cancels_removal),
+        unit_test(test_diff_version_and_architecture),
+        unit_test(test_diff_removal_with_version),
+        unit_test(test_diff_removal_with_other_version_keeps_install),
         unit_test(test_manifest_install_cancels_removal),
+        unit_test(test_diff_repeated_unversioned_install),
+        unit_test(test_diff_unversioned_then_versioned_install),
+        unit_test(test_diff_versioned_then_unversioned_install),
+        unit_test(test_diff_install_higher_version_first_keeps_first),
+        unit_test(test_diff_install_higher_version_last_keeps_last),
+        unit_test(test_diff_repeated_versioned_install),
     };
 
     int ret = run_tests(tests);

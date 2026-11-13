@@ -34,6 +34,6 @@ void PrepareChangesChroot(const char *path);
 bool RecordFileChangedInChroot(const char *path);
 bool RecordFileRenamedInChroot(const char *old_name, const char *new_name);
 bool RecordFileEvaluatedInChroot(const char *path);
-bool RecordPkgOperationInChroot(const char *op, const char *name, const char *arch, const char *version);
+bool RecordPkgOperationInChroot(const char *op, const char *name, const char *version, const char *arch);
 
 #endif /* CFENGINE_CHANGES_CHROOT_H */

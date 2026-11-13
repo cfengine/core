@@ -83,11 +83,10 @@ trap 'rm -rf "$WORKDIR"' EXIT
 mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
 
 #ext=""
-#if echo $CF_PROMISES | grep -q exe; then
-#    ext=".exe";
-#fi
-#ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises$ext"
-ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises"
+if echo $CF_PROMISES | grep -q exe; then
+    ext=".exe";
+fi
+ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises$ext"
 ln -s "$CF_REACTOR" "$WORKDIR/bin/cf-reactor"
 ln -s "$CF_AGENT" "$WORKDIR/bin/cf-agent"
 

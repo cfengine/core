@@ -61,7 +61,7 @@ def get_args():
         description="Beautiful CFEngine agent logos",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    ap.add_argument("--radius", "-r", help="Circle raidus", type=int, default=16)
+    ap.add_argument("--radius", "-r", help="Circle radius", type=int, default=16)
     ap.add_argument("--no-margins", help="No extra space around the agent", action="store_true")
     ap.add_argument("--body", help="Body color", type=str, default=cfengine_blue)
     ap.add_argument("--head", help="Head color", type=str, default=cfengine_orange)

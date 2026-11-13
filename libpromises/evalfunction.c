@@ -6476,7 +6476,7 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
     const char *range   = RlistScalarValue(finalargs);
     const Rlist *ifaces = finalargs->next;
 
-    if (!FuzzyMatchParse(range))
+    if (!IPRangeIsValid(range))
     {
         Log(LOG_LEVEL_VERBOSE,
             "%s(%s): argument is not a valid address range",
@@ -6488,7 +6488,7 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
          ip != NULL;
          ip = ip->next)
     {
-        if (FuzzySetMatch(range, ip->name) == 0)
+        if (IPRangeMatch(range, ip->name))
         {
             /*
              * MODE1: iprange(range)
@@ -6548,7 +6548,7 @@ static FnCallResult FnCallIsIpInSubnet(ARG_UNUSED EvalContext *ctx,
     const char *range = RlistScalarValue(finalargs);
     const Rlist *ips  = finalargs->next;
 
-    if (!FuzzyMatchParse(range))
+    if (!IPRangeIsValid(range))
     {
         Log(LOG_LEVEL_VERBOSE,
             "%s(%s): argument is not a valid address range",
@@ -6560,7 +6560,7 @@ static FnCallResult FnCallIsIpInSubnet(ARG_UNUSED EvalContext *ctx,
     {
         const char *ip_s = RlistScalarValue(ip);
 
-        if (FuzzySetMatch(range, ip_s) == 0)
+        if (IPRangeMatch(range, ip_s))
         {
             Log(LOG_LEVEL_DEBUG, "%s(%s): Match on IP '%s'",
                 fp->name, range, ip_s);
@@ -6620,12 +6620,12 @@ static FnCallResult FnCallHostRange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     char *prefix = RlistScalarValue(finalargs);
     char *range = RlistScalarValue(finalargs->next);
 
-    if (!FuzzyHostParse(range))
+    if (!HostRangeIsValid(range))
     {
         return FnFailure();
     }
 
-    return FnReturnContext(FuzzyHostMatch(prefix, range, VUQNAME) == 0);
+    return FnReturnContext(HostRangeMatch(prefix, range, VUQNAME));
 }
 
 /*********************************************************************/

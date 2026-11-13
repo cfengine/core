@@ -49,6 +49,13 @@ int cf_pclose_full_duplex_side(int fd);
 
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr);
 FILE *cf_popen_select(const char *command, const char *type, OutputSelect output_select);
+/**
+ * Like cf_popen(), but takes the ready-made NULL-terminated argument vector
+ * for execv() instead of a command string to split. argv[0] must be the full
+ * path of the program and every argument is passed through untouched, so an
+ * argument containing whitespace or quotes stays a single argument.
+ */
+FILE *cf_popen_argv(char *const argv[], const char *type, bool capture_stderr);
 FILE *cf_popensetuid(const char *command, const Seq *arglist, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 FILE *cf_popen_sh(const char *command, const char *type);
 FILE *cf_popen_sh_select(const char *command, const char *type, OutputSelect output_select);

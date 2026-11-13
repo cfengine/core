@@ -151,6 +151,8 @@ typedef struct
     WatcherStateNewFn new_state;
     WatcherStateDestroyFn destroy_state;
     WatcherCheckFn check;
+    WatcherBundlesRanFn bundles_ran;
+    ReactorWatchTargetType target; /* what the 'name' constraint is about */
 } EventType;
 
 static const EventArg NO_EXTRA_ARGS[] =
@@ -170,17 +172,25 @@ static const EventArg PACKAGE_ARGS[] =
     { NULL, RVAL_TYPE_NOPROMISEE, false }
 };
 
-#define EventTypeNew(name, type, args, new_state, destroy_state, check) \
-    { name, type, args, new_state, destroy_state, check }
-#define EventTypeNewNull() EventTypeNew(NULL, RVAL_TYPE_NOPROMISEE, NULL, NULL, NULL, NULL)
+#define EventTypeNew(name, type, args, new_state, destroy_state, check, bundles_ran, target) \
+    { name, type, args, new_state, destroy_state, check, bundles_ran, target }
+#define EventTypeNewNull() \
+    EventTypeNew(NULL, RVAL_TYPE_NOPROMISEE, NULL, NULL, NULL, NULL, NULL, REACTOR_WATCH_TARGET_FILE)
 
 /* A file event, about the file at the path of its constraint */
 #define FileEventTypeNew(name, check) \
-    EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, FileWatcherStateNew, FileWatcherStateDestroy, check)
+    EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, FileWatcherStateNew, FileWatcherStateDestroy, \
+                 check, FileWatcherBundlesRan, REACTOR_WATCH_TARGET_FILE)
 
 /* A user event, about the user with the name of its constraint */
 #define UserEventTypeNew(name, check) \
-    EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, UserWatcherStateNew, UserWatcherStateDestroy, check)
+    EventTypeNew(name, RVAL_TYPE_SCALAR, NO_EXTRA_ARGS, UserWatcherStateNew, UserWatcherStateDestroy, \
+                 check, NULL, REACTOR_WATCH_TARGET_USERS)
+
+/* A package event, about the package with the name of its constraint */
+#define PackageEventTypeNew(name, check) \
+    EventTypeNew(name, RVAL_TYPE_SCALAR, PACKAGE_ARGS, PackageWatcherStateNew, \
+                 PackageWatcherStateDestroy, check, NULL, REACTOR_WATCH_TARGET_PACKAGES)
 
 static const EventType EVENT_TABLE[] =
 {
@@ -191,13 +201,12 @@ static const EventType EVENT_TABLE[] =
     FileEventTypeNew(REACTOR_FILE_PERMISSIONS_CHANGED, FileWatcherCheckFilePermissionsChanged),
     FileEventTypeNew(REACTOR_FILE_OWNER_CHANGED, FileWatcherCheckFileOwnerChanged),
     EventTypeNew(REACTOR_FILE_SIZE_EXCEEDS, RVAL_TYPE_SCALAR, FILE_SIZE_EXCEEDS_ARGS,
-                 FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds),
+                 FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds,
+                 FileWatcherBundlesRan, REACTOR_WATCH_TARGET_FILE),
     UserEventTypeNew(REACTOR_USER_ADDED, UserWatcherCheckUserAdded),
     UserEventTypeNew(REACTOR_USER_REMOVED, UserWatcherCheckUserRemoved),
-    EventTypeNew(REACTOR_PACKAGE_INSTALLED, RVAL_TYPE_SCALAR, PACKAGE_ARGS,
-                 PackageWatcherStateNew, PackageWatcherStateDestroy, PackageWatcherCheckPackageInstalled),
-    EventTypeNew(REACTOR_PACKAGE_UNINSTALLED, RVAL_TYPE_SCALAR, PACKAGE_ARGS,
-                 PackageWatcherStateNew, PackageWatcherStateDestroy, PackageWatcherCheckPackageUninstalled),
+    PackageEventTypeNew(REACTOR_PACKAGE_INSTALLED, PackageWatcherCheckPackageInstalled),
+    PackageEventTypeNew(REACTOR_PACKAGE_UNINSTALLED, PackageWatcherCheckPackageUninstalled),
     EventTypeNewNull()
 };
 
@@ -284,6 +293,31 @@ static bool EventsPromiseGetInterval(const Promise *pp, time_t *interval)
     return true;
 }
 
+/** Sets *methods to the 'wakeup_sources' of the (expanded) events promise, NULL
+ * if it has none. The method names were checked against the syntax already,
+ * on expansion. */
+static bool EventsPromiseGetWakeupSources(const Promise *pp, const Rlist **methods)
+{
+    assert(pp != NULL);
+    assert(methods != NULL);
+
+    *methods = NULL;
+    const Constraint *con = PromiseGetConstraint(pp, REACTOR_WAKEUP_SOURCES);
+    if (con == NULL)
+    {
+        return true;
+    }
+    if (con->rval.type != RVAL_TYPE_LIST)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Reactor events promise '%s' has an invalid '%s', expected a list of wakeup sources",
+            pp->promiser, REACTOR_WAKEUP_SOURCES);
+        return false;
+    }
+    *methods = RvalRlistValue(con->rval);
+    return true;
+}
+
 static bool ResolveWhenBody(const EvalContext *ctx, const Promise *pp, WatcherOptions *opt)
 {
     assert(ctx != NULL);
@@ -342,6 +376,7 @@ static bool ResolveWhenBody(const EvalContext *ctx, const Promise *pp, WatcherOp
         if (BodySyntaxGetConstraintSyntax(when_syntax, cp->lval) == NULL || /* not a 'when' constraint */
             StringEqual(cp->lval, event->name) ||
             StringEqual(cp->lval, "interval") ||
+            StringEqual(cp->lval, REACTOR_WAKEUP_SOURCES) ||
             StringEqual(cp->lval, "meta"))                                 /* also a promise attribute */
         {
             continue;
@@ -362,11 +397,18 @@ static bool ResolveWhenBody(const EvalContext *ctx, const Promise *pp, WatcherOp
         }
     }
 
-    if (!EventsPromiseGetInterval(pp, &opt->interval))
+    if (!EventsPromiseGetInterval(pp, &opt->interval) ||
+        !EventsPromiseGetWakeupSources(pp, &opt->methods))
     {
         RlistDestroy(args);
         return false;
     }
+
+    /* The path is the value of the event's constraint, which lives as long
+     * as pp, unlike args */
+    opt->target.type = event->target;
+    opt->target.path = (event->target == REACTOR_WATCH_TARGET_FILE) ?
+        RvalScalarValue(PromiseGetConstraint(pp, event->name)->rval) : NULL;
 
     opt->state = event->new_state(ctx, args);
     RlistDestroy(args);
@@ -377,6 +419,7 @@ static bool ResolveWhenBody(const EvalContext *ctx, const Promise *pp, WatcherOp
     }
     opt->check_callback = event->check;
     opt->destroy_state = event->destroy_state;
+    opt->bundles_ran = event->bundles_ran;
     return true;
 }
 

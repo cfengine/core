@@ -37,6 +37,8 @@
 #include <eval_context.h>
 #include <json.h>
 #include <vars.h>                                         /* IsCf3VarString */
+#include <sequence.h>
+#include <alloc.h>
 
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);
@@ -1775,4 +1777,16 @@ Rlist *RlistFromContainer(const JsonElement *container)
     }
 
     return list;
+}
+
+Seq *RlistToStringSeq(const Rlist *list)
+{
+    Seq *seq = SeqNew(RlistLen(list), free);
+
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        SeqAppend(seq, xstrdup(RlistScalarValue(rp)));
+    }
+
+    return seq;
 }

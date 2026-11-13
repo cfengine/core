@@ -2620,6 +2620,10 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     /* Log classes */
     config->agent_specific.agent.report_class_log = false;
 
+    /* Report class metatags filter (NULL means no filter) */
+    config->agent_specific.agent.report_metatags_include = NULL;
+    config->agent_specific.agent.report_metatags_exclude = NULL;
+
     config->agent_specific.common.no_augments = false;
     config->agent_specific.common.no_host_specific = false;
 
@@ -2664,6 +2668,8 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
         free(config->agent_specific.agent.bootstrap_host);
         free(config->agent_specific.agent.bootstrap_ip);
         free(config->agent_specific.agent.bootstrap_port);
+        RlistDestroy(config->agent_specific.agent.report_metatags_include);
+        RlistDestroy(config->agent_specific.agent.report_metatags_exclude);
         free(config);
     }
 }

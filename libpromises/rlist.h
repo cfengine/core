@@ -29,6 +29,7 @@
 #include <writer.h>
 #include <json.h>
 #include <fncall.h>
+#include <sequence.h>
 
 /* NOTE: an empty Rlist is simply NULL. */
 struct Rlist_
@@ -106,6 +107,13 @@ Rlist *RlistFromStringSplitLines(const char *string, bool detect_crlf);
 Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_entries, bool allow_blanks);
 Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max);
 Rlist *RlistFromContainer(const JsonElement *container);
+
+/**
+ * @brief Copy the scalar strings of a list into a sequence
+ * @param list List of scalar strings (NULL is the empty list)
+ * @return Sequence of copied strings. Destroy with SeqDestroy().
+ */
+Seq *RlistToStringSeq(const Rlist *list);
 
 void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);

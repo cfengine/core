@@ -266,7 +266,7 @@ const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
     ConstraintSyntaxNewBool("fips_mode", "Activate full FIPS mode restrictions. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewReal("bwlimit", CF_VALRANGE, "Limit outgoing protocol bandwidth in Bytes per second", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("cache_system_functions", "Cache the result of system functions. Default value: true", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("protocol_version", "1,classic,2,tls,3,cookie,4,filestream,5,leech2,latest", "CFEngine protocol version to use when connecting to the server. Default: \"latest\"", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("protocol_version", "1,classic,2,tls,3,cookie,4,filestream,5,leech2,6,transfusion,latest", "CFEngine protocol version to use when connecting to the server. Default: \"latest\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tls_ciphers", "", "List of acceptable ciphers in outgoing TLS connections, defaults to OpenSSL's default. For syntax help see man page for \"openssl ciphers\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tls_min_version", "", "Minimum acceptable TLS version for outgoing connections, defaults to OpenSSL's default", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("package_inventory", ".*", "Name of the package manager used for software inventory management", SYNTAX_STATUS_NORMAL),
@@ -325,6 +325,8 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewStringList("copyfrom_restrict_keys", ".*", "A list of key hashes to restrict copy_from to", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("evaluation_order", "(classic|top_down)", "Order of evaluation of promises of agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("default_directory_create_mode", ".*", "Default directory create mode (defaults to 0700 if not specified)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("report_metatags_include", CF_ANYSTRING, "List of regex filters for metatags of classes and variables to be included into reports", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("report_metatags_exclude", CF_ANYSTRING, "List of regex filters for metatags of classes and variables to be excluded from reports", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

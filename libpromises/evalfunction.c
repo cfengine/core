@@ -9173,10 +9173,11 @@ static char *StringReplaceWithLists(const char *input_string, JsonElement *match
         if (JsonGetElementType(match_el) != JSON_ELEMENT_TYPE_PRIMITIVE ||
             JsonGetElementType(substitute_el) != JSON_ELEMENT_TYPE_PRIMITIVE)
         {
-            Log(LOG_LEVEL_WARNING,
+            Log(LOG_LEVEL_ERR,
                 "Failed to replace with function '%s', string: '%s': "
-                "match and substitute lists must contain only strings",
-                fp->name, input_string);
+                "match and substitute lists must contain only strings "
+                "(non-string element at index %zu)",
+                fp->name, input_string, i);
             free(ret);
             return NULL;
         }

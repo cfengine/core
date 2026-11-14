@@ -214,6 +214,49 @@ static void test_format_rejects_unpassed_arguments(void)
     }
 }
 
+static FnCallResult string_replace_lists_testcase(const char *string,
+                                                  const char *match,
+                                                  const char *substitute)
+{
+    EvalContext *ctx = EvalContextNew();
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, string);
+    RlistAppendScalar(&args, match);
+    RlistAppendScalar(&args, substitute);
+    RlistAppendScalar(&args, "lists");
+    FnCall *call = FnCallNew("string_replace", args);
+
+    FnCallResult res = FnCallStringReplace(ctx, NULL, call, args);
+
+    FnCallDestroy(call);
+    EvalContextDestroy(ctx);
+    return res;
+}
+
+static void test_string_replace_rejects_non_primitive_list_elements(void)
+{
+    /* Valid flat lists still work. */
+    FnCallResult res =
+        string_replace_lists_testcase("abcb", "[\"b\"]", "[\"Z\"]");
+    assert_int_equal(res.status, FNCALL_SUCCESS);
+    assert_string_equal("aZcZ", (char *) res.rval.item);
+    RvalDestroy(res.rval);
+
+    /* A substitute element that is a nested array passes the outer array and
+     * equal-length checks. The unpatched code passed it to
+     * JsonPrimitiveGetAsString(), which returned the aliased container pointer
+     * as a char *, and used it as a string (heap over-read / leak). */
+    res = string_replace_lists_testcase("abcb", "[\"b\"]", "[[\"Z\"]]");
+    assert_int_equal(res.status, FNCALL_FAILURE);
+
+    /* Same on the match side, and for a nested object. */
+    res = string_replace_lists_testcase("abcb", "[[\"b\"]]", "[\"Z\"]");
+    assert_int_equal(res.status, FNCALL_FAILURE);
+
+    res = string_replace_lists_testcase("abcb", "[\"b\"]", "[{\"k\":\"v\"}]");
+    assert_int_equal(res.status, FNCALL_FAILURE);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -223,6 +266,7 @@ int main()
         unit_test(test_basename),
         unit_test(test_module_protocol_percent_no_delimiter),
         unit_test(test_format_rejects_unpassed_arguments),
+        unit_test(test_string_replace_rejects_non_primitive_list_elements),
     };
 
     return run_tests(tests);

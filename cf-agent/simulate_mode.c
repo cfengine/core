@@ -41,6 +41,9 @@
 #include <map.h>                /* StringMap */
 #include <csv_parser.h>         /* GetCsvLineNext() */
 #include <unix.h>               /* GetGroupName(), GetUserName() */
+#include <json.h>               /* JsonElement */
+#include <writer.h>             /* StringWriter() */
+#include <definitions.h>        /* CF_PERMS_DEFAULT */
 
 #include <simulate_mode.h>
 
@@ -1141,4 +1144,151 @@ bool ManifestPkgOperations()
     MapDestroy(absent);
 
     return true;
+}
+
+/* Returns NULL for a path that exists neither in the changes chroot nor
+ * outside of it, e.g. a file created and deleted by the same run. */
+static JsonElement *ChangedFileAsJson(const char *path)
+{
+    assert(path != NULL);
+
+    const char *chrooted_path = ToChangesChroot(path);
+    struct stat st_orig;
+    struct stat st;
+    const bool existed = (lstat(path, &st_orig) == 0);
+    if (lstat(chrooted_path, &st) == -1)
+    {
+        if (!existed)
+        {
+            return NULL;
+        }
+        JsonElement *file_info = JsonObjectCreate(2);
+        JsonObjectAppendString(file_info, "path", path);
+        JsonObjectAppendString(file_info, "change", "deleted");
+        return file_info;
+    }
+
+    JsonElement *file_info = JsonObjectCreate(8);
+    JsonObjectAppendString(file_info, "path", path);
+    JsonObjectAppendString(file_info, "change",
+                           existed ? "modified" : "created");
+    JsonObjectAppendString(file_info, "type",
+                           GetFileTypeDescription(st.st_mode));
+    return file_info;
+}
+
+/* Appends the length-prefixed strings in #list_file (in the changes chroot)
+ * to #records. A missing #list_file means no records. */
+static bool ReadChrootRecords(const char *list_file, Seq *records)
+{
+    assert(list_file != NULL);
+    assert(records != NULL);
+
+    const char *path = ToChangesChroot(list_file);
+    if (access(path, F_OK) != 0)
+    {
+        return true;
+    }
+
+    int fd = safe_open(path, O_RDONLY);
+    if (fd == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open '%s': %s", path, GetErrorStr());
+        return false;
+    }
+
+    char *record;
+    int ret;
+    while ((ret = ReadLenPrefixedString(fd, &record)) > 0)
+    {
+        SeqAppend(records, record);
+    }
+    close(fd);
+
+    if (ret < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read '%s'", path);
+        return false;
+    }
+    return true;
+}
+
+static bool AddChangedFilesToJson(JsonElement *files)
+{
+    assert(files != NULL);
+
+    Seq *paths = SeqNew(16, free);
+    const bool success = ReadChrootRecords(CHROOT_CHANGES_LIST_FILE, paths);
+    StringSet *reported = StringSetNew();
+    const size_t n_paths = SeqLength(paths);
+    for (size_t i = 0; i < n_paths; i++)
+    {
+        /* Each file should only be reported once. */
+        const char *path = SeqAt(paths, i);
+        if (!StringSetContains(reported, path))
+        {
+            JsonElement *file_info = ChangedFileAsJson(path);
+            if (file_info != NULL)
+            {
+                JsonArrayAppendObject(files, file_info);
+            }
+            StringSetAdd(reported, xstrdup(path));
+        }
+    }
+    StringSetDestroy(reported);
+    SeqDestroy(paths);
+    return success;
+}
+
+bool WriteChangesJson(const char *output_file)
+{
+    assert(output_file != NULL);
+
+    JsonElement *json = JsonObjectCreate(3);
+    JsonObjectAppendInteger(json, "format_version", 1);
+    JsonElement *files = JsonArrayCreate(16);
+    JsonObjectAppendArray(json, "files", files);
+    if (!AddChangedFilesToJson(files))
+    {
+        JsonDestroy(json);
+        return false;
+    }
+
+    Log(LOG_LEVEL_INFO, "Writing the simulated change set to '%s'",
+        output_file);
+    Writer *writer = StringWriter();
+    JsonWrite(writer, json, 0);
+    WriterWrite(writer, "\n");
+    JsonDestroy(json);
+    char *document = StringWriterClose(writer);
+
+    /* Written to a new file which is then renamed into place, so that an
+     * existing file or link at #output_file is replaced, not written
+     * through. */
+    char *tmp_file;
+    xasprintf(&tmp_file, "%s.%06d" CF_NEW, output_file, rand() % 999999);
+    bool success = false;
+    int fd = safe_open_create_perms(tmp_file, O_WRONLY | O_CREAT | O_EXCL,
+                                    CF_PERMS_DEFAULT);
+    if (fd != -1)
+    {
+        const size_t document_len = strlen(document);
+        success =
+            (FullWrite(fd, document, document_len) == (ssize_t) document_len);
+        success = ((close(fd) == 0) && success);
+        success = (success && (rename(tmp_file, output_file) == 0));
+    }
+    if (!success)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to write the simulated change set to '%s': %s",
+            output_file, GetErrorStr());
+        if (fd != -1)
+        {
+            unlink(tmp_file);
+        }
+    }
+    free(tmp_file);
+    free(document);
+    return success;
 }

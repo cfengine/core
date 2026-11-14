@@ -1,0 +1,29 @@
+body common control
+{
+  inputs => { "../default.sub.cf" };
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testroot)/create-me"
+      create => "true",
+      content => "created";
+
+    "$(G.testroot)/modify-me" content => "after";
+    "$(G.testroot)/delete-me" delete => tidy;
+    # Renames are not in the --simulate-json output yet.
+    "$(G.testroot)/rename-me" rename => to("renamed");
+    "$(G.testroot)/link" link_from => symlink("$(G.testroot)/modify-me");
+}
+
+body rename to(name)
+{
+  newname => "$(name)";
+}
+
+body link_from symlink(target)
+{
+  source => "$(target)";
+  link_type => "symlink";
+}

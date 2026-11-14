@@ -82,6 +82,23 @@ void HandleRunagentRequest(int conn_fd, const char *local_run_command)
         request[n_read - 1] = '\0';
     }
 
+    /* The request names a single host to hail (a hostname, IP or host:port).
+     * It is interpolated into the cf-runagent command line below, which
+     * cf_popen() splits into arguments on whitespace (treating quotes as
+     * delimiters), so a request carrying any of those characters would append
+     * arbitrary cf-runagent arguments, run as root, e.g. "-f" to load another
+     * policy or "--remote-bundles" to pick bundles the socket is not meant to
+     * let a caller choose. None of them can appear in a host name or address,
+     * so refuse the request before building the command. */
+    if (request[0] == '\0' || strpbrk(request, " \t\n\v\f\r\"'`") != NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Refusing malformed runagent request");
+        fprintf(conn_file, "{\"error\": \"Malformed runagent request\"}");
+        free(request);
+        fclose(conn_file);
+        return;
+    }
+
     /* TODO: '--raw' for just getting output from cf-runagent directly? */
     const char *tool = NULL;
     char *command;

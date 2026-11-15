@@ -501,6 +501,39 @@ static void test_get_server_literal_sendbuffer_bound(void)
     free(conn);
 }
 
+/*
+ * realpath() fails on a dangling symlink. PreprocessRequestPath() must still
+ * return a canonical path for it, otherwise '..' components of the request
+ * reach the prefix-based path ACL check unresolved.
+ */
+static void test_preprocess_request_path_dangling_symlink(void)
+{
+    char tmpl[] = "/tmp/protocol_test.XXXXXX";
+    char *dir = mkdtemp(tmpl);
+    assert_true(dir != NULL);
+
+    char admitted[PATH_MAX], link_path[PATH_MAX];
+    snprintf(admitted, sizeof(admitted), "%s/admitted", dir);
+    snprintf(link_path, sizeof(link_path), "%s/dangling", dir);
+    assert_int_equal(mkdir(admitted, 0700), 0);
+    assert_int_equal(symlink("/nonexistent/protocol_test", link_path), 0);
+
+    char real_dir[PATH_MAX];
+    assert_true(realpath(dir, real_dir) != NULL);
+    char expected[PATH_MAX];
+    snprintf(expected, sizeof(expected), "%s/dangling", real_dir);
+
+    char reqpath[CF_BUFSIZE];
+    snprintf(reqpath, sizeof(reqpath), "%s/../dangling", admitted);
+    size_t len = PreprocessRequestPath(reqpath, sizeof(reqpath));
+    assert_string_equal(reqpath, expected);
+    assert_int_equal(len, strlen(expected));
+
+    unlink(link_path);
+    rmdir(admitted);
+    rmdir(dir);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -508,7 +541,8 @@ int main()
     {
           unit_test(test_command_parser),
           unit_test(test_user_name),
-          unit_test(test_get_server_literal_sendbuffer_bound)
+          unit_test(test_get_server_literal_sendbuffer_bound),
+          unit_test(test_preprocess_request_path_dangling_symlink)
     };
 
     return run_tests(tests);

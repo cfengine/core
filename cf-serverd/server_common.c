@@ -1339,6 +1339,53 @@ size_t ShortcutsExpand(char *path, size_t path_size,
 }
 
 /**
+ * realpath() fails on a dangling symlink, so canonicalise the parent
+ * directory of #path instead and append the link name. The result can be
+ * matched against the path ACLs like any other resolved path, unlike #path
+ * itself which may still contain '..' components or symlinked directories.
+ *
+ * @return true on success, with the result written in #dst.
+ */
+bool ResolveDanglingSymlink(const char *path, char *dst, size_t dst_size)
+{
+    const char *link_name = strrchr(path, FILE_SEPARATOR);
+    if (link_name == NULL || link_name[1] == '\0')
+    {
+        return false;
+    }
+
+    char parent[PATH_MAX];
+    size_t parent_len = link_name - path;
+    if (parent_len >= sizeof(parent))
+    {
+        return false;
+    }
+    if (parent_len == 0)                                  /* link is in / */
+    {
+        parent[0] = FILE_SEPARATOR;
+        parent[1] = '\0';
+    }
+    else
+    {
+        memcpy(parent, path, parent_len);
+        parent[parent_len] = '\0';
+    }
+    link_name++;
+
+    char resolved[PATH_MAX];
+    if (realpath(parent, resolved) == NULL)
+    {
+        return false;
+    }
+
+    size_t resolved_len = strlen(resolved);
+    bool need_separator = (resolved[resolved_len - 1] != FILE_SEPARATOR);
+    int ret = snprintf(dst, dst_size, "%s%s%s", resolved,
+                       need_separator ? FILE_SEPARATOR_STR : "", link_name);
+    return (ret >= 0 && (size_t) ret < dst_size);
+}
+
+/**
  * Canonicalize a path, ensure it is absolute, and resolve all symlinks.
  * In detail:
  *
@@ -1415,10 +1462,10 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
 
         /* } */
         struct stat statbuf;
-        if ((lstat(reqpath, &statbuf) == 0) && S_ISLNK(statbuf.st_mode))
+        if ((lstat(reqpath, &statbuf) == 0) && S_ISLNK(statbuf.st_mode) &&
+            ResolveDanglingSymlink(reqpath, dst, sizeof(dst)))
         {
             Log(LOG_LEVEL_VERBOSE, "Requested file is a dead symbolic link (filename: %s)", reqpath);
-            strlcpy(dst, reqpath, CF_BUFSIZE);
         }
         else
         {

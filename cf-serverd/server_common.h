@@ -64,6 +64,7 @@ size_t ShortcutsExpand(char *path, size_t path_size,
                        const StringMap *shortcuts,
                        const char *ipaddr, const char *hostname,
                        const char *key);
+bool ResolveDanglingSymlink(const char *path, char *dst, size_t dst_size);
 size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size);
 void SetConnIdentity(ServerConnectionState *conn, const char *username);
 bool DoExec2(const EvalContext *ctx,

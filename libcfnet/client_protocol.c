@@ -398,13 +398,34 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
         return false;
     }
 
-    decrypted_cchall = xmalloc(encrypted_len);
+    /* RSA_private_decrypt() can write up to RSA_size() bytes, however short
+     * the ciphertext the server sent us is. */
+    decrypted_cchall = xmalloc(RSA_size(PRIVKEY));
 
-    if (RSA_private_decrypt(encrypted_len, in, (unsigned char *) decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
+    const int decrypted_len = RSA_private_decrypt(
+        encrypted_len,
+        in,
+        (unsigned char *) decrypted_cchall,
+        PRIVKEY,
+        RSA_PKCS1_PADDING);
+    if (decrypted_len <= 0)
     {
         Log(LOG_LEVEL_ERR,
             "Private decrypt failed, abandoning. (RSA_private_decrypt: %s)",
             CryptoLastErrorString());
+        free(decrypted_cchall);
+        RSA_free(server_pubkey);
+        return false;
+    }
+
+    if (decrypted_len < nonce_len)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Counter-challenge from server '%s' is too short (%d bytes, expected %d)",
+            conn->this_server,
+            decrypted_len,
+            nonce_len);
+        free(decrypted_cchall);
         RSA_free(server_pubkey);
         return false;
     }

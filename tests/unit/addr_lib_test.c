@@ -222,6 +222,12 @@ static void test_FuzzySetMatch_ipv6()
     ASSERT_MATCH("2001:0-ffff:0:0:0:0:0:1", "2001:ffff:0:0:0:0:0:1");
     ASSERT_MATCH("2001:10-20:0:0:0:0:0:1", "2001:20:0:0:0:0:0:1");
     ASSERT_NO_MATCH("2001:10-20:0:0:0:0:0:1", "2001:21:0:0:0:0:0:1");
+
+    /* Groups are hexadecimal */
+    ASSERT_MATCH("2001:a-f:0:0:0:0:0:1", "2001:c:0:0:0:0:0:1");
+    ASSERT_NO_MATCH("fe80:1-3:0:0:0:0:0:1", "fe81:2:0:0:0:0:0:1");
+    ASSERT_NO_MATCH("2001:1-3:0:0:0:0:0:a", "2001:2:0:0:0:0:0:b");
+    ASSERT_MATCH("2001:1-3:0:0:0:0:0:A", "2001:2:0:0:0:0:0:a");
 }
 
 #undef ASSERT_MATCH

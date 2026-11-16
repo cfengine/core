@@ -208,6 +208,67 @@ static bool MatchIPv4Range(const char *pattern, const char *address)
     return true;
 }
 
+static bool MatchIPv6Range(const char *pattern, const char *address)
+{
+    long from = -1, to = -1, cmp = -1;
+    char buffer1[64], buffer2[64];
+
+    const char *sp1 = pattern;
+    const char *sp2 = address;
+
+    for (int i = 0; i < 8; i++)
+    {
+        buffer1[0] = '\0';
+        sscanf(sp1, "%63[^:]", buffer1);
+        buffer1[63] = '\0';
+
+        sp1 += strlen(buffer1);
+        if (*sp1 == ':')
+        {
+            sp1++;
+        }
+
+        buffer2[0] = '\0';
+        sscanf(sp2, "%63[^:]", buffer2);
+        buffer2[63] = '\0';
+
+        sp2 += strlen(buffer2);
+        if (*sp2 == ':')
+        {
+            sp2++;
+        }
+
+        if (strstr(buffer1, "-"))
+        {
+            sscanf(buffer1, "%lx-%lx", &from, &to);
+            sscanf(buffer2, "%lx", &cmp);
+
+            if (from < 0 || to < 0)
+            {
+                return false;
+            }
+
+            if ((from >= cmp) || (cmp > to))
+            {
+                Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx", from, cmp, to);
+                return false;
+            }
+        }
+        else
+        {
+            sscanf(buffer1, "%ld", &from);
+            sscanf(buffer2, "%ld", &cmp);
+
+            if (from != cmp)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 /******************************************************************************/
 /* Public API                                                                 */
 /******************************************************************************/
@@ -301,63 +362,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
         }
         else
         {
-            long i, from = -1, to = -1, cmp = -1;
-            char buffer1[64], buffer2[64];
-
-            const char *sp1 = s1;
-            const char *sp2 = s2;
-
-            for (i = 0; i < 8; i++)
-            {
-                buffer1[0] = '\0';
-                sscanf(sp1, "%63[^:]", buffer1);
-                buffer1[63] = '\0';
-
-                sp1 += strlen(buffer1);
-                if (*sp1 == ':')
-                {
-                    sp1++;
-                }
-
-                buffer2[0] = '\0';
-                sscanf(sp2, "%63[^:]", buffer2);
-                buffer2[63] = '\0';
-
-                sp2 += strlen(buffer2);
-                if (*sp2 == ':')
-                {
-                    sp2++;
-                }
-
-                if (strstr(buffer1, "-"))
-                {
-                    sscanf(buffer1, "%lx-%lx", &from, &to);
-                    sscanf(buffer2, "%lx", &cmp);
-
-                    if (from < 0 || to < 0)
-                    {
-                        return -1;
-                    }
-
-                    if ((from >= cmp) || (cmp > to))
-                    {
-                        Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx", from, cmp, to);
-                        return -1;
-                    }
-                }
-                else
-                {
-                    sscanf(buffer1, "%ld", &from);
-                    sscanf(buffer2, "%ld", &cmp);
-
-                    if (from != cmp)
-                    {
-                        return -1;
-                    }
-                }
-            }
-
-            return 0;
+            return MatchIPv6Range(s1, s2) ? 0 : -1;
         }
     }
 

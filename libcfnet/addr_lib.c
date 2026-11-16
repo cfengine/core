@@ -213,7 +213,7 @@ static bool ParseIPv6RangePattern(const char *pattern, Interval groups[IPV6_GROU
         return true;
     }
 
-    if (strstr(gap + 1, "::") != NULL)
+    if (StringContains(gap + 1, "::"))
     {
         Log(LOG_LEVEL_VERBOSE,
             "Invalid IPv6 range '%s': '::' may only appear once", pattern);
@@ -335,7 +335,7 @@ static bool GetPatternNotation(const char *pattern, PatternNotation *notation)
 static bool MatchPrefix(const char *pattern, const char *address)
 {
     const size_t len = strlen(pattern);
-    return strncmp(pattern, address, len) == 0 &&
+    return StringEqualN(pattern, address, len) &&
            (address[len] == '\0' || address[len] == '.');
 }
 
@@ -469,7 +469,7 @@ static bool MatchIPv6Range(const char *pattern, const char *address)
  */
 bool IPRangeMatch(const char *pattern, const char *address)
 {
-    if (strcmp(pattern, address) == 0)
+    if (StringEqual(pattern, address))
     {
         return true;
     }

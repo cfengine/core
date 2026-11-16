@@ -642,9 +642,9 @@ bool FuzzyMatchParse(const char *s)
  *
  * @param hostname will point to the hostname, or NULL if no or empty hostname
  * @param port will point to the port, or NULL if no or empty port
- * @return the type of hostname: ADDRESS_TYPE_IPV4 if it starts with a digit,
- *         ADDRESS_TYPE_IPV6 if it contains a ':' (not validated), otherwise
- *         (hostname, invalid or too long) ADDRESS_TYPE_OTHER
+ * @return the type of hostname: ADDRESS_TYPE_IPV4 if it is a valid IPv4
+ *         address, ADDRESS_TYPE_IPV6 if it contains a ':' (not validated),
+ *         otherwise (hostname, invalid or too long) ADDRESS_TYPE_OTHER
  * @WARNING modifies #s to '\0' terminate hostname if followed by port.
  */
 AddressType ParseHostPort(char *s, char **hostname, char **port)
@@ -687,18 +687,12 @@ AddressType ParseHostPort(char *s, char **hostname, char **port)
 
         if (first_colon != NULL)
         {
-            if (first_dot != NULL && first_dot < first_colon)
+            // "1.2.3.4:80", "cfengine.com:80", "localhost:80" or "localhost:"
+            if ((first_dot != NULL && first_dot < first_colon) ||
+                strchr(first_colon + 1, ':') == NULL)
             {
-                // "1.2.3.4:80" or "cfengine.com:80"
                 *first_colon = '\0';
                 port_str = first_colon + 1;
-            }
-            else if (strchr(first_colon + 1, ':') == NULL)
-            {
-                // "localhost:80" or "localhost:"
-                *first_colon = '\0';
-                port_str = first_colon + 1;
-                classify = false;
             }
             else                   // Multiple colons: IPv6 address, no port
             {
@@ -719,7 +713,8 @@ AddressType ParseHostPort(char *s, char **hostname, char **port)
         return ADDRESS_TYPE_IPV6;
     }
 
-    return isdigit((unsigned char) (*hostname)[0])
+    struct in_addr addr;
+    return (inet_pton(AF_INET, *hostname, &addr) == 1)
         ? ADDRESS_TYPE_IPV4
         : ADDRESS_TYPE_OTHER;
 }

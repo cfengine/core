@@ -168,6 +168,12 @@ static void test_ParseHostPort_address_type()
     ASSERT_ADDRESS_TYPE("[1.2.3.4", ADDRESS_TYPE_OTHER);
     ASSERT_ADDRESS_TYPE("", ADDRESS_TYPE_OTHER);
 
+    /* Hostnames starting with a digit are not IPv4 addresses */
+    ASSERT_ADDRESS_TYPE("1password.com", ADDRESS_TYPE_OTHER);
+    ASSERT_ADDRESS_TYPE("1password.com:80", ADDRESS_TYPE_OTHER);
+    ASSERT_ADDRESS_TYPE("[1password.com]:80", ADDRESS_TYPE_OTHER);
+    ASSERT_ADDRESS_TYPE("1.2.3", ADDRESS_TYPE_OTHER);
+
 #undef ASSERT_ADDRESS_TYPE
 }
 

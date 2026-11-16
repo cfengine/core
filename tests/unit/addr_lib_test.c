@@ -218,8 +218,10 @@ static void test_FuzzySetMatch_ipv6()
     ASSERT_MATCH("::/0", "fe80::1");
     ASSERT_NO_MATCH("2001:db8::/129", "2001:db8::1");
 
-    /* Range */
+    /* Range: both bounds are inclusive */
+    ASSERT_MATCH("2001:0-ffff:0:0:0:0:0:1", "2001:0:0:0:0:0:0:1");
     ASSERT_MATCH("2001:0-ffff:0:0:0:0:0:1", "2001:ffff:0:0:0:0:0:1");
+    ASSERT_MATCH("2001:10-20:0:0:0:0:0:1", "2001:10:0:0:0:0:0:1");
     ASSERT_MATCH("2001:10-20:0:0:0:0:0:1", "2001:20:0:0:0:0:0:1");
     ASSERT_NO_MATCH("2001:10-20:0:0:0:0:0:1", "2001:21:0:0:0:0:0:1");
 

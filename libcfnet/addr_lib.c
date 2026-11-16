@@ -531,48 +531,43 @@ bool FuzzyHostParse(const char *arg2)
     return true;
 }
 
-int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost)
+/**
+ * Checks whether refhost is prefix followed by a number within range,
+ * e.g. FuzzyHostMatch("host", "1-10", "HOST5") == 0.
+ * The comparison of the prefix is case-insensitive.
+ *
+ * Returns 0 on match.
+ */
+int FuzzyHostMatch(const char *prefix, const char *range, const char *refhost)
 {
-    char *sp, refbase[1024];
-    long cmp = -1, start = -1, end = -1;
-    char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE];
-
-    strlcpy(refbase, refhost, sizeof(refbase));
-    sp = refbase + strlen(refbase) - 1;
-
-    while (isdigit((int) *sp))
+    // Split refhost into base name and trailing number, e.g. "host12"
+    const size_t len = strlen(refhost);
+    size_t base_len = len;
+    while (base_len > 0 && isdigit((unsigned char) refhost[base_len - 1]))
     {
-        sp--;
+        base_len--;
     }
 
-    sp++;
-    sscanf(sp, "%ld", &cmp);
-    *sp = '\0';
-
-    if (cmp < 0)
+    if (base_len == 0 || base_len == len)
     {
-        return 1;
+        return 1; // No base name, or no number
     }
 
-    if (strlen(refbase) == 0)
+    unsigned long number;
+    if (!ParseNumber(refhost + base_len, refhost + len, 10, LONG_MAX, &number))
     {
-        return 1;
+        return 1; // Number too large
     }
 
-    sscanf(arg1, "%ld-%ld", &start, &end);
-
-    if ((cmp < start) || (cmp > end))
+    long start = -1, end = -1;
+    sscanf(range, "%ld-%ld", &start, &end);
+    if ((long) number < start || (long) number > end)
     {
         return 1;
     }
 
-    strlcpy(buf1, refbase, CF_BUFSIZE);
-    strlcpy(buf2, arg0, CF_BUFSIZE);
-
-    ToLowerStrInplace(buf1);
-    ToLowerStrInplace(buf2);
-
-    if (strcmp(buf1, buf2) != 0)
+    if (strlen(prefix) != base_len ||
+        !StringEqualN_IgnoreCase(prefix, refhost, base_len))
     {
         return 1;
     }

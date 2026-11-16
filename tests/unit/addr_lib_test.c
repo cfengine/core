@@ -230,6 +230,19 @@ static void test_FuzzySetMatch_ipv6()
     ASSERT_NO_MATCH("fe80:1-3:0:0:0:0:0:1", "fe81:2:0:0:0:0:0:1");
     ASSERT_NO_MATCH("2001:1-3:0:0:0:0:0:a", "2001:2:0:0:0:0:0:b");
     ASSERT_MATCH("2001:1-3:0:0:0:0:0:A", "2001:2:0:0:0:0:0:a");
+
+    /* "::" compression in pattern and address */
+    ASSERT_MATCH("2001:db8:1-5::1", "2001:db8:3::1");
+    ASSERT_MATCH("2001:db8:1-5::1", "2001:db8:3:0:0:0:0:1");
+    ASSERT_MATCH("2001:db8:1-5:0:0:0:0:1", "2001:db8:3::1");
+    ASSERT_NO_MATCH("2001:db8:1-5::1", "2001:db8:3::2");
+    ASSERT_MATCH("::1-5", "::3");
+    ASSERT_MATCH("fe80::0-ff:1", "fe80::12:1");
+
+    /* Invalid range patterns never match */
+    ASSERT_NO_MATCH("2001:db8:1-5", "2001:db8:3::1");
+    ASSERT_NO_MATCH("2001::db8::1-5", "2001::db8:0:0:3");
+    ASSERT_NO_MATCH("2001:db8:1-10000::1", "2001:db8:3::1");
 }
 
 #undef ASSERT_MATCH

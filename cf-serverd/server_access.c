@@ -73,6 +73,8 @@ static bool access_CheckResource(const struct resource_acl *acl,
                                  const char *ipaddr, const char *hostname,
                                  const char *key, const char *username)
 {
+    assert(acl != NULL);
+
     bool access     = false;                 /* DENY by default */
     bool have_match = false;                 /* No matching rule found yet */
 

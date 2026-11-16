@@ -28,9 +28,11 @@
 #include <logging.h>
 #include <string_lib.h>
 
-#define CF_ADDRSIZE 128
 #define IPV4_OCTETS 4
 #define IPV6_GROUPS 8
+
+/* Large enough for the binary form of both IPv4 and IPv6 addresses */
+#define BINARY_ADDR_SIZE sizeof(struct in6_addr)
 
 /* Inclusive interval matched by one octet/group of a range pattern,
  * e.g. "10-20", or "7" which is the interval 7-7. */
@@ -240,6 +242,53 @@ static bool ParseIPv6RangePattern(const char *pattern, Interval groups[IPV6_GROU
 }
 
 /**
+ * Parses a CIDR pattern "ADDRESS/BITS" of the given family.
+ *
+ * @param address receives the binary network address (BINARY_ADDR_SIZE bytes)
+ */
+static bool ParseCIDR(const char *pattern, int family,
+                      unsigned char *address, unsigned long *bits)
+{
+    assert(family == AF_INET || family == AF_INET6);
+    const char *family_name = (family == AF_INET) ? "IPv4" : "IPv6";
+
+    const char *slash = strchr(pattern, '/');
+    if (slash == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Invalid %s CIDR '%s': missing '/'",
+            family_name, pattern);
+        return false;
+    }
+
+    char address_str[CF_MAX_IP_LEN];
+    const size_t address_len = slash - pattern;
+    if (address_len >= sizeof(address_str))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Invalid %s CIDR '%s': address is too long",
+            family_name, pattern);
+        return false;
+    }
+    memcpy(address_str, pattern, address_len);
+    address_str[address_len] = '\0';
+
+    if (inet_pton(family, address_str, address) != 1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Invalid %s CIDR '%s': '%s' is not a valid %s address",
+            family_name, pattern, address_str, family_name);
+        return false;
+    }
+
+    const unsigned long max_bits = (family == AF_INET) ? 32 : 128;
+    if (!ParseNumber(slash + 1, slash + strlen(slash), 10, max_bits, bits))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Invalid %s CIDR '%s': mask must be a number from 0 to %lu",
+            family_name, pattern, max_bits);
+        return false;
+    }
+    return true;
+}
+
+/**
  * Determines the notation of an address pattern: CIDR if it contains a '/',
  * range if it contains a '-', otherwise prefix.
  *
@@ -290,89 +339,48 @@ static bool MatchPrefix(const char *pattern, const char *address)
            (address[len] == '\0' || address[len] == '.');
 }
 
-static bool MatchIPv4CIDR(const char *pattern, const char *address)
+/* True if the first bits of a and b are equal */
+static bool LeadingBitsEqual(const unsigned char *a, const unsigned char *b,
+                             unsigned long bits)
 {
-    struct sockaddr_in addr1, addr2;
-    char network[CF_ADDRSIZE];
-    unsigned long mask;
+    const size_t whole_bytes = bits / 8;
+    const unsigned int remaining_bits = bits % 8;
 
-    // Checks that the addr to match is a valid address
-    // else bogus addresses will always match /0 range
-    if (inet_pton(AF_INET, address, &addr2.sin_addr) != 1)
+    if (memcmp(a, b, whole_bytes) != 0)
     {
-        Log(LOG_LEVEL_ERR, "Invalid reference IPv4: %s", address);
         return false;
     }
-
-    network[0] = '\0';
-    int ret = sscanf(pattern, "%16[^/]/%lu", network, &mask);
-    if (ret != 2 || mask > 32 ||
-        inet_pton(AF_INET, network, &addr1.sin_addr) != 1)
+    if (remaining_bits == 0)
     {
-        Log(LOG_LEVEL_ERR, "Invalid IPv4 CIDR: %s", pattern);
-        return false;
-    }
-    else if (mask == 0)
-    {
-        return true;                     /* /0 CIDR matches everything */
+        return true;
     }
 
-    unsigned long a1 = htonl(addr1.sin_addr.s_addr);
-    unsigned long a2 = htonl(addr2.sin_addr.s_addr);
-
-    unsigned long shift = 32 - mask;
-    assert(shift < 32);                /* Undefined behaviour if 32 */
-
-    return (a1 >> shift) == (a2 >> shift);
+    const unsigned char mask = (unsigned char) (0xFF << (8 - remaining_bits));
+    return (a[whole_bytes] & mask) == (b[whole_bytes] & mask);
 }
 
-static bool MatchIPv6CIDR(const char *pattern, const char *address)
+static bool MatchCIDR(const char *pattern, int family, const char *address)
 {
-    struct sockaddr_in6 addr1 = {0};
-    struct sockaddr_in6 addr2 = {0};
-    char network[CF_ADDRSIZE];
-    unsigned long mask;
+    const char *family_name = (family == AF_INET) ? "IPv4" : "IPv6";
 
-    network[0] = '\0';
-    int ret = sscanf(pattern, "%40[^/]/%lu", network, &mask);
-    if (ret != 2 || mask > 128)
+    unsigned char network[BINARY_ADDR_SIZE];
+    unsigned long bits;
+    if (!ParseCIDR(pattern, family, network, &bits))
     {
-        Log(LOG_LEVEL_ERR, "Invalid IPv6 CIDR: %s", pattern);
-        return false;
-    }
-    int blocks = mask / 8;
-    int remaining_bits = mask % 8;
-
-    addr1.sin6_family = AF_INET6;
-    if (inet_pton(AF_INET6, network, &addr1.sin6_addr) != 1)
-    {
-        return false;
-    }
-    addr2.sin6_family = AF_INET6;
-    if (inet_pton(AF_INET6, address, &addr2.sin6_addr) != 1)
-    {
+        Log(LOG_LEVEL_ERR, "Invalid %s CIDR: %s", family_name, pattern);
         return false;
     }
 
-    for (int i = 0; i < blocks; i++)
+    // Checks that the address to match is valid, otherwise bogus addresses
+    // would always match a /0 range
+    unsigned char addr[BINARY_ADDR_SIZE];
+    if (inet_pton(family, address, addr) != 1)
     {
-        if (addr1.sin6_addr.s6_addr[i] != addr2.sin6_addr.s6_addr[i])
-        {
-            return false;
-        }
+        Log(LOG_LEVEL_ERR, "Invalid %s address: %s", family_name, address);
+        return false;
     }
 
-    if (remaining_bits > 0)
-    {
-        uint8_t bitmask = (uint8_t)(0xFF << (8 - remaining_bits));
-
-        if ((addr1.sin6_addr.s6_addr[blocks] & bitmask) !=
-            (addr2.sin6_addr.s6_addr[blocks] & bitmask))
-        {
-            return false;
-        }
-    }
-    return true;
+    return LeadingBitsEqual(network, addr, bits);
 }
 
 /**
@@ -496,7 +504,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
         match = MatchPrefix(s1, s2);
         break;
     case PATTERN_CIDR:
-        match = is_v4 ? MatchIPv4CIDR(s1, s2) : MatchIPv6CIDR(s1, s2);
+        match = MatchCIDR(s1, is_v4 ? AF_INET : AF_INET6, s2);
         break;
     case PATTERN_RANGE:
         match = is_v4 ? MatchIPv4Range(s1, s2) : MatchIPv6Range(s1, s2);
@@ -572,176 +580,64 @@ int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost)
     return 0;
 }
 
+/**
+ * Checks that s is an address pattern understood by FuzzySetMatch().
+ */
 bool FuzzyMatchParse(const char *s)
 {
-    short isCIDR = false, isrange = false, isv6 = false, isv4 = false, isADDR = false;
-    char address[CF_ADDRSIZE];
-    int mask, count = 0;
+    const bool is_v4 = (strchr(s, '.') != NULL);
+    const bool is_v6 = (strchr(s, ':') != NULL);
 
-    for (const char *sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
+    if (is_v4 && is_v6)
     {
-        if (!isxdigit((int) *sp))
-        {
-            isADDR = false;
-            break;
-        }
-
-        if (*sp == ':')         /* Catches any ipv6 address */
-        {
-            isADDR = true;
-            break;
-        }
-
-        if (isdigit((int) *sp)) /* catch non-ipv4 address - no more than 3 digits */
-        {
-            count++;
-            if (count > 3)
-            {
-                isADDR = false;
-                break;
-            }
-        }
-        else
-        {
-            count = 0;
-        }
-    }
-
-    if (!isADDR)
-    {
-        return true;
-    }
-
-    if (strstr(s, "/") != 0)
-    {
-        isCIDR = true;
-    }
-
-    if (strstr(s, "-") != 0)
-    {
-        isrange = true;
-    }
-
-    if (strstr(s, ".") != 0)
-    {
-        isv4 = true;
-    }
-
-    if (strstr(s, ":") != 0)
-    {
-        isv6 = true;
-    }
-
-    if (isv4 && isv6)
-    {
-        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses");
+        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses in '%s'", s);
         return false;
     }
 
-    if (isCIDR && isrange)
+    if (!is_v4 && !is_v6)
     {
-        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xx-yy range notation");
+        Log(LOG_LEVEL_VERBOSE, "'%s' is not an IP address, range or subnet", s);
         return false;
     }
 
-    if (isv4 && isCIDR)
+    PatternNotation notation;
+    if (!GetPatternNotation(s, &notation))
     {
-        if (strlen(s) > 4 + 3 * 4 + 1 + 2)      /* xxx.yyy.zzz.mmm/cc */
-        {
-            Log(LOG_LEVEL_ERR, "IPv4 address looks too long");
-            return false;
-        }
-
-        address[0] = '\0';
-        mask = 0;
-        sscanf(s, "%16[^/]/%d", address, &mask);
-
-        if (mask < 8)
-        {
-            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is less than 8", mask, s);
-            return false;
-        }
-
-        if (mask > 30)
-        {
-            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is silly (> 30)", mask, s);
-            return false;
-        }
+        return false;
     }
 
-    if (isv4 && isrange)
+    bool valid = false;
+    if (notation == PATTERN_CIDR)
     {
-        long i, from = -1, to = -1;
-        char buffer1[64];
-
-        const char *sp1 = s;
-
-        for (i = 0; i < 4; i++)
-        {
-            buffer1[0] = '\0';
-            sscanf(sp1, "%63[^.]", buffer1);
-            buffer1[63] = '\0';
-
-            if (strlen(buffer1) == 0)
-            {
-                break;
-            }
-
-            sp1 += strlen(buffer1);
-            if (*sp1 == '.')
-            {
-                sp1++;
-            }
-
-            if (strstr(buffer1, "-"))
-            {
-                sscanf(buffer1, "%ld-%ld", &from, &to);
-
-                if ((from < 0) || (to < 0))
-                {
-                    Log(LOG_LEVEL_ERR, "Error in IP range - looks like address, or bad hostname");
-                    return false;
-                }
-
-                if (to < from)
-                {
-                    Log(LOG_LEVEL_ERR, "Bad IP range");
-                    return false;
-                }
-
-            }
-        }
+        unsigned char network[BINARY_ADDR_SIZE];
+        unsigned long bits;
+        valid = ParseCIDR(s, is_v4 ? AF_INET : AF_INET6, network, &bits);
+    }
+    else if (is_v4) // Range or prefix
+    {
+        Interval octets[IPV4_OCTETS];
+        valid = (ParseIPv4Pattern(s, octets) > 0);
+    }
+    else if (notation == PATTERN_RANGE) // IPv6
+    {
+        Interval groups[IPV6_GROUPS];
+        valid = ParseIPv6RangePattern(s, groups);
+    }
+    else // IPv6 full address, or prefix of 1-7 groups
+    {
+        struct in6_addr addr;
+        Interval groups[IPV6_GROUPS - 1];
+        size_t count;
+        valid = inet_pton(AF_INET6, s, &addr) == 1 ||
+                (ParseIPv6Groups(s, s + strlen(s), groups, IPV6_GROUPS - 1, &count) &&
+                 count > 0);
     }
 
-    if (isv6 && isCIDR)
+    if (!valid)
     {
-        char address[CF_ADDRSIZE];
-        int mask;
-
-        if (strlen(s) < 20)
-        {
-            Log(LOG_LEVEL_ERR, "IPv6 address looks too short");
-            return false;
-        }
-
-        if (strlen(s) > 42)
-        {
-            Log(LOG_LEVEL_ERR, "IPv6 address looks too long");
-            return false;
-        }
-
-        address[0] = '\0';
-        mask = 0;
-        sscanf(s, "%40[^/]/%d", address, &mask);
-
-        if (mask > 15)
-        {
-            Log(LOG_LEVEL_ERR, "IPv6 CIDR mask is too large");
-            return false;
-        }
+        Log(LOG_LEVEL_VERBOSE, "Invalid IP address, range or subnet '%s'", s);
     }
-
-    return true;
+    return valid;
 }
 
 

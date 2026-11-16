@@ -30,6 +30,50 @@
 
 #define CF_ADDRSIZE 128
 
+/* Notation used by an address pattern, see FuzzySetMatch() */
+typedef enum
+{
+    PATTERN_PREFIX, // "10.1.2.3", "10.1.2"
+    PATTERN_CIDR,   // "10.1.2.0/24", "2001:db8::/32"
+    PATTERN_RANGE,  // "10.1.2.1-50", "2001:db8:0-ff::1"
+} PatternNotation;
+
+/**
+ * Determines the notation of an address pattern: CIDR if it contains a '/',
+ * range if it contains a '-', otherwise prefix.
+ *
+ * @param pattern the address pattern, e.g. "10.1.2.0/24"
+ * @param notation receives the notation of the pattern
+ * @return true on success, false (and logs an error) if the pattern mixes
+ *         CIDR and range notation, in which case notation is not set
+ */
+static bool GetPatternNotation(const char *pattern, PatternNotation *notation)
+{
+    const bool is_cidr = (strchr(pattern, '/') != NULL);
+    const bool is_range = (strchr(pattern, '-') != NULL);
+
+    if (is_cidr && is_range)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Cannot mix CIDR notation with xxx-yyy range notation '%s'", pattern);
+        return false;
+    }
+
+    if (is_cidr)
+    {
+        *notation = PATTERN_CIDR;
+    }
+    else if (is_range)
+    {
+        *notation = PATTERN_RANGE;
+    }
+    else
+    {
+        *notation = PATTERN_PREFIX;
+    }
+    return true;
+}
+
 /******************************************************************************/
 /* Matching                                                                   */
 /******************************************************************************/
@@ -277,96 +321,54 @@ static bool MatchIPv6Range(const char *pattern, const char *address)
    s1 is the test string, and s2 is the reference e.g.
    FuzzySetMatch("128.39.74.10/23","128.39.75.56") == 0
 
+   s1 may be a CIDR ("10.0.0.0/8", "2001:db8::/32"), a range
+   ("10.0.0.1-50", "2001:db8:0-ff::1") or an address prefix ("10.1.2").
+
    Returns 0 on match. */
 
 /* TODO rename to AddrSubnetMatch() */
 int FuzzySetMatch(const char *s1, const char *s2)
 {
-    short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
-
     if (strcmp(s1, s2) == 0)
     {
         return 0;
     }
 
-    if (strstr(s1, "/") != 0)
+    const bool is_v4 = (strchr(s1, '.') != NULL || strchr(s2, '.') != NULL);
+    const bool is_v6 = (strchr(s1, ':') != NULL || strchr(s2, ':') != NULL);
+
+    if (is_v4 && is_v6)
     {
-        isCIDR = true;
+        return -1; // Mixed IPv4 and IPv6
     }
 
-    if (strstr(s1, "-") != 0)
+    PatternNotation notation;
+    if (!GetPatternNotation(s1, &notation))
     {
-        isrange = true;
-    }
-
-    if (strstr(s1, ".") != 0)
-    {
-        isv4 = true;
-    }
-
-    if (strstr(s1, ":") != 0)
-    {
-        isv6 = true;
-    }
-
-    if (strstr(s2, ".") != 0)
-    {
-        isv4 = true;
-    }
-
-    if (strstr(s2, ":") != 0)
-    {
-        isv6 = true;
-    }
-
-    if (isv4 && isv6)
-    {
-        /* This is just wrong */
         return -1;
     }
 
-    if (isCIDR && isrange)
-    {
-        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xxx-yyy range notation '%s'", s1);
-        return -1;
-    }
-
-    if (!(isv6 || isv4))
+    if (!is_v4 && !is_v6)
     {
         Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name '%s'", s1);
         return -1;
     }
 
-    if (!(isrange || isCIDR))
+    bool match = false;
+    switch (notation)
     {
-        return MatchPrefix(s1, s2) ? 0 : -1;
+    case PATTERN_PREFIX:
+        match = MatchPrefix(s1, s2);
+        break;
+    case PATTERN_CIDR:
+        match = is_v4 ? MatchIPv4CIDR(s1, s2) : MatchIPv6CIDR(s1, s2);
+        break;
+    case PATTERN_RANGE:
+        match = is_v4 ? MatchIPv4Range(s1, s2) : MatchIPv6Range(s1, s2);
+        break;
     }
 
-    if (isv4)
-    {
-        if (isCIDR)
-        {
-            return MatchIPv4CIDR(s1, s2) ? 0 : -1;
-        }
-        else
-        {
-            return MatchIPv4Range(s1, s2) ? 0 : -1;
-        }
-    }
-
-    if (isv6)
-    {
-        if (isCIDR)
-        {
-            return MatchIPv6CIDR(s1, s2) ? 0 : -1;
-        }
-        else
-        {
-            return MatchIPv6Range(s1, s2) ? 0 : -1;
-        }
-    }
-
-    return -1;
+    return match ? 0 : -1;
 }
 
 bool FuzzyHostParse(const char *arg2)

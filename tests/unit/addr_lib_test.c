@@ -208,6 +208,9 @@ static void test_FuzzySetMatch_ipv4()
     ASSERT_MATCH("0.0.0.0/0", "1.2.3.4");
     ASSERT_NO_MATCH("0.0.0.0/0", "not-an-ip-address");
     ASSERT_NO_MATCH("1.2.3.4/33", "1.2.3.4");
+    /* The pattern's address used to be read uninitialized when invalid */
+    ASSERT_NO_MATCH("bogus.address/0", "1.2.3.4");
+    ASSERT_NO_MATCH("1.2.3.999/24", "1.2.3.4");
 
     /* Mixed notations */
     ASSERT_NO_MATCH("10.0.0.1-5/8", "10.0.0.1");

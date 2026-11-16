@@ -82,6 +82,55 @@ static bool MatchIPv4CIDR(const char *pattern, const char *address)
     return (a1 >> shift) == (a2 >> shift);
 }
 
+static bool MatchIPv6CIDR(const char *pattern, const char *address)
+{
+    struct sockaddr_in6 addr1 = {0};
+    struct sockaddr_in6 addr2 = {0};
+    char network[CF_ADDRSIZE];
+    unsigned long mask;
+
+    network[0] = '\0';
+    int ret = sscanf(pattern, "%40[^/]/%lu", network, &mask);
+    if (ret != 2 || mask > 128)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid IPv6 CIDR: %s", pattern);
+        return false;
+    }
+    int blocks = mask / 8;
+    int remaining_bits = mask % 8;
+
+    addr1.sin6_family = AF_INET6;
+    if (inet_pton(AF_INET6, network, &addr1.sin6_addr) != 1)
+    {
+        return false;
+    }
+    addr2.sin6_family = AF_INET6;
+    if (inet_pton(AF_INET6, address, &addr2.sin6_addr) != 1)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < blocks; i++)
+    {
+        if (addr1.sin6_addr.s6_addr[i] != addr2.sin6_addr.s6_addr[i])
+        {
+            return false;
+        }
+    }
+
+    if (remaining_bits > 0)
+    {
+        uint8_t bitmask = (uint8_t)(0xFF << (8 - remaining_bits));
+
+        if ((addr1.sin6_addr.s6_addr[blocks] & bitmask) !=
+            (addr2.sin6_addr.s6_addr[blocks] & bitmask))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 static bool MatchIPv4Range(const char *pattern, const char *address)
 {
     long from = -1, to = -1, cmp = -1;
@@ -173,7 +222,6 @@ static bool MatchIPv4Range(const char *pattern, const char *address)
 int FuzzySetMatch(const char *s1, const char *s2)
 {
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
-    char address[CF_ADDRSIZE];
 
     if (strcmp(s1, s2) == 0)
     {
@@ -247,54 +295,9 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
     if (isv6)
     {
-        int i;
-
         if (isCIDR)
         {
-            struct sockaddr_in6 addr1 = {0};
-            struct sockaddr_in6 addr2 = {0};
-            unsigned long mask;
-
-            address[0] = '\0';
-            int ret = sscanf(s1, "%40[^/]/%lu", address, &mask);
-            if (ret != 2 || mask > 128)
-            {
-                Log(LOG_LEVEL_ERR, "Invalid IPv6 CIDR: %s", s1);
-                return -1;
-            }
-            int blocks = mask / 8;
-            int remaining_bits = mask % 8;
-
-            addr1.sin6_family = AF_INET6;
-            if (inet_pton(AF_INET6, address, &addr1.sin6_addr) != 1)
-            {
-                return -1;
-            }
-            addr2.sin6_family = AF_INET6;
-            if (inet_pton(AF_INET6, s2, &addr2.sin6_addr) != 1)
-            {
-                return -1;
-            }
-
-            for (i = 0; i < blocks; i++)
-            {
-                if (addr1.sin6_addr.s6_addr[i] != addr2.sin6_addr.s6_addr[i])
-                {
-                    return -1;
-                }
-            }
-
-            if (remaining_bits > 0)
-            {
-                uint8_t bitmask = (uint8_t)(0xFF << (8 - remaining_bits));
-
-                if ((addr1.sin6_addr.s6_addr[blocks] & bitmask) !=
-                    (addr2.sin6_addr.s6_addr[blocks] & bitmask))
-                {
-                    return -1;
-                }
-            }
-            return 0;
+            return MatchIPv6CIDR(s1, s2) ? 0 : -1;
         }
         else
         {

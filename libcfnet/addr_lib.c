@@ -300,8 +300,8 @@ static bool MatchIPv6Range(const char *pattern, const char *address)
         }
         else
         {
-            sscanf(buffer1, "%ld", &from);
-            sscanf(buffer2, "%ld", &cmp);
+            sscanf(buffer1, "%lx", &from);
+            sscanf(buffer2, "%lx", &cmp);
 
             if (from != cmp)
             {

@@ -29,6 +29,7 @@
 #include <string_lib.h>
 
 #define CF_ADDRSIZE 128
+#define IPV4_OCTETS 4
 #define IPV6_GROUPS 8
 
 /* Inclusive interval matched by one octet/group of a range pattern,
@@ -123,6 +124,33 @@ static bool ParseInterval(const char *start, const char *end, int base,
     return ParseNumber(start, dash, base, max, &interval->from) &&
            ParseNumber(dash + 1, end, base, max, &interval->to) &&
            interval->from <= interval->to;
+}
+
+/**
+ * Parses an IPv4 pattern of 1 to 4 '.'-separated octets, each of which is a
+ * decimal number or range, e.g. "10.0.0.1-50", "10.1-5" or "10.1.2.3".
+ *
+ * @return the number of octets parsed, or 0 if the pattern is invalid
+ */
+static size_t ParseIPv4Pattern(const char *pattern, Interval octets[IPV4_OCTETS])
+{
+    const char *start = pattern;
+    for (size_t count = 0; count < IPV4_OCTETS; count++)
+    {
+        const char *end = start + strcspn(start, ".");
+        if (!ParseInterval(start, end, 10, 255, &octets[count]))
+        {
+            return 0;
+        }
+
+        if (*end == '\0')
+        {
+            return count + 1;
+        }
+        start = end + 1;
+    }
+
+    return 0; // More than 4 octets
 }
 
 /**
@@ -348,80 +376,49 @@ static bool MatchIPv6CIDR(const char *pattern, const char *address)
     return true;
 }
 
+/**
+ * Matches an IPv4 range pattern. A pattern with fewer than 4 octets matches
+ * on the leading octets only, e.g. "10.1-5" matches "10.3.7.8".
+ */
 static bool MatchIPv4Range(const char *pattern, const char *address)
 {
-    long from = -1, to = -1, cmp = -1;
-    char buffer1[64], buffer2[64];
-
-    const char *sp1 = pattern;
-    const char *sp2 = address;
-
-    for (int i = 0; i < 4; i++)
+    Interval octets[IPV4_OCTETS];
+    const size_t count = ParseIPv4Pattern(pattern, octets);
+    if (count == 0)
     {
-        buffer1[0] = '\0';
-        sscanf(sp1, "%63[^.]", buffer1);
-        buffer1[63] = '\0';
+        Log(LOG_LEVEL_DEBUG, "Invalid IPv4 range '%s'", pattern);
+        return false;
+    }
 
-        if (strlen(buffer1) == 0)
+    const char *start = address;
+    for (size_t i = 0; i < count; i++)
+    {
+        const char *end = start + strcspn(start, ".");
+        unsigned long value;
+        if (!ParseNumber(start, end, 10, 255, &value))
         {
-            break;
+            Log(LOG_LEVEL_VERBOSE, "Invalid IPv4 address '%s'", address);
+            return false;
         }
-
-        sp1 += strlen(buffer1);
-        if (*sp1 == '.')
+        if (value < octets[i].from || value > octets[i].to)
         {
-            sp1++;
-        }
-
-        buffer2[0] = '\0';
-        sscanf(sp2, "%63[^.]", buffer2);
-        buffer2[63] = '\0';
-
-        if (strlen(buffer2) == 0)
-        {
-            /* address has fewer octets than the pattern: no match */
             return false;
         }
 
-        sp2 += strlen(buffer2);
-        if (*sp2 == '.')
+        if (*end == '\0')
         {
-            sp2++;
-        }
-
-        if (strstr(buffer1, "-"))
-        {
-            sscanf(buffer1, "%ld-%ld", &from, &to);
-            sscanf(buffer2, "%ld", &cmp);
-
-            if ((from < 0) || (to < 0))
+            if (i + 1 < count)
             {
-                Log(LOG_LEVEL_DEBUG, "Couldn't read range");
+                Log(LOG_LEVEL_VERBOSE,
+                    "IPv4 address '%s' has fewer octets than range '%s'",
+                    address, pattern);
                 return false;
             }
-
-            if ((from > cmp) || (cmp > to))
-            {
-                Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld, range '%s'", from, cmp, to, buffer2);
-                return false;
-            }
+            return true;
         }
-        else
-        {
-            sscanf(buffer1, "%ld", &from);
-            sscanf(buffer2, "%ld", &cmp);
-
-            if (from != cmp)
-            {
-                Log(LOG_LEVEL_DEBUG, "Unequal");
-                return false;
-            }
-        }
-
-        Log(LOG_LEVEL_DEBUG, "Matched octet '%s' with '%s'", buffer1, buffer2);
+        start = end + 1;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Matched IP range");
     return true;
 }
 

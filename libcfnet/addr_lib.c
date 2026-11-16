@@ -82,6 +82,83 @@ static bool MatchIPv4CIDR(const char *pattern, const char *address)
     return (a1 >> shift) == (a2 >> shift);
 }
 
+static bool MatchIPv4Range(const char *pattern, const char *address)
+{
+    long from = -1, to = -1, cmp = -1;
+    char buffer1[64], buffer2[64];
+
+    const char *sp1 = pattern;
+    const char *sp2 = address;
+
+    for (int i = 0; i < 4; i++)
+    {
+        buffer1[0] = '\0';
+        sscanf(sp1, "%63[^.]", buffer1);
+        buffer1[63] = '\0';
+
+        if (strlen(buffer1) == 0)
+        {
+            break;
+        }
+
+        sp1 += strlen(buffer1);
+        if (*sp1 == '.')
+        {
+            sp1++;
+        }
+
+        buffer2[0] = '\0';
+        sscanf(sp2, "%63[^.]", buffer2);
+        buffer2[63] = '\0';
+
+        if (strlen(buffer2) == 0)
+        {
+            /* address has fewer octets than the pattern: no match */
+            return false;
+        }
+
+        sp2 += strlen(buffer2);
+        if (*sp2 == '.')
+        {
+            sp2++;
+        }
+
+        if (strstr(buffer1, "-"))
+        {
+            sscanf(buffer1, "%ld-%ld", &from, &to);
+            sscanf(buffer2, "%ld", &cmp);
+
+            if ((from < 0) || (to < 0))
+            {
+                Log(LOG_LEVEL_DEBUG, "Couldn't read range");
+                return false;
+            }
+
+            if ((from > cmp) || (cmp > to))
+            {
+                Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld, range '%s'", from, cmp, to, buffer2);
+                return false;
+            }
+        }
+        else
+        {
+            sscanf(buffer1, "%ld", &from);
+            sscanf(buffer2, "%ld", &cmp);
+
+            if (from != cmp)
+            {
+                Log(LOG_LEVEL_DEBUG, "Unequal");
+                return false;
+            }
+        }
+
+        Log(LOG_LEVEL_DEBUG, "Matched octet '%s' with '%s'", buffer1, buffer2);
+    }
+
+    Log(LOG_LEVEL_DEBUG, "Matched IP range");
+    return true;
+}
+
 /******************************************************************************/
 /* Public API                                                                 */
 /******************************************************************************/
@@ -164,79 +241,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
         }
         else
         {
-            long i, from = -1, to = -1, cmp = -1;
-            char buffer1[64], buffer2[64];
-
-            const char *sp1 = s1;
-            const char *sp2 = s2;
-
-            for (i = 0; i < 4; i++)
-            {
-                buffer1[0] = '\0';
-                sscanf(sp1, "%63[^.]", buffer1);
-                buffer1[63] = '\0';
-
-                if (strlen(buffer1) == 0)
-                {
-                    break;
-                }
-
-                sp1 += strlen(buffer1);
-                if (*sp1 == '.')
-                {
-                    sp1++;
-                }
-
-                buffer2[0] = '\0';
-                sscanf(sp2, "%63[^.]", buffer2);
-                buffer2[63] = '\0';
-
-                if (strlen(buffer2) == 0)
-                {
-                    /* s2 has fewer octets than the pattern: no match */
-                    return -1;
-                }
-
-                sp2 += strlen(buffer2);
-                if (*sp2 == '.')
-                {
-                    sp2++;
-                }
-
-                if (strstr(buffer1, "-"))
-                {
-                    sscanf(buffer1, "%ld-%ld", &from, &to);
-                    sscanf(buffer2, "%ld", &cmp);
-
-                    if ((from < 0) || (to < 0))
-                    {
-                        Log(LOG_LEVEL_DEBUG, "Couldn't read range");
-                        return -1;
-                    }
-
-                    if ((from > cmp) || (cmp > to))
-                    {
-                        Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld, range '%s'", from, cmp, to, buffer2);
-                        return -1;
-                    }
-                }
-                else
-                {
-                    sscanf(buffer1, "%ld", &from);
-                    sscanf(buffer2, "%ld", &cmp);
-
-                    if (from != cmp)
-                    {
-                        Log(LOG_LEVEL_DEBUG, "Unequal");
-                        return -1;
-                    }
-                }
-
-                Log(LOG_LEVEL_DEBUG, "Matched octet '%s' with '%s'", buffer1, buffer2);
-            }
-
-            Log(LOG_LEVEL_DEBUG, "Matched IP range");
-            return 0;
+            return MatchIPv4Range(s1, s2) ? 0 : -1;
         }
     }
 

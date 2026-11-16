@@ -1322,6 +1322,24 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 continue;
             }
 
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORT_PROMISE_HANDLE_INCLUDE].lval))
+            {
+                assert(value_type == CF_DATA_TYPE_STRING_LIST);
+                RlistDestroy(config->agent_specific.agent.report_promise_handle_include);
+                config->agent_specific.agent.report_promise_handle_include = RlistCopy(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting report_promise_handle_include");
+                continue;
+            }
+
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORT_PROMISE_HANDLE_EXCLUDE].lval))
+            {
+                assert(value_type == CF_DATA_TYPE_STRING_LIST);
+                RlistDestroy(config->agent_specific.agent.report_promise_handle_exclude);
+                config->agent_specific.agent.report_promise_handle_exclude = RlistCopy(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting report_promise_handle_exclude");
+                continue;
+            }
+
             if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_EVALUATION_ORDER].lval))
             {
                 assert(value_type == CF_DATA_TYPE_STRING);

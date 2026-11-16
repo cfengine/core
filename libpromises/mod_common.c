@@ -327,6 +327,8 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewString("default_directory_create_mode", ".*", "Default directory create mode (defaults to 0700 if not specified)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("report_metatags_include", CF_ANYSTRING, "List of regex filters for metatags of classes and variables to be included into reports", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("report_metatags_exclude", CF_ANYSTRING, "List of regex filters for metatags of classes and variables to be excluded from reports", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("report_promise_handle_include", CF_ANYSTRING, "List of regex filters for handles of promise executions to be included into reports", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("report_promise_handle_exclude", CF_ANYSTRING, "List of regex filters for handles of promise executions to be excluded from reports", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

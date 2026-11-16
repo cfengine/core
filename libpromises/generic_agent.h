@@ -99,6 +99,8 @@ typedef struct
             bool report_class_log;
             Rlist *report_metatags_include;
             Rlist *report_metatags_exclude;
+            Rlist *report_promise_handle_include;
+            Rlist *report_promise_handle_exclude;
         } agent;
         struct
         {

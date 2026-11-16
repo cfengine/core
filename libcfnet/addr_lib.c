@@ -30,6 +30,24 @@
 
 #define CF_ADDRSIZE 128
 
+/******************************************************************************/
+/* Matching                                                                   */
+/******************************************************************************/
+
+/**
+ * Plain string prefix match, at octet boundaries, i.e. "10.1.2" matches
+ * "10.1.2.3", but "10.1.2.1" does not match "10.1.2.12".
+ */
+static bool MatchPrefix(const char *pattern, const char *address)
+{
+    const size_t len = strlen(pattern);
+    return strncmp(pattern, address, len) == 0 &&
+           (address[len] == '\0' || address[len] == '.');
+}
+
+/******************************************************************************/
+/* Public API                                                                 */
+/******************************************************************************/
 
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
@@ -98,15 +116,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
     if (!(isrange || isCIDR))
     {
-        if (strlen(s2) > strlen(s1))
-        {
-            if (*(s2 + strlen(s1)) != '.')
-            {
-                return -1;      // Because xxx.1 should not match xxx.12 in the same octet
-            }
-        }
-
-        return strncmp(s1, s2, strlen(s1));     /* do partial string match */
+        return MatchPrefix(s1, s2) ? 0 : -1;
     }
 
     if (isv4)

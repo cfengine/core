@@ -292,7 +292,7 @@ static bool MatchIPv6Range(const char *pattern, const char *address)
                 return false;
             }
 
-            if ((from >= cmp) || (cmp > to))
+            if ((from > cmp) || (cmp > to))
             {
                 Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx", from, cmp, to);
                 return false;

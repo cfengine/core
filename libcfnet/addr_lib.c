@@ -29,6 +29,15 @@
 #include <string_lib.h>
 
 #define CF_ADDRSIZE 128
+#define IPV6_GROUPS 8
+
+/* Inclusive interval matched by one octet/group of a range pattern,
+ * e.g. "10-20", or "7" which is the interval 7-7. */
+typedef struct
+{
+    unsigned long from;
+    unsigned long to;
+} Interval;
 
 /* Notation used by an address pattern, see FuzzySetMatch() */
 typedef enum
@@ -37,6 +46,170 @@ typedef enum
     PATTERN_CIDR,   // "10.1.2.0/24", "2001:db8::/32"
     PATTERN_RANGE,  // "10.1.2.1-50", "2001:db8:0-ff::1"
 } PatternNotation;
+
+/******************************************************************************/
+/* Parsing helpers                                                            */
+/******************************************************************************/
+
+/**
+ * Parses the unsigned number in [start, end), written in the given base
+ * (10 or 16). Unlike strtoul(), no sign, whitespace or "0x" is accepted.
+ *
+ * @return false if the input is empty, has invalid digits or exceeds max
+ */
+static bool ParseNumber(const char *start, const char *end, int base,
+                        unsigned long max, unsigned long *value)
+{
+    assert(start != NULL);
+    assert(end != NULL);
+    assert(start <= end);
+    assert(base == 10 || base == 16);
+
+    if (start == end)
+    {
+        return false;
+    }
+
+    unsigned long result = 0;
+    for (const char *c = start; c < end; c++)
+    {
+        const unsigned char ch = *c;
+        unsigned long digit;
+        if (isdigit(ch))
+        {
+            digit = ch - '0';
+        }
+        else if (base == 16 && isxdigit(ch))
+        {
+            digit = tolower(ch) - 'a' + 10;
+        }
+        else
+        {
+            return false;
+        }
+
+        if (result > (max - digit) / base)
+        {
+            return false;
+        }
+        result = result * base + digit;
+    }
+
+    *value = result;
+    return true;
+}
+
+/**
+ * Parses "N" or "FROM-TO" in [start, end) into an interval.
+ *
+ * @return false if a number is invalid, exceeds max, or FROM > TO
+ */
+static bool ParseInterval(const char *start, const char *end, int base,
+                          unsigned long max, Interval *interval)
+{
+    assert(interval != NULL);
+
+    const char *dash = memchr(start, '-', end - start);
+    if (dash == NULL)
+    {
+        if (!ParseNumber(start, end, base, max, &interval->from))
+        {
+            return false;
+        }
+        interval->to = interval->from;
+        return true;
+    }
+
+    return ParseNumber(start, dash, base, max, &interval->from) &&
+           ParseNumber(dash + 1, end, base, max, &interval->to) &&
+           interval->from <= interval->to;
+}
+
+/**
+ * Parses up to max ':'-separated hex groups (numbers or ranges) in
+ * [start, end). An empty input yields 0 groups.
+ */
+static bool ParseIPv6Groups(const char *start, const char *end,
+                            Interval *groups, size_t max, size_t *count)
+{
+    assert(start <= end);
+
+    *count = 0;
+    if (start == end)
+    {
+        return true;
+    }
+
+    while (*count < max)
+    {
+        const char *sep = memchr(start, ':', end - start);
+        const char *group_end = (sep != NULL) ? sep : end;
+        if (!ParseInterval(start, group_end, 16, 0xFFFF, &groups[*count]))
+        {
+            return false;
+        }
+        (*count)++;
+
+        if (sep == NULL)
+        {
+            return true;
+        }
+        start = sep + 1;
+    }
+
+    return false; // Too many groups
+}
+
+/**
+ * Parses an IPv6 range pattern into exactly 8 groups, expanding "::",
+ * e.g. "2001:db8:1-5::1".
+ */
+static bool ParseIPv6RangePattern(const char *pattern, Interval groups[IPV6_GROUPS])
+{
+    const char *end = pattern + strlen(pattern);
+    const char *gap = strstr(pattern, "::");
+    size_t count;
+
+    if (gap == NULL)
+    {
+        if (!ParseIPv6Groups(pattern, end, groups, IPV6_GROUPS, &count) ||
+            count != IPV6_GROUPS)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Invalid IPv6 range '%s': expected 8 valid groups, or '::'",
+                pattern);
+            return false;
+        }
+        return true;
+    }
+
+    if (strstr(gap + 1, "::") != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Invalid IPv6 range '%s': '::' may only appear once", pattern);
+        return false;
+    }
+
+    // "::" stands for at least one zero group
+    size_t head_count, tail_count;
+    Interval tail[IPV6_GROUPS];
+    if (!ParseIPv6Groups(pattern, gap, groups, IPV6_GROUPS - 1, &head_count) ||
+        !ParseIPv6Groups(gap + 2, end, tail, IPV6_GROUPS - 1 - head_count, &tail_count))
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Invalid IPv6 range '%s': invalid group, or more than 7 groups besides '::'",
+            pattern);
+        return false;
+    }
+
+    const size_t zero_count = IPV6_GROUPS - head_count - tail_count;
+    for (size_t i = head_count; i < head_count + zero_count; i++)
+    {
+        groups[i] = (Interval) { .from = 0, .to = 0 };
+    }
+    memcpy(groups + head_count + zero_count, tail, tail_count * sizeof(*tail));
+    return true;
+}
 
 /**
  * Determines the notation of an address pattern: CIDR if it contains a '/',
@@ -254,59 +427,25 @@ static bool MatchIPv4Range(const char *pattern, const char *address)
 
 static bool MatchIPv6Range(const char *pattern, const char *address)
 {
-    long from = -1, to = -1, cmp = -1;
-    char buffer1[64], buffer2[64];
-
-    const char *sp1 = pattern;
-    const char *sp2 = address;
-
-    for (int i = 0; i < 8; i++)
+    Interval groups[IPV6_GROUPS];
+    if (!ParseIPv6RangePattern(pattern, groups))
     {
-        buffer1[0] = '\0';
-        sscanf(sp1, "%63[^:]", buffer1);
-        buffer1[63] = '\0';
+        Log(LOG_LEVEL_DEBUG, "Invalid IPv6 range '%s'", pattern);
+        return false;
+    }
 
-        sp1 += strlen(buffer1);
-        if (*sp1 == ':')
+    struct in6_addr addr;
+    if (inet_pton(AF_INET6, address, &addr) != 1)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < IPV6_GROUPS; i++)
+    {
+        const unsigned long value = (addr.s6_addr[2 * i] << 8) | addr.s6_addr[2 * i + 1];
+        if (value < groups[i].from || value > groups[i].to)
         {
-            sp1++;
-        }
-
-        buffer2[0] = '\0';
-        sscanf(sp2, "%63[^:]", buffer2);
-        buffer2[63] = '\0';
-
-        sp2 += strlen(buffer2);
-        if (*sp2 == ':')
-        {
-            sp2++;
-        }
-
-        if (strstr(buffer1, "-"))
-        {
-            sscanf(buffer1, "%lx-%lx", &from, &to);
-            sscanf(buffer2, "%lx", &cmp);
-
-            if (from < 0 || to < 0)
-            {
-                return false;
-            }
-
-            if ((from > cmp) || (cmp > to))
-            {
-                Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx", from, cmp, to);
-                return false;
-            }
-        }
-        else
-        {
-            sscanf(buffer1, "%lx", &from);
-            sscanf(buffer2, "%lx", &cmp);
-
-            if (from != cmp)
-            {
-                return false;
-            }
+            return false;
         }
     }
 

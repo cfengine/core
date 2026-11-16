@@ -611,107 +611,89 @@ bool FuzzyMatchParse(const char *s)
 
 
 /**
- * Simple check to avoid writing to illegal memory addresses.
- * NOT a proper test for valid IP.
- */
-static AddressType AddressTypeCheckValidity(char *s, AddressType address_type)
-{
-    if(NULL_OR_EMPTY(s))
-    {
-        return ADDRESS_TYPE_OTHER;
-    }
-    if(strlen(s) >= CF_MAX_IP_LEN)
-    {
-        return ADDRESS_TYPE_OTHER;
-    }
-    return address_type;
-}
-
-/**
  * Parses "hostname:port" or "[hostname]:port", where hostname may also be
  * IPv4 or IPv6 address string.
  *
  * @param hostname will point to the hostname, or NULL if no or empty hostname
  * @param port will point to the port, or NULL if no or empty port
+ * @return the type of hostname: ADDRESS_TYPE_IPV4 if it starts with a digit,
+ *         ADDRESS_TYPE_IPV6 if it contains a ':' (not validated), otherwise
+ *         (hostname, invalid or too long) ADDRESS_TYPE_OTHER
  * @WARNING modifies #s to '\0' terminate hostname if followed by port.
  */
 AddressType ParseHostPort(char *s, char **hostname, char **port)
 {
     s = TrimWhitespace(s);
-    if ( NULL_OR_EMPTY(s) )
+    if (NULL_OR_EMPTY(s))
     {
         *hostname = NULL;
         *port     = NULL;
         return ADDRESS_TYPE_OTHER;
     }
 
-    AddressType address_type = ADDRESS_TYPE_OTHER;
-    char *h, *p; // hostname, port temporaries
+    char *host = s;
+    char *port_str = NULL;
+    bool is_ipv6 = false;
+    bool classify = true;
 
-    h = s;
-    p = NULL;
-
-    char *first_colon = strchr(s, ':');
-    char *first_dot   = strchr(s, '.');
-
-    if (s[0] == '[')     // [host or ip]:port
+    if (s[0] == '[')               // [host or ip]:port
     {
-        h = s + 1;
-        p = strchr(h, ']');
-        if (p != NULL)
+        host = s + 1;
+        char *closing = strchr(host, ']');
+        if (closing != NULL)
         {
-            if (first_colon != NULL && first_colon < p)
+            *closing = '\0';
+            is_ipv6 = (strchr(host, ':') != NULL);
+            if (closing[1] == ':')
             {
-                address_type = ADDRESS_TYPE_IPV6;
-            }
-            else if (isdigit(h[0]))
-            {
-                address_type = ADDRESS_TYPE_IPV4;
-            } // (else it's other by default)
-
-            *p = '\0';        // '\0' terminate host name
-            if (p[1] == ':')  // move port* forward
-            {
-                p += 2;
+                port_str = closing + 2;
             }
         }
-    }
-    else if (first_colon == NULL)    // localhost, 192.168.0.1
-    {
-        if (isdigit(h[0]))
+        else
         {
-            address_type = ADDRESS_TYPE_IPV4;
+            classify = false;      // Unterminated bracket
         }
     }
-    else if (first_dot == NULL || first_colon < first_dot)
+    else
     {
-        // If only one colon: (cfengine.com:222 or localhost:)
-        if (strchr(first_colon + 1, ':') == NULL)
+        char *first_colon = strchr(s, ':');
+        char *first_dot   = strchr(s, '.');
+
+        if (first_colon != NULL)
         {
-            *first_colon = '\0';
-            p = first_colon + 1;
-        }
-        else // Multiple colons:
-        {
-            address_type = ADDRESS_TYPE_IPV6;
-        }
-    }
-    else // (first_dot < first_colon) : IPv4 or hostname
-    {
-        p = strchr(h, ':');
-        if (p != NULL)
-        {
-            *p = '\0'; // '\0'-terminate hostname
-            p++;
-        }
-        if (isdigit(h[0]))
-        {
-            address_type = ADDRESS_TYPE_IPV4;
+            if (first_dot != NULL && first_dot < first_colon)
+            {
+                // "1.2.3.4:80" or "cfengine.com:80"
+                *first_colon = '\0';
+                port_str = first_colon + 1;
+            }
+            else if (strchr(first_colon + 1, ':') == NULL)
+            {
+                // "localhost:80" or "localhost:"
+                *first_colon = '\0';
+                port_str = first_colon + 1;
+                classify = false;
+            }
+            else                   // Multiple colons: IPv6 address, no port
+            {
+                is_ipv6 = true;
+            }
         }
     }
 
-    *hostname =              (h[0] != '\0') ? h : NULL;
-    *port     = (p != NULL && p[0] != '\0') ? p : NULL;
+    *hostname = (host[0] != '\0') ? host : NULL;
+    *port     = (port_str != NULL && port_str[0] != '\0') ? port_str : NULL;
 
-    return AddressTypeCheckValidity(*hostname, address_type);
+    if (!classify || *hostname == NULL || strlen(*hostname) >= CF_MAX_IP_LEN)
+    {
+        return ADDRESS_TYPE_OTHER;
+    }
+    if (is_ipv6)
+    {
+        return ADDRESS_TYPE_IPV6;
+    }
+
+    return isdigit((unsigned char) (*hostname)[0])
+        ? ADDRESS_TYPE_IPV4
+        : ADDRESS_TYPE_OTHER;
 }

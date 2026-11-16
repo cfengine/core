@@ -306,7 +306,8 @@ static bool MatchIPv4CIDR(const char *pattern, const char *address)
 
     network[0] = '\0';
     int ret = sscanf(pattern, "%16[^/]/%lu", network, &mask);
-    if (ret != 2 || mask > 32)
+    if (ret != 2 || mask > 32 ||
+        inet_pton(AF_INET, network, &addr1.sin_addr) != 1)
     {
         Log(LOG_LEVEL_ERR, "Invalid IPv4 CIDR: %s", pattern);
         return false;
@@ -315,8 +316,6 @@ static bool MatchIPv4CIDR(const char *pattern, const char *address)
     {
         return true;                     /* /0 CIDR matches everything */
     }
-
-    inet_pton(AF_INET, network, &addr1.sin_addr);
 
     unsigned long a1 = htonl(addr1.sin_addr.s_addr);
     unsigned long a2 = htonl(addr2.sin_addr.s_addr);

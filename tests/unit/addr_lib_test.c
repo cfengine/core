@@ -285,6 +285,35 @@ static void test_FuzzyMatchParse()
 {
     assert_true(FuzzyMatchParse("1.2.3.4"));
     assert_true(FuzzyMatchParse("1-10.2.3.4"));
+    assert_true(FuzzyMatchParse("1.2.3"));
+    assert_true(FuzzyMatchParse("192.168.1.50-140"));
+    assert_true(FuzzyMatchParse("0.0.0.0/0"));
+    assert_true(FuzzyMatchParse("8.8.8.8/31"));
+    assert_true(FuzzyMatchParse("1.2.3.4/32"));
+    assert_true(FuzzyMatchParse("2001:db8::1"));
+    assert_true(FuzzyMatchParse("2001:db8"));
+    assert_true(FuzzyMatchParse("2001:db8::/64"));
+    assert_true(FuzzyMatchParse("::/0"));
+    assert_true(FuzzyMatchParse("2001:db8:1-5::1"));
+    assert_true(FuzzyMatchParse("2001:0-ffff:0:0:0:0:0:1"));
+
+    assert_false(FuzzyMatchParse(""));
+    assert_false(FuzzyMatchParse("localhost"));
+    assert_false(FuzzyMatchParse("www.cfengine.com"));
+    assert_false(FuzzyMatchParse("1.2.3.4.5"));
+    assert_false(FuzzyMatchParse("1.2.3."));
+    assert_false(FuzzyMatchParse("1.2.3.256"));
+    assert_false(FuzzyMatchParse("10.5-1.0.0"));
+    assert_false(FuzzyMatchParse("10.0.0.0/33"));
+    assert_false(FuzzyMatchParse("10.0.0.0/"));
+    assert_false(FuzzyMatchParse("10.0.0/8"));
+    assert_false(FuzzyMatchParse("1.2.3.4/8-9"));
+    assert_false(FuzzyMatchParse("1.2.3.4:5::"));
+    assert_false(FuzzyMatchParse("2001:db8::/129"));
+    assert_false(FuzzyMatchParse("2001:db8:1-5"));
+    assert_false(FuzzyMatchParse("2001::1::1-2"));
+    assert_false(FuzzyMatchParse("2001:db8:5-1::1"));
+    assert_false(FuzzyMatchParse("2001:db8:g::1"));
 
     /* A range with fewer octets used to read past the end of the string. */
     char *s = xstrdup("1-2.3");

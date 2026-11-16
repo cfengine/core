@@ -45,6 +45,43 @@ static bool MatchPrefix(const char *pattern, const char *address)
            (address[len] == '\0' || address[len] == '.');
 }
 
+static bool MatchIPv4CIDR(const char *pattern, const char *address)
+{
+    struct sockaddr_in addr1, addr2;
+    char network[CF_ADDRSIZE];
+    unsigned long mask;
+
+    // Checks that the addr to match is a valid address
+    // else bogus addresses will always match /0 range
+    if (inet_pton(AF_INET, address, &addr2.sin_addr) != 1)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid reference IPv4: %s", address);
+        return false;
+    }
+
+    network[0] = '\0';
+    int ret = sscanf(pattern, "%16[^/]/%lu", network, &mask);
+    if (ret != 2 || mask > 32)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid IPv4 CIDR: %s", pattern);
+        return false;
+    }
+    else if (mask == 0)
+    {
+        return true;                     /* /0 CIDR matches everything */
+    }
+
+    inet_pton(AF_INET, network, &addr1.sin_addr);
+
+    unsigned long a1 = htonl(addr1.sin_addr.s_addr);
+    unsigned long a2 = htonl(addr2.sin_addr.s_addr);
+
+    unsigned long shift = 32 - mask;
+    assert(shift < 32);                /* Undefined behaviour if 32 */
+
+    return (a1 >> shift) == (a2 >> shift);
+}
+
 /******************************************************************************/
 /* Public API                                                                 */
 /******************************************************************************/
@@ -123,47 +160,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
     {
         if (isCIDR)
         {
-            struct sockaddr_in addr1, addr2;
-            unsigned long mask;
-
-            // Checks that the addr to match is a valid address
-            // else bogus addresses will always match /0 range
-            if (inet_pton(AF_INET, s2, &addr2.sin_addr) != 1) {
-              Log(LOG_LEVEL_ERR, "Invalid reference IPv4: %s", s2);
-              return -1;
-            }
-
-            address[0] = '\0';
-            int ret = sscanf(s1, "%16[^/]/%lu", address, &mask);
-            if (ret != 2 || mask > 32)
-            {
-                Log(LOG_LEVEL_ERR, "Invalid IPv4 CIDR: %s", s1);
-                return -1;
-            }
-            else if (mask == 0)
-            {
-                return 0;                     /* /0 CIDR matches everything */
-            }
-
-            inet_pton(AF_INET, address, &addr1.sin_addr);
-
-            unsigned long a1 = htonl(addr1.sin_addr.s_addr);
-            unsigned long a2 = htonl(addr2.sin_addr.s_addr);
-
-            unsigned long shift = 32 - mask;
-            assert(shift < 32);                /* Undefined behaviour if 32 */
-
-            a1 = a1 >> shift;
-            a2 = a2 >> shift;
-
-            if (a1 == a2)
-            {
-                return 0;
-            }
-            else
-            {
-                return -1;
-            }
+            return MatchIPv4CIDR(s1, s2) ? 0 : -1;
         }
         else
         {

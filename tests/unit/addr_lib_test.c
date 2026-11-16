@@ -321,6 +321,29 @@ static void test_FuzzyMatchParse()
     free(s);
 }
 
+static void test_FuzzyHostMatch()
+{
+    assert_int_equal(FuzzyHostMatch("host", "1-10", "host1"), 0);
+    assert_int_equal(FuzzyHostMatch("host", "1-10", "host10"), 0);
+    assert_int_equal(FuzzyHostMatch("host", "1-10", "HOST5"), 0);
+    assert_int_equal(FuzzyHostMatch("Host", "1-10", "host5"), 0);
+    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host0"), 0);
+    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host11"), 0);
+    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "hostx5"), 0);
+    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "myhost5"), 0);
+    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host"), 0);
+    assert_int_not_equal(FuzzyHostMatch("host", "1-10", "host99999999999999999999999"), 0);
+
+    /* Host names that are empty or all digits used to be scanned backwards
+     * past the start of the buffer. */
+    char *s = xstrdup("");
+    assert_int_not_equal(FuzzyHostMatch("host", "1-10", s), 0);
+    free(s);
+
+    s = xstrdup("123");
+    assert_int_not_equal(FuzzyHostMatch("", "1-200", s), 0);
+    free(s);
+}
 
 int main()
 {
@@ -333,6 +356,7 @@ int main()
         unit_test(test_FuzzySetMatch_ipv4),
         unit_test(test_FuzzySetMatch_ipv6),
         unit_test(test_FuzzyMatchParse),
+        unit_test(test_FuzzyHostMatch),
     };
 
     return run_tests(tests);

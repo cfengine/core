@@ -192,7 +192,12 @@ static void test_FuzzySetMatch_ipv4()
     ASSERT_NO_MATCH("10.0.0.1-50", "10.0.1.25");
     ASSERT_MATCH("10.1-5", "10.3.7.8");
     ASSERT_NO_MATCH("10.1-5", "10.6.7.8");
+    ASSERT_NO_MATCH("10.0.0.1-50", "10.0.0.abc");
     ASSERT_NO_MATCH("10.0.0.50-1", "10.0.0.25");
+    ASSERT_NO_MATCH("10.x.0.1-50", "10.0.0.25");
+    /* Octets that failed to parse used to reuse the previous octet's value */
+    ASSERT_NO_MATCH("10.x.0.1-50", "10.10.0.25");
+    ASSERT_NO_MATCH("10.0.5.1-50", "10.0.5.abc");
 
     /* CIDR */
     ASSERT_MATCH("10.0.0.0/8", "10.200.3.4");

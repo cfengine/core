@@ -299,8 +299,8 @@ static bool ParseCIDR(const char *pattern, int family,
  */
 static bool GetPatternNotation(const char *pattern, PatternNotation *notation)
 {
-    const bool is_cidr = (strchr(pattern, '/') != NULL);
-    const bool is_range = (strchr(pattern, '-') != NULL);
+    const bool is_cidr = StringContainsChar(pattern, '/');
+    const bool is_range = StringContainsChar(pattern, '-');
 
     if (is_cidr && is_range)
     {
@@ -474,8 +474,8 @@ bool IPRangeMatch(const char *pattern, const char *address)
         return true;
     }
 
-    const bool is_v4 = (strchr(pattern, '.') != NULL || strchr(address, '.') != NULL);
-    const bool is_v6 = (strchr(pattern, ':') != NULL || strchr(address, ':') != NULL);
+    const bool is_v4 = (StringContainsChar(pattern, '.') || StringContainsChar(address, '.'));
+    const bool is_v6 = (StringContainsChar(pattern, ':') || StringContainsChar(address, ':'));
 
     if (is_v4 && is_v6)
     {
@@ -579,8 +579,8 @@ bool HostRangeMatch(const char *prefix, const char *range, const char *hostname)
  */
 bool IPRangeIsValid(const char *pattern)
 {
-    const bool is_v4 = (strchr(pattern, '.') != NULL);
-    const bool is_v6 = (strchr(pattern, ':') != NULL);
+    const bool is_v4 = StringContainsChar(pattern, '.');
+    const bool is_v6 = StringContainsChar(pattern, ':');
 
     if (is_v4 && is_v6)
     {
@@ -668,7 +668,7 @@ AddressType ParseHostPort(char *s, char **hostname, char **port)
         if (closing != NULL)
         {
             *closing = '\0';
-            is_ipv6 = (strchr(host, ':') != NULL);
+            is_ipv6 = StringContainsChar(host, ':');
             if (closing[1] == ':')
             {
                 port_str = closing + 2;
@@ -688,7 +688,7 @@ AddressType ParseHostPort(char *s, char **hostname, char **port)
         {
             // "1.2.3.4:80", "cfengine.com:80", "localhost:80" or "localhost:"
             if ((first_dot != NULL && first_dot < first_colon) ||
-                strchr(first_colon + 1, ':') == NULL)
+                !StringContainsChar(first_colon + 1, ':'))
             {
                 *first_colon = '\0';
                 port_str = first_colon + 1;

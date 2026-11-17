@@ -304,7 +304,7 @@ static bool GetPatternNotation(const char *pattern, PatternNotation *notation)
 
     if (is_cidr && is_range)
     {
-        Log(LOG_LEVEL_ERR,
+        Log(LOG_LEVEL_VERBOSE,
             "Cannot mix CIDR notation with xxx-yyy range notation '%s'", pattern);
         return false;
     }
@@ -367,7 +367,7 @@ static bool MatchCIDR(const char *pattern, int family, const char *address)
     unsigned long bits;
     if (!ParseCIDR(pattern, family, network, &bits))
     {
-        Log(LOG_LEVEL_ERR, "Invalid %s CIDR: %s", family_name, pattern);
+        Log(LOG_LEVEL_VERBOSE, "Invalid %s CIDR: %s", family_name, pattern);
         return false;
     }
 
@@ -376,7 +376,7 @@ static bool MatchCIDR(const char *pattern, int family, const char *address)
     unsigned char addr[BINARY_ADDR_SIZE];
     if (inet_pton(family, address, addr) != 1)
     {
-        Log(LOG_LEVEL_ERR, "Invalid %s address: %s", family_name, address);
+        Log(LOG_LEVEL_VERBOSE, "Invalid %s address: %s", family_name, address);
         return false;
     }
 
@@ -490,7 +490,7 @@ bool IPRangeMatch(const char *pattern, const char *address)
 
     if (!is_v4 && !is_v6)
     {
-        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name '%s'", pattern);
+        Log(LOG_LEVEL_VERBOSE, "Not a valid address range - or not a fully qualified name '%s'", pattern);
         return false;
     }
 
@@ -584,7 +584,7 @@ bool IPRangeIsValid(const char *pattern)
 
     if (is_v4 && is_v6)
     {
-        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses in '%s'", pattern);
+        Log(LOG_LEVEL_VERBOSE, "Mixture of IPv6 and IPv4 addresses in '%s'", pattern);
         return false;
     }
 

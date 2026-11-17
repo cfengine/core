@@ -1377,7 +1377,6 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (plainlen < 0)
         {
-            DebugBinOut((char *) conn->session_key, 32, "Session key");
             Log(LOG_LEVEL_ERR, "Bad decrypt (%d)", len);
         }
 

@@ -1305,6 +1305,18 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
         return -1;
     }
 
+    /* Subdirectories are created as they are found, but files directly in
+     * remote_dir need the top-level local directory to exist already */
+    bool force = false;
+    if (!MakeParentDirectoryPerms(local_dir, force, NULL, sb.st_mode))
+    {
+        // Error already logged
+        free(local_dir);
+        free(base);
+        CFNetDisconnect(conn);
+        return -1;
+    }
+
     int ret = process_dir_recursive(conn,
                                     remote_dir,
                                     local_dir,

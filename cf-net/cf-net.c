@@ -1176,7 +1176,6 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
     assert(args != NULL);
 
     char *local_dir = NULL;
-    bool specified_path = false;
 
     int argc = 0;
     while (args[argc] != NULL)
@@ -1212,7 +1211,6 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
                     free(local_dir);
                 }
                 local_dir = xstrdup(optarg);
-                specified_path = true;
                 break;
             }
             case ':':
@@ -1243,8 +1241,18 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
     char *base = xstrdup(basename(tmp));
     free(tmp);
 
+    if (local_dir == NULL)
+    {
+        /* No -o is the same as -o . */
+        local_dir = xstrdup(".");
+    }
+
+    /* MakeParentDirectoryPerms() rejects relative paths.
+     * Make a relative -o path absolute by prefixing the cwd. */
+    const bool use_cwd = !IsAbsoluteFileName(local_dir);
+
     char cwd[PATH_MAX];
-    if (!specified_path && getcwd(cwd, sizeof(cwd)) == NULL)
+    if (use_cwd && getcwd(cwd, sizeof(cwd)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to get current working directory: %s", GetErrorStr());
         free(base);
@@ -1253,7 +1261,14 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
     }
 
     tmp = local_dir;
-    local_dir = StringFormat("%s/%s/", (specified_path ? local_dir : cwd), base);
+    if (use_cwd)
+    {
+        local_dir = StringFormat("%s/%s/%s/", cwd, local_dir, base);
+    }
+    else
+    {
+        local_dir = StringFormat("%s/%s/", local_dir, base);
+    }
     free(tmp);
 
     if (strlen(local_dir) > PATH_MAX)

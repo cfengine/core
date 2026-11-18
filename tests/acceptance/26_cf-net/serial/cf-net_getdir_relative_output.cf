@@ -1,0 +1,59 @@
+body common control
+{
+  inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  files:
+    # Only a subdirectory, which getdir has to create locally
+    "$(G.testdir)/remote/sub/nested.txt"
+      create => "true",
+      content => "nested";
+
+  methods:
+    "any" usebundle => dcs_fini("$(G.testdir)/out");
+    "any" usebundle => generate_key;
+    "any" usebundle => trust_key;
+
+    "any"
+      usebundle => start_server(
+        "$(this.promise_dirname)/serverd_admit_localhost_15000.cf.srv"
+      );
+}
+
+bundle agent test
+{
+  meta:
+    "description" string => "getdir with a relative output path (-o)";
+
+    "test_skip_needs_work"
+      string => "windows",
+      meta => { "ENT-10254" };
+
+  commands:
+    "$(sys.cf_net)"
+      args => " -H 127.0.0.1:15000 getdir -o out $(G.testdir)/remote",
+      contain => in_dir_shell("$(G.testdir)");
+}
+
+bundle agent check
+{
+  methods:
+    "check"
+      usebundle => dcs_check_diff(
+        "$(G.testdir)/out/remote/sub/nested.txt",
+        "$(G.testdir)/remote/sub/nested.txt",
+        "$(this.promise_filename)"
+      );
+}
+
+bundle agent destroy
+{
+  methods:
+    "any"
+      usebundle => stop_server(
+        "$(this.promise_dirname)/serverd_admit_localhost_15000.cf.srv"
+      );
+}

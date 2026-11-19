@@ -7689,10 +7689,10 @@ static int ParseDate(const char *input_string, time_t *out)
         {
             Log(LOG_LEVEL_DEBUG, "No output read for '%s'", input_string);
         }
-        fclose(fd);
+        cf_pclose(fd);
         return -1;
     }
-    fclose(fd);
+    cf_pclose(fd);
 
     long time_value;
     int ret = StringToLong(buffer, &time_value);

@@ -102,7 +102,7 @@ static const Description COMMANDS[] =
     {"opendir", "List files and folders in a directory",
                 "cf-net opendir masterfiles"},
     {"getdir", "Recursively downloads files and folders in a directory",
-                "cf-net getdir masterfiles/ -o /tmp/"},
+                "cf-net getdir masterfiles/ -o /tmp/ [-p]"},
     {NULL, NULL, NULL}
 };
 
@@ -171,6 +171,19 @@ static const char *command_strings[] =
 // MACRO DECLARATIONS:
 //*******************************************************************
 #define RECURSIONLIMIT 50 // GetDir
+
+/* Modes applied by getdir unless --preserve-perms is given, so that a remote
+ * server cannot choose local permissions (e.g. setuid bits) */
+#define GETDIR_FILE_PERMS (S_IRUSR | S_IWUSR)
+#define GETDIR_DIR_PERMS  (S_IRWXU)
+
+/* Not defined on Windows, but remote file modes use POSIX bit values */
+#ifndef S_ISUID
+# define S_ISUID 04000
+#endif
+#ifndef S_ISGID
+# define S_ISGID 02000
+#endif
 
 
 //*******************************************************************
@@ -611,7 +624,12 @@ static int CFNetHelpTopic(const char *topic)
            "\nto download files. By default the directory is saved with its basename"
            "\nin the current working directory (cwd). Override the destination using"
            "\nthe -o path option."
-           "\n\nUsage: cf-net getdir [-o output_path] <remote_directory>"
+           "\n\nBy default, downloaded files are created with mode 0600 and"
+           "\ndirectories with mode 0700, regardless of their remote permissions."
+           "\nUse the -p (--preserve-perms) option to apply the remote permissions"
+           "\ninstead. With -p, a warning is logged for every remote file that has"
+           "\nthe setuid or setgid bit set."
+           "\n\nUsage: cf-net getdir [-o output_path] [-p] <remote_directory>"
            "\n\nExample: cf-net getdir -o /tmp/backup masterfiles/\n");
     }
     else
@@ -1007,21 +1025,33 @@ enum get_dir_error
 };
 
 static bool CFNetGetWithPerms(AgentConnection *conn, const char *remote_path,
-                          const char *local_path, bool print_stats)
+                              const char *local_path, bool print_stats,
+                              bool preserve_perms)
 {
     assert(conn != NULL);
     assert(remote_path != NULL);
     assert(local_path != NULL);
 
-    struct stat perms;
-    if (!ProtocolStat(conn, remote_path, &perms))
+    struct stat sb;
+    if (!ProtocolStat(conn, remote_path, &sb))
     {
         Log(LOG_LEVEL_ERR, "Failed to stat remote file: %s:%s",
             conn->this_server, remote_path);
         return false;
     }
 
-    if (!ProtocolGet(conn, remote_path, local_path, perms.st_size, perms.st_mode, print_stats))
+    const mode_t remote_perms = sb.st_mode & 07777;
+    const mode_t local_perms = preserve_perms ? remote_perms : GETDIR_FILE_PERMS;
+
+    if (preserve_perms && (remote_perms & (S_ISUID | S_ISGID)) != 0)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Copying file %s:%s with setuid/setgid bit to '%s' (mode %04jo)",
+            conn->this_server, remote_path, local_path,
+            (uintmax_t) remote_perms);
+    }
+
+    if (!ProtocolGet(conn, remote_path, local_path, sb.st_size, local_perms, print_stats))
     {
         Log(LOG_LEVEL_ERR, "Failed to get remote file: %s:%s",
             conn->this_server, remote_path);
@@ -1064,6 +1094,7 @@ static int process_dir_recursive(AgentConnection *conn,
                                  const char *remote_path,
                                  const char *local_path,
                                  bool print_stats,
+                                 bool preserve_perms,
                                  int limit)
 {
     int ret = 0;
@@ -1140,14 +1171,17 @@ static int process_dir_recursive(AgentConnection *conn,
 
         if (S_ISDIR(sb.st_mode)) // Is directory
         {
-            if (!create_local_dir(local_path, item, sb.st_mode))
+            const mode_t dir_perms =
+                preserve_perms ? (sb.st_mode & 07777) : GETDIR_DIR_PERMS;
+            if (!create_local_dir(local_path, item, dir_perms))
             {
                 // Error already logged
                 SeqDestroy(items);
                 return GET_DIR_ERROR;
             }
             ret = process_dir_recursive(conn, remote_full, local_full,
-                                        print_stats, (limit - 1));
+                                        print_stats, preserve_perms,
+                                        (limit - 1));
 
             if (ret != GET_DIR_OK)
             {
@@ -1157,7 +1191,8 @@ static int process_dir_recursive(AgentConnection *conn,
         }
         else
         {
-            if (!CFNetGetWithPerms(conn, remote_full, local_full, print_stats))
+            if (!CFNetGetWithPerms(conn, remote_full, local_full, print_stats,
+                                   preserve_perms))
             {
                 SeqDestroy(items);
                 return GET_DIR_ERROR;
@@ -1176,6 +1211,7 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
     assert(args != NULL);
 
     char *local_dir = NULL;
+    bool preserve_perms = false;
 
     int argc = 0;
     while (args[argc] != NULL)
@@ -1184,8 +1220,9 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
     }
 
     static struct option longopts[] = {
-         { "output",     required_argument,      NULL,          'o' },
-         { NULL,         0,                      NULL,           0  }
+         { "output",         required_argument,  NULL,          'o' },
+         { "preserve-perms", no_argument,        NULL,          'p' },
+         { NULL,             0,                  NULL,           0  }
     };
     if (argc <= 1)
     {
@@ -1195,7 +1232,7 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
     optind = 0;
     extern char *optarg;
     int c = 0;
-    const char *optstr = "o:";
+    const char *optstr = "o:p";
     while ((c = getopt_long(argc, args, optstr, longopts, NULL))
             != -1)
     {
@@ -1211,6 +1248,11 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
                     free(local_dir);
                 }
                 local_dir = xstrdup(optarg);
+                break;
+            }
+            case 'p':
+            {
+                preserve_perms = true;
                 break;
             }
             case ':':
@@ -1308,7 +1350,9 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
     /* Subdirectories are created as they are found, but files directly in
      * remote_dir need the top-level local directory to exist already */
     bool force = false;
-    if (!MakeParentDirectoryPerms(local_dir, force, NULL, sb.st_mode))
+    const mode_t dir_perms =
+        preserve_perms ? (sb.st_mode & 07777) : GETDIR_DIR_PERMS;
+    if (!MakeParentDirectoryPerms(local_dir, force, NULL, dir_perms))
     {
         // Error already logged
         free(local_dir);
@@ -1321,6 +1365,7 @@ static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
                                     remote_dir,
                                     local_dir,
                                     opts->print_stats,
+                                    preserve_perms,
                                     RECURSIONLIMIT);
     if (ret == GET_DIR_RECURSION_LIMIT)
     {

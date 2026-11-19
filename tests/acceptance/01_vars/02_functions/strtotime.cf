@@ -17,8 +17,16 @@ bundle agent test
     "some_date" int => strtotime("2009-09-21T00:00:00Z");
     "epoch" int => int(1253491200);
 
+    # Quotes must not split the date into several arguments (ENT-14983).
+    # As one argument "(...)" is a comment, split into "@100 (" and "@200)"
+    # date fails.
+    "quoted_date" int => strtotime("@100 (' '@200)");
+
   classes:
-    "ok" expression => strcmp("$(epoch)", "$(some_date)");
+    "ok"
+      expression => and(
+        strcmp("$(epoch)", "$(some_date)"), strcmp("100", "$(quoted_date)")
+      );
 
   reports:
     ok::

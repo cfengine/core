@@ -327,6 +327,11 @@ bool acl_CheckPath(const struct acl *acl, const char *reqpath,
      * e.g. turn "/path/to/192.168.1.1.json"
      *      to   "/path/to/$(connection.ip).json" */
     char mangled_path[PATH_MAX];
+    if (reqpath_len >= sizeof(mangled_path))
+    {
+        /* Does not fit, same as an overflow in ReplaceSpecialVariables(). */
+        return access;
+    }
     memcpy(mangled_path, reqpath, reqpath_len + 1);
     size_t mangled_path_len =
         ReplaceSpecialVariables(mangled_path, sizeof(mangled_path),

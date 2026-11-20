@@ -789,7 +789,7 @@ bool IsMatchItemIn(const Item *list, const char *item)
     CYCLE_DECLARE(ptr, slow, toggle);
     while (ptr != NULL)
     {
-        if (FuzzySetMatch(ptr->name, item) == 0 ||
+        if (IPRangeMatch(ptr->name, item) ||
             (IsRegex(ptr->name) &&
              StringMatchFull(ptr->name, item)))
         {

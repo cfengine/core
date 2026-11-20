@@ -374,7 +374,7 @@ static void DeleteAuthList(Auth **list, Auth **list_tail)
     *list_tail = NULL;
 }
 
-/* Must not be called unless ACTIVE_THREADS is zero: */
+/* Must not be called unless ConnectionsInFlight() is zero: */
 static void ClearAuthAndACLs(void)
 {
     /* Must have no currently open connections to free the ACLs. */
@@ -674,6 +674,24 @@ static void GracefulStop()
 }
 #endif // HAVE_SYSTEMD_SD_DAEMON_H
 
+/* Number of connections still being handled.
+ *
+ * A connection is added to SERVER_ACCESS.connectionlist before its handler
+ * thread increments ACTIVE_THREADS, and removed only after the thread has
+ * decremented it again, so ACTIVE_THREADS alone can be zero while a
+ * connection is still in flight.
+ *
+ * Must be called with cft_server_children locked.
+ */
+static int ConnectionsInFlight(void)
+{
+    ThreadLock(cft_count);
+    const int listed = (int) ListLen(SERVER_ACCESS.connectionlist);
+    ThreadUnlock(cft_count);
+
+    return MAX(ACTIVE_THREADS, listed);
+}
+
 /* Wait for connection-handler threads to finish their work.
  *
  * @return Number of live threads remaining after waiting.
@@ -684,7 +702,7 @@ static int WaitOnThreads(int graceful_time)
     for (int i = graceful_time; i > 0; i--)
     {
         ThreadLock(cft_server_children);
-        result = ACTIVE_THREADS;
+        result = ConnectionsInFlight();
         ThreadUnlock(cft_server_children);
 
         if (result == 0)
@@ -749,15 +767,15 @@ static void CollectCallIfDue(EvalContext *ctx)
 
 /* Check for new policy just before spawning a thread.
  *
- * Server reconfiguration can only happen when no threads are active,
- * so this is a good time to do it; but we do still have to check for
- * running threads. */
+ * Server reconfiguration can only happen when no connections are being
+ * handled, so this is a good time to do it; but we do still have to check
+ * for connections in flight. */
 static void PolicyUpdateIfSafe(EvalContext *ctx, Policy **policy,
                                GenericAgentConfig *config)
 {
     ThreadLock(cft_server_children);
     int prior = COLLECT_INTERVAL;
-    if (ACTIVE_THREADS == 0)
+    if (ConnectionsInFlight() == 0)
     {
         CheckFileChanges(ctx, policy, config);
     }

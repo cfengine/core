@@ -1,4 +1,5 @@
 #!/bin/sh
+set -ex
 
 # Usage: run_test.sh TEST
 #
@@ -40,7 +41,16 @@ REACTOR_TESTS_DIR=$(cd "$(dirname "$0")" && pwd)
 # Print the path of binary $1, see the usage above.
 find_binary() {
     if [ -n "$CF_BINDIR" ]; then
-        echo "$CF_BINDIR/$1"
+        if [ -x "$CF_BINDIR/$1.exe" ]; then
+            echo "$CF_BINDIR/$1.exe"
+            return
+        fi
+        if [ -x "$CF_BINDIR/$1" ]; then
+            echo "$CF_BINDIR/$1"
+            return
+        fi
+        echo "Unable to find executable for $1 in $CF_BINDIR"
+        exit 1
     elif [ -x "$REACTOR_TESTS_DIR/../../$1/$1" ]; then
         # in-tree build, may be a libtool wrapper script
         echo "$REACTOR_TESTS_DIR/../../$1/$1"
@@ -51,7 +61,10 @@ find_binary() {
 
 CF_REACTOR=${CF_REACTOR:-$(find_binary cf-reactor)}
 CF_PROMISES=${CF_PROMISES:-$(find_binary cf-promises)}
+CF_AGENT=${CF_AGENT:-$(find_binary cf-agent)}
 export CF_REACTOR
+export CF_PROMISES
+export CF_AGENT
 
 for b in "$CF_REACTOR" "$CF_PROMISES"; do
     if [ ! -x "$b" ]; then
@@ -66,9 +79,27 @@ WORKDIR=$(mktemp -d "${TMPDIR:-/tmp}/cf-reactor-test.XXXXXX" 2>/dev/null) || {
     (umask 077 && mkdir "$WORKDIR") || exit 2
 }
 WORKDIR=$(cd "$WORKDIR" && pwd)
+# On Windows (MSYS2/Cygwin), use the C:/... form of the path: the native
+# binaries get POSIX-looking paths (/c/...) converted when passed through env
+# vars or arguments, so the paths they log and record wouldn't match the ones
+# the tests look for. The shell tools accept the C:/... form as well.
+if command -v cygpath >/dev/null 2>&1; then
+    WORKDIR=$(cygpath -m "$WORKDIR")
+fi
 trap 'rm -rf "$WORKDIR"' EXIT
 mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
-ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises"
+
+ext=""
+case "$CF_PROMISES" in *.exe) ext=".exe" ;; esac
+ln -s "$CF_PROMISES" "$WORKDIR/bin/cf-promises$ext"
+ln -s "$CF_REACTOR" "$WORKDIR/bin/cf-reactor"
+ln -s "$CF_AGENT" "$WORKDIR/bin/cf-agent"
+
+# on windows ln -s copies, so the copied exes need their DLLs alongside
+if [ -n "$ext" ]; then
+  cp "$(dirname "$CF_PROMISES")"/*.dll "$WORKDIR/bin/"
+fi
+
 
 # Run a copy of the policy, keeping its path relative to lib.cf, as CFEngine
 # refuses to read policy files writable by group or others, which those of a
@@ -86,9 +117,19 @@ LOG="$WORKDIR/reactor.log"
 PROMISE_NAME=$(basename "$t" .sh)
 export WORKDIR CFENGINE_TEST_OVERRIDE_WORKDIR LOG PROMISE_NAME
 
-sh "$t" "$policy" > "$WORKDIR/test.log" 2>&1
-result=$?
+echo "--- Validate test policy $policy ---"
+"$CF_PROMISES" -dc "$policy"
+
+echo "--- Begin test $t ---"
+# The exit status of a pipeline is that of its last command, tee here, so
+# record the one of the test in a file
+{
+    bash -ex "$t" "$policy" 2>&1 && rc=0 || rc=$?
+    echo "$rc" > "$WORKDIR/test.rc"
+} | tee "$WORKDIR/test.log"
+result=$(cat "$WORKDIR/test.rc")
 if [ "$result" -ne 0 ]; then
     cat "$WORKDIR/test.log"
 fi
+echo "--- End test $t with exit code $result ---"
 exit "$result"

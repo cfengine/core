@@ -174,6 +174,53 @@ static void test_GetFstabEntryOptions(void)
     assert_true(GetFstabEntryOptions("/mnt/opts/nosuchmount") == NULL);
 }
 
+static void test_GetHostAndSource(void)
+{
+    char host[256], source[1024];
+
+    GetHostAndSource("//server/share/dir", host, sizeof(host),
+                     source, sizeof(source));
+    assert_true(StringEqual(host, "//server"));
+    assert_true(StringEqual(source, "/share/dir"));
+
+    GetHostAndSource("panfs://server/volume", host, sizeof(host),
+                     source, sizeof(source));
+    assert_true(StringEqual(host, "panfs://server"));
+    assert_true(StringEqual(source, "/volume"));
+
+    GetHostAndSource("server:/export", host, sizeof(host),
+                     source, sizeof(source));
+    assert_true(StringEqual(host, "server"));
+    assert_true(StringEqual(source, "/export"));
+
+    /* The first field of a mount(8) line is whatever the filesystem was
+     * mounted from (e.g. a FUSE fsname), so it may lack the separators... */
+    GetHostAndSource("//server", host, sizeof(host), source, sizeof(source));
+    assert_true(StringEqual(host, "//server"));
+    assert_true(StringEqual(source, ""));
+
+    GetHostAndSource("tmpfs", host, sizeof(host), source, sizeof(source));
+    assert_true(StringEqual(host, "tmpfs"));
+    assert_true(StringEqual(source, ""));
+
+    /* ...or be longer than host and source. */
+    char buf[CF_BUFSIZE];
+
+    memset(buf, 'h', sizeof(buf));
+    memcpy(buf, "//", 2);
+    memcpy(buf + 2 + sizeof(host), "/share", sizeof("/share"));
+    GetHostAndSource(buf, host, sizeof(host), source, sizeof(source));
+    assert_true(StringEqual(host, ""));
+    assert_true(StringEqual(source, ""));
+
+    memset(buf, 'd', sizeof(buf));
+    memcpy(buf, "//server/share/", 15);
+    buf[sizeof(buf) - 1] = '\0';
+    GetHostAndSource(buf, host, sizeof(host), source, sizeof(source));
+    assert_true(StringEqual(host, ""));
+    assert_true(StringEqual(source, ""));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -183,6 +230,7 @@ int main()
         unit_test(test_OptionStringExpandDefaults),
         unit_test(test_MountOptionsFromLine),
         unit_test(test_GetFstabEntryOptions),
+        unit_test(test_GetHostAndSource),
     };
 
     return run_tests(tests);

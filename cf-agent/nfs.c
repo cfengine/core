@@ -48,7 +48,8 @@
 static int FSTAB_EDITS = 0; /* GLOBAL_X */
 static Item *FSTABLIST = NULL; /* GLOBAL_X */
 
-static void GetHostAndSource(const char *buf, char *host, char *source);
+static void GetHostAndSource(const char *buf, char *host, size_t host_size,
+                             char *source, size_t source_size);
 
 static bool ConflictingOptions(const char *a, const char *b);
 static bool OptionPresent(const char *opt, const Seq *actual);
@@ -136,49 +137,52 @@ static const char *const VMOUNTOPTS[] =
     [PLATFORM_CONTEXT_ANDROID] = "defaults",         /* android */
 };
 
-static void GetHostAndSource(const char *buf, char *host, char *source)
+static void GetHostAndSource(const char *buf, char *host, size_t host_size,
+                             char *source, size_t source_size)
 /* Extracts from buffer host & source of nfs, cifs and panfs network systems */
 {
-    assert(StringStartsWith(buf, "panfs://")
-           || StringStartsWith(buf, "//")
-           || strchr(buf, ':') != NULL);
-    int index = 0; // Index for buf and host
-    int source_index = 0;
-    size_t slashes = 0;
+    size_t host_len;
+    size_t source_start;
 
-    // panfs & cifs
+    // panfs & cifs, e.g. "//server/share" or "panfs://server/volume": the
+    // host is everything before the third slash
     if (StringStartsWith(buf, "panfs://") || StringStartsWith(buf, "//"))
     {
-        // copy host
-        while (slashes != 3)
+        size_t slashes = 0;
+        for (host_len = 0; buf[host_len] != '\0'; host_len++)
         {
-            // TODO: Add example of what this string looks like
-            if (buf[index] == '/' || buf[index] == '\\')
+            if ((buf[host_len] == '/' || buf[host_len] == '\\') &&
+                (++slashes == 3))
             {
-                slashes++;
+                break;
             }
-            host[index] = buf[index];
-            index++;
         }
-        host[--index] = '\0';
+        source_start = host_len;
     }
-    // nfs
+    // nfs, e.g. "server:/export"
     else
     {
-        while (buf[index] != ':')
-        {
-            host[index] = buf[index];
-            index++;
-        }
-        host[index++] = '\0';
+        host_len = strcspn(buf, ":");
+        source_start = (buf[host_len] == ':') ? host_len + 1 : host_len;
     }
 
-    // copy source
-    while ((buf[index] != '\0') && (buf[index] != ' '))
+    const size_t source_len = strcspn(buf + source_start, " ");
+
+    host[0] = '\0';
+    source[0] = '\0';
+
+    if ((host_len >= host_size) || (source_len >= source_size))
     {
-        source[source_index++] = buf[index++];
+        Log(LOG_LEVEL_VERBOSE,
+            "Mount source '%s' is too long, ignoring its host and source",
+            buf);
+        return;
     }
-    source[source_index] = '\0';
+
+    memcpy(host, buf, host_len);
+    host[host_len] = '\0';
+    memcpy(source, buf + source_start, source_len);
+    source[source_len] = '\0';
 }
 
 /**
@@ -415,6 +419,8 @@ bool LoadMountInfo(Seq *list)
     {
         buf1[0] = buf2[0] = buf3[0] = '\0';
         nfs = false;
+        panfs = false;
+        cifs = false;
 
         ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
         if (res == -1)
@@ -505,7 +511,8 @@ bool LoadMountInfo(Seq *list)
         {
             if (cifs || panfs)
             {
-                GetHostAndSource(buf1, host, source);
+                GetHostAndSource(buf1, host, sizeof(host),
+                                 source, sizeof(source));
             }
             else
             {
@@ -545,7 +552,8 @@ bool LoadMountInfo(Seq *list)
         {
             if (cifs || panfs)
             {
-                GetHostAndSource(buf1, host, source);
+                GetHostAndSource(buf1, host, sizeof(host),
+                                 source, sizeof(source));
             }
             else
             {

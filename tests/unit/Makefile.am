@@ -162,7 +162,8 @@ check_PROGRAMS = \
 	package_watcher_test \
 	user_watcher_test \
 	stoppable_thread_test \
-	wakeup_channel_test
+	wakeup_channel_test \
+	cf_execd_runagent_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -400,6 +401,10 @@ process_terminate_unix_test_LDADD = libtest.la ../../libntech/libutils/libutils.
 exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c ../../cf-execd/execd-config.c
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
+
+cf_execd_runagent_test_SOURCES = cf_execd_runagent_test.c \
+	../../cf-execd/cf-execd-runagent.c
+cf_execd_runagent_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 sysinfo_test_LDADD = libtest.la \
 	../../libenv/libenv.la \

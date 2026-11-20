@@ -525,6 +525,10 @@ allow cfengine_httpd_t cfengine_var_lib_t:lnk_file read;
 allow cfengine_httpd_t cfengine_execd_t:unix_stream_socket connectto;
 allow cfengine_httpd_t cfengine_var_lib_t:sock_file write;
 
+# allow php-fpm to create its unix sockets and httpd to connect to them
+allow cfengine_httpd_t cfengine_var_lib_t:sock_file { create setattr unlink };
+allow cfengine_httpd_t self:unix_stream_socket connectto;
+
 # allow httpd/php to upload notification/alert scripts
 allow cfengine_httpd_t cfengine_action_script_exec_t:dir { add_name getattr search write remove_name };
 allow cfengine_httpd_t cfengine_action_script_exec_t:file { create write setattr unlink };
@@ -550,7 +554,7 @@ allow cfengine_httpd_t init_var_run_t:dir search;
 allow cfengine_httpd_t kernel_t:unix_dgram_socket sendto;
 allow cfengine_httpd_t net_conf_t:file { getattr open read };
 allow cfengine_httpd_t node_t:tcp_socket node_bind;
-allow cfengine_httpd_t self:capability { dac_override dac_read_search kill net_bind_service setgid setuid net_admin };
+allow cfengine_httpd_t self:capability { chown dac_override dac_read_search kill net_bind_service setgid setuid net_admin };
 allow cfengine_httpd_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
 allow cfengine_httpd_t self:process execmem;
 allow cfengine_httpd_t unconfined_t:process signull;

@@ -1339,47 +1339,42 @@ size_t ShortcutsExpand(char *path, size_t path_size,
 }
 
 /**
- * realpath() fails on a dangling symlink, so canonicalise the parent
- * directory of #path instead and append the link name. The result can be
- * matched against the path ACLs like any other resolved path, unlike #path
- * itself which may still contain '..' components or symlinked directories.
+ * Get the canonical path of a dangling symlink.
  *
- * @return true on success, with the result written in #dst.
+ * realpath() fails if the symlink target does not exist. Instead, this
+ * resolves the parent directory with realpath() and appends the link name.
+ * The link itself is not followed.
+ *
+ * Example: "/srv/admitted/../dangling" becomes "/srv/dangling".
+ *
+ * The caller must check that #path is a symlink.
+ *
+ * @return true on success, with the result written to #dst.
  */
-bool ResolveDanglingSymlink(const char *path, char *dst, size_t dst_size)
+static bool ResolveDanglingSymlink(const char *path, char *dst, size_t dst_size)
 {
-    const char *link_name = strrchr(path, FILE_SEPARATOR);
-    if (link_name == NULL || link_name[1] == '\0')
+    const char *link_name = ReadLastNode(path);
+    if (link_name[0] == '\0')
     {
         return false;
     }
 
-    char parent[PATH_MAX];
-    size_t parent_len = link_name - path;
-    if (parent_len >= sizeof(parent))
+    char *parent = GetParentDirectoryCopy(path);
+    if (parent == NULL)
     {
         return false;
     }
-    if (parent_len == 0)                                  /* link is in / */
-    {
-        parent[0] = FILE_SEPARATOR;
-        parent[1] = '\0';
-    }
-    else
-    {
-        memcpy(parent, path, parent_len);
-        parent[parent_len] = '\0';
-    }
-    link_name++;
 
     char resolved[PATH_MAX];
-    if (realpath(parent, resolved) == NULL)
+    const char *ok = realpath(parent, resolved);
+    free(parent);
+    if (ok == NULL)
     {
         return false;
     }
 
     size_t resolved_len = strlen(resolved);
-    bool need_separator = (resolved[resolved_len - 1] != FILE_SEPARATOR);
+    bool need_separator = !IsFileSep(resolved[resolved_len - 1]);
     int ret = snprintf(dst, dst_size, "%s%s%s", resolved,
                        need_separator ? FILE_SEPARATOR_STR : "", link_name);
     return (ret >= 0 && (size_t) ret < dst_size);
@@ -1461,9 +1456,11 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
         /* { */
 
         /* } */
+        /* Cap at PATH_MAX like realpath(), since callers such as
+         * acl_CheckPath() copy the result into PATH_MAX sized buffers */
         struct stat statbuf;
         if ((lstat(reqpath, &statbuf) == 0) && S_ISLNK(statbuf.st_mode) &&
-            ResolveDanglingSymlink(reqpath, dst, sizeof(dst)))
+            ResolveDanglingSymlink(reqpath, dst, MIN(sizeof(dst), PATH_MAX)))
         {
             Log(LOG_LEVEL_VERBOSE, "Requested file is a dead symbolic link (filename: %s)", reqpath);
         }

@@ -1911,7 +1911,7 @@ bool EvalContextClassPutSoftTagsSetWithComment(EvalContext *ctx, const char *nam
 {
     bool ret;
     char *ns = NULL;
-    char *delim = strchr(name, ':');
+    const char *delim = strchr(name, ':');
 
     if (delim)
     {

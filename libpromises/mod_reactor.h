@@ -42,6 +42,13 @@
 #define REACTOR_PACKAGE_UNINSTALLED "package_uninstalled"
 #define REACTOR_PACKAGE_MODULE "package_module"
 
+/* How the event of a 'when' body is watched for, an ordered list of methods.
+ * Every method name of every edition is known here, so that policy validates
+ * the same way everywhere; a method this binary doesn't have is skipped. */
+#define REACTOR_WAKEUP_SOURCES "wakeup_sources"
+#define REACTOR_WAKEUP_SOURCE_POLL "poll"
+#define REACTOR_WAKEUP_SOURCES_RANGE "poll|inotify|fanotify|ebpf|usn|rdcw"
+
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"
 

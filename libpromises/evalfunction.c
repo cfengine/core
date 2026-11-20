@@ -7660,22 +7660,24 @@ static int ParseDate(const char *input_string, time_t *out)
     strncpy(date_path, GetBinDir(), sizeof(date_path) - 1);
     JoinPaths(date_path, sizeof(date_path), "date");
 
-    char buffer[CF_BUFSIZE];
-    int n = snprintf(buffer, sizeof(buffer), "%s --date '%s' +%%s", date_path, input_string);
+    /* The input must be its own argument: inside a command string, a quote in
+     * it would end the argument and add new ones (see ArgSplitCommand()) */
+    Seq *arglist = SeqNew(3, free);
+    SeqAppend(arglist, xstrdup("--date"));
+    SeqAppend(arglist, xstrdup(input_string));
+    SeqAppend(arglist, xstrdup("+%s"));
 
-    if (n < 0 || (size_t) n >= sizeof(buffer)) {
-        Log(LOG_LEVEL_ERR, "Truncation error: input string '%.10s...' is too long (%d >= %zu)",
-            input_string, n, sizeof(buffer));
-        return -1;
-    }
-
-    FILE *fd = cf_popen(buffer, "r", true);
+    FILE *fd = cf_popensetuid(date_path, arglist, "r", CF_SAME_OWNER,
+                              CF_SAME_GROUP, NULL, NULL, false);
+    SeqDestroy(arglist);
     if (fd == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't run command: '%s'", buffer);
+        Log(LOG_LEVEL_ERR, "Couldn't run '%s' for date '%s'", date_path,
+            input_string);
         return -1;
     }
 
+    char buffer[CF_BUFSIZE];
     size_t bytes_read = fread(buffer, 1, sizeof(buffer) - 1 , fd);
     buffer[bytes_read] = '\0';
 
@@ -7689,10 +7691,10 @@ static int ParseDate(const char *input_string, time_t *out)
         {
             Log(LOG_LEVEL_DEBUG, "No output read for '%s'", input_string);
         }
-        fclose(fd);
+        cf_pclose(fd);
         return -1;
     }
-    fclose(fd);
+    cf_pclose(fd);
 
     long time_value;
     int ret = StringToLong(buffer, &time_value);

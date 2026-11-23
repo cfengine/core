@@ -309,9 +309,9 @@ fi
 # shellcheck disable=SC2166
 # ^^ allow grouping in test expression
 if [ "$OS" = "hpux" ] || [ \( "$OS" = "solaris" -a "$OS_VERSION" = "5.10" \) ]; then
-  ps -efl >processes.log 2>&1
+  ps -efl >"$tmpdir"/processes.log 2>&1
 else
-  ps auwwx >processes.log 2>&1
+  ps auwwx >"$tmpdir"/processes.log 2>&1
 fi
 
 # top procs

@@ -407,6 +407,31 @@ fi
 echo >> "$info_file"
 echo "Checked system log for report entries over the network limit"
 
+# Kernel OOM kills and hung tasks for any process; the syslog filter above keeps only cf- lines
+_kernel="$tmpdir"/kernel-oom-and-hung-tasks.log
+if [ "$OS" = "linux" ]; then
+  if command -v journalctl >/dev/null; then
+    journalctl _TRANSPORT=kernel --since=-7d --no-pager 2>/dev/null
+  else
+    dmesg 2>/dev/null
+  fi | grep -iE 'out of memory|oom-kill|killed process|blocked for more than' > "$_kernel"
+  echo "- `wc -l < "$_kernel" | tr -d ' '` kernel OOM or hung task lines [[./kernel-oom-and-hung-tasks.log]]" >> "$info_file"
+  echo "Captured kernel OOM and hung task messages"
+fi
+
+# CFEngine package install, upgrade and removal history
+_pkg_hist="$tmpdir"/package-history.log
+for f in /var/log/dpkg.log* /var/log/dnf.rpm.log* /var/log/yum.log* /var/log/zypp/history*; do
+  [ -f "$f" ] || continue
+  case "$f" in
+    *.gz) gzip -dc "$f" ;;
+    *) cat "$f" ;;
+  esac
+done 2>/dev/null | grep -i 'cfengine' | grep -vE ' (status|configure|trigproc) ' | sort > "$_pkg_hist"
+command -v rpm >/dev/null && rpm -qa --last 'cfengine*' >> "$_pkg_hist" 2>&1
+[ -s "$_pkg_hist" ] || rm -f "$_pkg_hist"
+echo "Captured CFEngine package history"
+
 # cf- component related SELinux denials, as either subject or object
 if command -v ausearch >/dev/null; then
   ausearch -m avc -se cfengine > "$tmpdir"/ausearch-cfengine-avcs.log || true

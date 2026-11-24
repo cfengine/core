@@ -130,12 +130,23 @@ static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref
     bool ret;
     if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
     {
-        char *value = JsonPrimitiveToString(data);
-        Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
-            ref->ns, ref->scope, key, value);
-        ret = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
-                                                       tags, comment);
-        free(value);
+        if (JsonGetPrimitiveType(data) == JSON_PRIMITIVE_TYPE_NULL)
+        {
+            /* JsonPrimitiveToString() returns NULL for JSON null and there is
+             * no scalar to install in its place. */
+            Log(LOG_LEVEL_ERR, "Invalid value in '%s' variable specification in CMDB data"
+                " (null is not a supported value)", key);
+            ret = false;
+        }
+        else
+        {
+            char *value = JsonPrimitiveToString(data);
+            Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
+                ref->ns, ref->scope, key, value);
+            ret = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
+                                                           tags, comment);
+            free(value);
+        }
     }
     else if ((JsonGetType(data) == JSON_TYPE_ARRAY) &&
              JsonArrayContainsOnlyPrimitives(data))

@@ -3,7 +3,7 @@
 # lists containing null keep installing, with the nulls skipped
 body common control
 {
-  inputs => { "../../default.sub.cf" };
+  inputs => { "../../default.cf.sub" };
   bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }

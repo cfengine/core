@@ -1,0 +1,26 @@
+{
+  "files": [
+    {
+      "change": "created",
+      "path": "WORKDIR/tmp/create-me",
+      "type": "regular file"
+    },
+    {
+      "change": "modified",
+      "path": "WORKDIR/tmp/modify-me",
+      "type": "regular file"
+    },
+    {
+      "change": "deleted",
+      "path": "WORKDIR/tmp/delete-me"
+    },
+    {
+      "change": "created",
+      "path": "WORKDIR/tmp/link",
+      "type": "symbolic link"
+    }
+  ],
+  "format_version": 1
+}
+exit status 1 without --simulate
+exit status 1 with a relative path

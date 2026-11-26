@@ -1,0 +1,55 @@
+body common control
+{
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testroot)/modify-me"
+      create => "true",
+      content => "before";
+
+    "$(G.testroot)/delete-me" create => "true";
+    "$(G.testroot)/rename-me" create => "true";
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "(solaris|aix|hpux|windows)",
+      # ENT-6540 exotics fail to delete chroot
+      # ENT-10254 tests fail on Windows due to CRLF
+      meta => { "ENT-6540", "ENT-10254" };
+
+    "description"
+      string => "Test that --simulate-json writes the change set as JSON";
+
+  commands:
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub --simulate=manifest --simulate-json=$(this.promise_filename).json.temp > $(this.promise_filename).prose.temp 2>&1"
+      contain => in_shell;
+
+    "$(G.sed) -e 's,$(sys.workdir),WORKDIR,g' -e 's/\"uid\": [0-9]*/\"uid\": UID/' -e 's/\"gid\": [0-9]*/\"gid\": GID/' $(this.promise_filename).json.temp > $(this.promise_filename).actual"
+      contain => in_shell;
+
+    # The option requires --simulate and an absolute path.
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub --simulate-json=$(this.promise_filename).unused.temp > /dev/null 2>&1; echo \"exit status $? without --simulate\" >> $(this.promise_filename).actual"
+      contain => in_shell;
+
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub --simulate=manifest --simulate-json=relative.json > /dev/null 2>&1; echo \"exit status $? with a relative path\" >> $(this.promise_filename).actual"
+      contain => in_shell;
+}
+
+bundle agent check
+{
+  methods:
+    "check"
+      usebundle => dcs_check_diff(
+        "$(this.promise_filename).actual",
+        "$(this.promise_filename).expected",
+        "$(this.promise_filename)"
+      );
+}

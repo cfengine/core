@@ -2,9 +2,6 @@
 #
 # Test isipinsubnet()
 #
-# This is an .error.pass.cf test, because isipinsubnet() is given
-# 'not-an-ip-address' on purpose and logs an error.
-#
 #######################################################
 body common control
 {
@@ -19,10 +16,6 @@ bundle agent test
   meta:
     "description" -> { "CFE-3081" }
       string => "Test that isipinsubnet() validates IP addresses as valid especially within the 0.0.0.0/0 range";
-
-    "test_soft_fail"
-      string => "any",
-      meta => { "CFE-3081" };
 
   vars:
     "variable_value_from_varible" string => "$(nosuch.variable)";

@@ -516,7 +516,7 @@ static void test_get_server_literal_sendbuffer_bound(void)
 static char DANGLING_DIR[PATH_MAX];
 static char DANGLING_REAL_DIR[PATH_MAX];
 
-static void dangling_setup(void)
+static void dangling_setup(ARG_UNUSED void **state)
 {
     strlcpy(DANGLING_DIR, "/tmp/protocol_test.XXXXXX", sizeof(DANGLING_DIR));
     assert_true(mkdtemp(DANGLING_DIR) != NULL);
@@ -533,7 +533,7 @@ static void dangling_setup(void)
     assert_int_equal(symlink("../outside", path), 0);
 }
 
-static void dangling_teardown(void)
+static void dangling_teardown(ARG_UNUSED void **state)
 {
     char path[PATH_MAX];
     xsnprintf(path, sizeof(path), "%s/admitted/escape", DANGLING_DIR);
@@ -562,12 +562,12 @@ static void check_resolves_outside(const char *request)
     assert_int_equal(len, strlen(expected));
 }
 
-static void test_preprocess_request_path_dangling_dotdot(void)
+static void test_preprocess_request_path_dangling_dotdot(ARG_UNUSED void **state)
 {
     check_resolves_outside("admitted/../outside/dangling");
 }
 
-static void test_preprocess_request_path_dangling_symlinked_dir(void)
+static void test_preprocess_request_path_dangling_symlinked_dir(ARG_UNUSED void **state)
 {
     check_resolves_outside("admitted/escape/dangling");
 }

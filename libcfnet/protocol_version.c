@@ -41,6 +41,10 @@ ProtocolVersion ParseProtocolVersionPolicy(const char *const s)
     {
         return CF_PROTOCOL_LEECH2;
     }
+    else if (StringEqual(s, "6") || StringEqual(s, "transfusion"))
+    {
+        return CF_PROTOCOL_TRANSFUSION;
+    }
     else if (StringEqual(s, "latest"))
     {
         return CF_PROTOCOL_LATEST;

@@ -12,14 +12,15 @@ log_offset=0
 
 # Run command $@ until it succeeds, for at most WAIT_TIMEOUT seconds, polling
 # every 0.1 second. Fails if it never succeeded. Runs in a subshell without
-# tracing, so that set -x doesn't log every poll.
+# tracing, so that set -x doesn't log every poll. The deadline is based on the
+# clock rather than a poll count, since a poll can take much longer than 0.1
+# second where starting processes is slow (e.g. MSYS2 on Windows).
 wait_until() {
     (
         set +x
-        polls=$((WAIT_TIMEOUT * 10))
+        deadline=$(($(now) + WAIT_TIMEOUT))
         until "$@"; do
-            [ "$polls" -gt 0 ] || exit 1
-            polls=$((polls - 1))
+            [ "$(now)" -lt "$deadline" ] || exit 1
             sleep 0.1
         done
     )
@@ -170,8 +171,13 @@ set_installed_packages() {
 # Start cf-reactor in the background with policy file $1, logging to $LOG.
 # It is stopped when the test exits.
 start_reactor() {
-    "$CF_REACTOR" --no-fork --verbose -f "$1" >>"$LOG" 2>&1 &
+    "$CF_REACTOR" --no-fork --debug -f "$1" >>"$LOG" 2>&1 &
     reactor_pid=$!
+    echo "reactor_pid is $reactor_pid"
+    if grep 'error:' "$LOG"; then
+        stop_reactor
+        exit 1
+    fi
     trap stop_reactor EXIT
 }
 

@@ -37,8 +37,13 @@ run_test() {
     total=$((total + 1))
 
     start=$(now)
-    output=$(sh "$dir/run_test.sh" "$1" 2>&1)
-    result=$?
+    # The exit status of a pipeline is that of its last command, tee here, so
+    # record the one of the test in a file
+    {
+        sh -ex "$dir/run_test.sh" "$1" 2>&1 && rc=0 || rc=$?
+        echo "$rc" > "$1".rc
+    } | tee "$1".log
+    result=$(cat "$1".rc)
     elapsed=$(($(now) - start))
 
     case $result in
@@ -55,10 +60,11 @@ run_test() {
             failures="$failures  $name
 "
             echo "--- FAIL: $name (${elapsed}s)"
-            echo "$output"
+            cat "$1".log
             echo "---"
             ;;
     esac
+    rm -f "$1".log "$1".rc
 }
 
 for t in "$dir"/tests/*/*.sh "$dir"/tests/*/unsafe/*.sh; do

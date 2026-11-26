@@ -82,24 +82,40 @@ void HandleRunagentRequest(int conn_fd, const char *local_run_command)
         request[n_read - 1] = '\0';
     }
 
+    /* An empty request would turn into '-H ""', which makes cf-runagent fall
+     * back to the hosts list from policy instead of hailing nothing. */
+    if (request[0] == '\0')
+    {
+        Log(LOG_LEVEL_ERR, "Refusing empty runagent request");
+        fprintf(conn_file, "{\"error\": \"Empty runagent request\"}");
+        free(request);
+        fclose(conn_file);
+        return;
+    }
+
     /* TODO: '--raw' for just getting output from cf-runagent directly? */
     const char *tool = NULL;
-    char *command;
+    FILE *run_agent_output = NULL;
 
     if (StringEqual(request, "localhost") || StringIsLocalHostIP(request))
     {
         tool = "cf-agent";
-        command = xstrdup(local_run_command);
+        run_agent_output = cf_popen(local_run_command, "r", true);
     }
     else
     {
         tool = "cf-runagent";
-        xasprintf(&command, "%s%ccf-runagent -b -H %s", GetBinDir(), FILE_SEPARATOR, request);
+        /* The request is handed to cf-runagent as a single argv element and
+         * never goes through command line splitting, so whitespace or quotes
+         * in it cannot add further cf-runagent options (e.g. "-f" to load
+         * another policy as root); it is just a host that fails to resolve. */
+        char *runagent_path;
+        xasprintf(&runagent_path, "%s%ccf-runagent", GetBinDir(), FILE_SEPARATOR);
+        char *const argv[] = { runagent_path, "-b", "-H", request, NULL };
+        run_agent_output = cf_popen_argv(argv, "r", true);
+        free(runagent_path);
     }
     free(request);
-
-    FILE *run_agent_output = cf_popen(command, "r", true);
-    free(command);
 
     if (run_agent_output == NULL)
     {

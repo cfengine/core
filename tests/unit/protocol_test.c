@@ -11,6 +11,7 @@
 #include <connection_info.h>
 #include <net.h>
 #include <eval_context.h>
+#include <misc_lib.h>                                  /* xsnprintf */
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -501,6 +502,76 @@ static void test_get_server_literal_sendbuffer_bound(void)
     free(conn);
 }
 
+/*
+ * realpath() fails on a dangling symlink. PreprocessRequestPath() must still
+ * return a canonical path for it. Otherwise '..' components and symlinked
+ * directories reach the prefix-based path ACL check unresolved.
+ *
+ * Layout:
+ *   <dir>/admitted/
+ *   <dir>/admitted/escape -> ../outside
+ *   <dir>/outside/
+ *   <dir>/outside/dangling -> /nonexistent/protocol_test
+ */
+static char DANGLING_DIR[PATH_MAX];
+static char DANGLING_REAL_DIR[PATH_MAX];
+
+static void dangling_setup(ARG_UNUSED void **state)
+{
+    strlcpy(DANGLING_DIR, "/tmp/protocol_test.XXXXXX", sizeof(DANGLING_DIR));
+    assert_true(mkdtemp(DANGLING_DIR) != NULL);
+    assert_true(realpath(DANGLING_DIR, DANGLING_REAL_DIR) != NULL);
+
+    char path[PATH_MAX];
+    xsnprintf(path, sizeof(path), "%s/admitted", DANGLING_DIR);
+    assert_int_equal(mkdir(path, 0700), 0);
+    xsnprintf(path, sizeof(path), "%s/outside", DANGLING_DIR);
+    assert_int_equal(mkdir(path, 0700), 0);
+    xsnprintf(path, sizeof(path), "%s/outside/dangling", DANGLING_DIR);
+    assert_int_equal(symlink("/nonexistent/protocol_test", path), 0);
+    xsnprintf(path, sizeof(path), "%s/admitted/escape", DANGLING_DIR);
+    assert_int_equal(symlink("../outside", path), 0);
+}
+
+static void dangling_teardown(ARG_UNUSED void **state)
+{
+    char path[PATH_MAX];
+    xsnprintf(path, sizeof(path), "%s/admitted/escape", DANGLING_DIR);
+    unlink(path);
+    xsnprintf(path, sizeof(path), "%s/outside/dangling", DANGLING_DIR);
+    unlink(path);
+    xsnprintf(path, sizeof(path), "%s/outside", DANGLING_DIR);
+    rmdir(path);
+    xsnprintf(path, sizeof(path), "%s/admitted", DANGLING_DIR);
+    rmdir(path);
+    rmdir(DANGLING_DIR);
+}
+
+/* Request <dir>/<request> must resolve to <real dir>/outside/dangling */
+static void check_resolves_outside(const char *request)
+{
+    char reqpath[CF_BUFSIZE];
+    xsnprintf(reqpath, sizeof(reqpath), "%s/%s", DANGLING_DIR, request);
+
+    char expected[PATH_MAX];
+    xsnprintf(expected, sizeof(expected), "%s/outside/dangling",
+              DANGLING_REAL_DIR);
+
+    size_t len = PreprocessRequestPath(reqpath, sizeof(reqpath));
+    assert_string_equal(reqpath, expected);
+    assert_int_equal(len, strlen(expected));
+}
+
+static void test_preprocess_request_path_dangling_dotdot(ARG_UNUSED void **state)
+{
+    check_resolves_outside("admitted/../outside/dangling");
+}
+
+static void test_preprocess_request_path_dangling_symlinked_dir(ARG_UNUSED void **state)
+{
+    check_resolves_outside("admitted/escape/dangling");
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -508,7 +579,11 @@ int main()
     {
           unit_test(test_command_parser),
           unit_test(test_user_name),
-          unit_test(test_get_server_literal_sendbuffer_bound)
+          unit_test(test_get_server_literal_sendbuffer_bound),
+          unit_test_setup_teardown(test_preprocess_request_path_dangling_dotdot,
+                                   dangling_setup, dangling_teardown),
+          unit_test_setup_teardown(test_preprocess_request_path_dangling_symlinked_dir,
+                                   dangling_setup, dangling_teardown)
     };
 
     return run_tests(tests);

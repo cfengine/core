@@ -1308,6 +1308,48 @@ size_t ShortcutsExpand(char *path, size_t path_size,
 }
 
 /**
+ * Get the canonical path of a dangling symlink.
+ *
+ * realpath() fails if the symlink target does not exist. Instead, this
+ * resolves the parent directory with realpath() and appends the link name.
+ * The link itself is not followed.
+ *
+ * Example: "/srv/admitted/../dangling" becomes "/srv/dangling".
+ *
+ * The caller must check that #path is a symlink.
+ *
+ * @return true on success, with the result written to #dst.
+ */
+static bool ResolveDanglingSymlink(const char *path, char *dst, size_t dst_size)
+{
+    const char *link_name = ReadLastNode(path);
+    if (link_name[0] == '\0')
+    {
+        return false;
+    }
+
+    char *parent = GetParentDirectoryCopy(path);
+    if (parent == NULL)
+    {
+        return false;
+    }
+
+    char resolved[PATH_MAX];
+    const char *ok = realpath(parent, resolved);
+    free(parent);
+    if (ok == NULL)
+    {
+        return false;
+    }
+
+    size_t resolved_len = strlen(resolved);
+    bool need_separator = !IsFileSep(resolved[resolved_len - 1]);
+    int ret = snprintf(dst, dst_size, "%s%s%s", resolved,
+                       need_separator ? FILE_SEPARATOR_STR : "", link_name);
+    return (ret >= 0 && (size_t) ret < dst_size);
+}
+
+/**
  * Canonicalize a path, ensure it is absolute, and resolve all symlinks.
  * In detail:
  *
@@ -1383,11 +1425,13 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
         /* { */
 
         /* } */
+        /* Cap at PATH_MAX like realpath(), since callers such as
+         * acl_CheckPath() copy the result into PATH_MAX sized buffers */
         struct stat statbuf;
-        if ((lstat(reqpath, &statbuf) == 0) && S_ISLNK(statbuf.st_mode))
+        if ((lstat(reqpath, &statbuf) == 0) && S_ISLNK(statbuf.st_mode) &&
+            ResolveDanglingSymlink(reqpath, dst, MIN(sizeof(dst), PATH_MAX)))
         {
             Log(LOG_LEVEL_VERBOSE, "Requested file is a dead symbolic link (filename: %s)", reqpath);
-            strlcpy(dst, reqpath, CF_BUFSIZE);
         }
         else
         {

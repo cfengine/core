@@ -40,5 +40,6 @@ WatcherCheckResult FileWatcherCheckFileContentModified(void *state);
 WatcherCheckResult FileWatcherCheckFilePermissionsChanged(void *state);
 WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state);
 WatcherCheckResult FileWatcherCheckFileSizeExceeds(void *state);
+void FileWatcherBundlesRan(void *state);
 
 #endif

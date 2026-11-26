@@ -57,13 +57,14 @@ static const ConstraintSyntax when_constraints[] =
     ConstraintSyntaxNewString(REACTOR_PACKAGE_UNINSTALLED, CF_ANYSTRING, "Package to react for on uninstallation", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString(REACTOR_PACKAGE_MODULE, ".*", "Package module to list the installed packages with, instead of the default one", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("interval", REACTOR_INTERVAL_RANGE, "Seconds between two checks for the event", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList(REACTOR_WAKEUP_SOURCES, REACTOR_WAKEUP_SOURCES_RANGE, "Methods to watch for the event with, in order of preference. Without '" REACTOR_WAKEUP_SOURCE_POLL "', the promise is not kept if none of them is available", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 /* Checks that a 'when' body has an event attribute, i.e. any attribute other
- * than the global ones (meta, inherit_from) and 'interval', which only sets
- * how the event is checked for. A body inheriting from another one may get
- * its event from it, and that one is checked on its own. */
+ * than the global ones (meta, inherit_from), 'interval' and 'wakeup_sources',
+ * which only set how the event is checked for. A body inheriting from another
+ * may get its event from it, and that one is checked on its own. */
 static bool WhenBodyCheck(const Body *body, Seq *errors)
 {
     assert(body != NULL);
@@ -76,7 +77,9 @@ static bool WhenBodyCheck(const Body *body, Seq *errors)
     for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
         const Constraint *cp = SeqAt(body->conlist, i);
-        if (!StringEqual(cp->lval, "meta") && !StringEqual(cp->lval, "interval"))
+        if (!StringEqual(cp->lval, "meta") &&
+            !StringEqual(cp->lval, "interval") &&
+            !StringEqual(cp->lval, REACTOR_WAKEUP_SOURCES))
         {
             return true;
         }

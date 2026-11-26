@@ -232,6 +232,11 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_ClassHistoryEnable,
 {
 }
 
+ENTERPRISE_FUNC_0ARG_DEFINE_STUB(const ReactorWatchBackend *const *, ReactorEnterpriseWatchBackends)
+{
+    return NULL;
+}
+
 ENTERPRISE_FUNC_0ARG_DEFINE_STUB(size_t, ReactorNovaMaxFds)
 {
     return 0;
